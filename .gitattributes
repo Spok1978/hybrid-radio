@@ -1,0 +1,21 @@
+# Целевая платформа приёмника — Linux (Raspberry Pi OS) либо ESP32 (сборка из Linux/Windows).
+# В репозитории и в рабочей копии держим LF, иначе файлы, отредактированные на Windows,
+# ломаются на Pi.
+* text=auto eol=lf
+
+# Эти обязаны быть с LF при любых настройках:
+# скрипт с CRLF даёт на Linux "bad interpreter: /bin/bash^M"
+*.sh        text eol=lf
+*.service   text eol=lf
+*.conf      text eol=lf
+Makefile    text eol=lf
+
+# Бинарные — git не должен их трогать и пытаться показать diff
+*.ttf   binary
+*.pdf   binary
+*.png   binary
+*.jpg   binary
+*.bin   binary
+*.hex   binary
+*.elf   binary
+*.uf2   binary
