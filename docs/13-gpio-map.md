@@ -85,13 +85,17 @@ dtparam=i2c_arm=on
 dtoverlay=rotary-encoder,pin_a=5,pin_b=6,relative_axis=1,steps-per-period=4
 dtoverlay=rotary-encoder,pin_a=7,pin_b=8,relative_axis=1,steps-per-period=4,linux_axis=1
 
-# кнопки: каждая — отдельный вызов оверлея
-dtoverlay=gpio-key,gpio=4,label=MENU
-dtoverlay=gpio-key,gpio=27,label=MEM
-dtoverlay=gpio-key,gpio=22,label=PREV
-dtoverlay=gpio-key,gpio=23,label=NEXT
-dtoverlay=gpio-key,gpio=24,label=SEEK
-dtoverlay=gpio-key,gpio=25,label=OK
+# кнопки: каждая — отдельный вызов оверлея, keycode обязателен и уникален
+dtoverlay=gpio-key,gpio=4,label=MENU,keycode=139
+dtoverlay=gpio-key,gpio=27,label=MEM,keycode=165
+dtoverlay=gpio-key,gpio=22,label=PREV,keycode=105
+dtoverlay=gpio-key,gpio=23,label=NEXT,keycode=106
+dtoverlay=gpio-key,gpio=24,label=SEEK,keycode=217
+dtoverlay=gpio-key,gpio=25,label=OK,keycode=28
+
+# кнопка второго энкодера и тумблер режима — тоже входы, без них софт их не увидит
+dtoverlay=gpio-key,gpio=12,label=ENC2,keycode=96
+dtoverlay=gpio-key,gpio=9,label=MODE,keycode=161
 
 # питание
 dtoverlay=gpio-shutdown,gpio_pin=17,debounce=3000
@@ -109,8 +113,13 @@ dtoverlay=gpio-poweroff,gpiopin=26
    прибор не гасит. Проверить, работает ли ожидаемо.
 3. У `gpio-key` и `gpio-shutdown` **вывод по умолчанию — GPIO3**. Обязательно
    задавать свой явно, иначе оверлей займёт шину тюнера.
-4. Коды клавиш (`keycode`) назначить осознанно, чтобы в программе они
-   не пересеклись с обычной клавиатурой.
+4. **`keycode` задавать обязательно и уникально для каждой кнопки.**
+   В описании оверлея значение по умолчанию не документировано, а без явного
+   кода кнопки в лучшем случае неразличимы для программы. Коды в блоке выше —
+   рабочие значения из `linux/input-event-codes.h`, поменять можно любые,
+   лишь бы не повторялись. Добавлено 2026-08-21 по итогам внешнего разбора:
+   раньше `keycode` не был задан ни у одной кнопки, а для тумблера и кнопки
+   второго энкодера строк не было вовсе.
 5. **Тумблер режима — это уровень, а не нажатие.** `gpio-key` даёт события
    «нажал/отпустил», а тумблер стоит в положении. После включения прибора
    события не будет, пока его не щёлкнут, поэтому при старте нужно
