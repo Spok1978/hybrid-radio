@@ -1,0 +1,162 @@
+# Машиночитаемый список цепей приёмника IP-Radio.
+#
+# Источник истины — docs/16-connection-list.md. Этот файл написан из него
+# вручную и однозначно, а НЕ пересказан ИИ из прозы: пересказ прозы — ровно
+# тот способ, которым в проект уже дважды заезжали ошибки.
+#
+# Назначение: вход для генератора схемы (KiCad через MCP/SKiDL/kicad-sch-api),
+# для проверки покрытия выводов и для сверки при монтаже.
+#
+# Правило: правим docs/16, потом этот файл. Не наоборот.
+
+meta:
+  project: ip-radio
+  revision: 2026-08-21
+  source: docs/16-connection-list.md
+  note: >
+    Нумерация выводов модулей условная и соответствует подписям на плате
+    (шелкографии), а не физическому порядку контактов. У клонов порядок
+    различается — сверять при монтаже.
+
+components:
+  A1:  { desc: "Raspberry Pi 3 Model B+, колодка 40 контактов", type: board }
+  A3:  { desc: "Экран Waveshare 7inch DSI LCD (C), 1024x600", type: display }
+  B1:  { desc: "Модуль тюнера RDA5807M (RRD-102V2.0)", type: module,
+         pins: [VCC, GND, SDIO, SCLK, ANT, LOUT, ROUT] }
+  B2:  { desc: "Антенна телескопическая", type: antenna, pins: [ANT] }
+  C1:  { desc: "Модуль ЦАП PCM5102A (GY-PCM5102A)", type: module,
+         pins: [VCC, GND, BCK, LCK, DIN, SCK, FLT, DEMP, FMT, XSMT, LOUT, ROUT] }
+  C2:  { desc: "Модуль усилителя TPA3118D2, задействован один канал", type: module,
+         pins: [VCC, GND, IN, IN_UNUSED, OUTP, OUTN, SD, GAIN, GVDD] }
+  C3:  { desc: "Динамик 4 Ом 15 Вт", type: speaker, pins: [P, N] }
+  C4:  { desc: "Подстроечник 10 кОм, 3296W", type: potentiometer, pins: [1, W, 3] }
+  D2:  { desc: "Гнездо питания 5,5x2,1", type: connector, pins: [CENTER, SHELL] }
+  D3:  { desc: "Выключатель KCD1-101", type: switch, pins: [1, 2] }
+  D4:  { desc: "Держатель предохранителя + предохранитель 3 А", type: fuse, pins: [1, 2] }
+  D6:  { desc: "Преобразователь DC-DC 12->5,1 В, синхронный, >=3 А", type: module,
+         pins: [IN_P, IN_N, OUT_P, OUT_N] }
+  D7:  { desc: "IRF4905, P-MOSFET, TO-220", type: mosfet, pins: [G, D, S] }
+  D8:  { desc: "Стабилитрон 1N4744A 15 В", type: zener, pins: [A, K] }
+  D9:  { desc: "TVS P6KE16A, однонаправленный", type: tvs, pins: [A, K] }
+  D10: { desc: "LDO HT7333-A, 3,3 В, TO-92", type: regulator, pins: [VIN, GND, VOUT] }
+  D11: { desc: "Дроссель 10 мкГн, 3 А", type: inductor, pins: [1, 2] }
+  E1a: { desc: "Резистор 10 кОм", value: 10k }
+  E1b: { desc: "Резистор 10 кОм", value: 10k }
+  E2a: { desc: "Резистор 100 кОм, затвор D7", value: 100k }
+  E2b: { desc: "Резистор 100 кОм, разряд сумматора", value: 100k }
+  E2c: { desc: "Резистор 100 кОм, подтяжка SD усилителя", value: 100k }
+  E3:  { desc: "Конденсатор плёночный 3,3 мкФ, вход усилителя", value: 3u3 }
+  E4:  { desc: "Электролит 1000 мкФ / 25 В, питание усилителя", value: 1000u }
+  E5:  { desc: "Электролит 470 мкФ / 25 В, вход преобразователя", value: 470u }
+  E6:  { desc: "Электролит 470 мкФ / 16 В, выход преобразователя", value: 470u }
+  E7a: { desc: "Электролит 10 мкФ, вход LDO", value: 10u }
+  E7b: { desc: "Электролит 10 мкФ, выход LDO", value: 10u }
+  E8a: { desc: "Керамика 0,1 мкФ, шина 12 В", value: 100n }
+  E8b: { desc: "Керамика 0,1 мкФ, выход преобразователя", value: 100n }
+  E8c: { desc: "Керамика 0,1 мкФ, вход LDO", value: 100n }
+  E8d: { desc: "Керамика 0,1 мкФ, выход LDO", value: 100n }
+  E8e: { desc: "Керамика 0,1 мкФ, питание усилителя", value: 100n }
+  F2a: { desc: "Ферритовая бусина, вход LDO", pins: [1, 2] }
+  F2b: { desc: "Ферритовая бусина, выход LDO", pins: [1, 2] }
+  R1a: { desc: "Резистор 1 кОм, эфирная ветвь L", value: 1k }
+  R1b: { desc: "Резистор 1 кОм, эфирная ветвь R", value: 1k }
+  R1c: { desc: "Резистор 1 кОм, последовательно в линию SD", value: 1k }
+  R20: { desc: "Резистор 20 кОм, делитель GAIN (заменяет заводской)", value: 20k }
+  R100: { desc: "Резистор 100 кОм, делитель GAIN (заменяет заводской)", value: 100k }
+  G1a: { desc: "Энкодер EC11 №1 (частота/меню)", pins: [A, B, C, SW1, SW2] }
+  G1b: { desc: "Энкодер EC11 №2 (громкость)", pins: [A, B, C, SW1, SW2] }
+  G3a: { desc: "Кнопка MENU", pins: [1, 2] }
+  G3b: { desc: "Кнопка MEM", pins: [1, 2] }
+  G3c: { desc: "Кнопка PREV", pins: [1, 2] }
+  G3d: { desc: "Кнопка NEXT", pins: [1, 2] }
+  G3e: { desc: "Кнопка SEEK", pins: [1, 2] }
+  G5:  { desc: "Кнопка питания, без фиксации", pins: [1, 2] }
+  G6:  { desc: "Тумблер MTS-202, задействована одна группа", pins: [COM, NO] }
+
+# Выводы Pi указаны номером контакта колодки: A1.7 = контакт 7 = GPIO4.
+nets:
+
+  IN12:      [D2.CENTER, D3.1]
+  IN12_SW:   [D3.2, D4.1]
+  IN12_FUSED: [D4.2, D7.D]
+
+  GATE:      [D7.G, E2a.1, D8.A]
+
+  "+12V":
+    [D7.S, D8.K, D9.K, E5.P, E8a.1, D6.IN_P, C2.VCC, E4.P, E8e.1]
+
+  "+5V":
+    [D6.OUT_P, E6.P, E8b.1, A1.PWR_USB, A3.VIN_5V, C1.VCC, D11.1]
+
+  "+5V_LDO": [D11.2, F2a.1]
+  LDO_IN:    [F2a.2, D10.VIN, E7a.P, E8c.1]
+  LDO_OUT:   [D10.VOUT, F2b.1, E7b.P, E8d.1]
+  "+3V3":    [F2b.2, B1.VCC]
+
+  I2C_SDA:   [A1.3, B1.SDIO]
+  I2C_SCL:   [A1.5, B1.SCLK]
+
+  I2S_BCK:   [A1.12, C1.BCK]
+  I2S_LRCK:  [A1.35, C1.LCK]
+  I2S_DIN:   [A1.40, C1.DIN]
+
+  ANT:       [B1.ANT, B2.ANT]
+
+  TUNER_L:   [B1.LOUT, R1a.1]
+  TUNER_R:   [B1.ROUT, R1b.1]
+  DAC_L:     [C1.LOUT, E1a.1]
+  DAC_R:     [C1.ROUT, E1b.1]
+
+  SUM:       [R1a.2, R1b.2, E1a.2, E1b.2, E2b.1, C4.1]
+  AMP_IN:    [C4.W, E3.1]
+  AMP_IN_AC: [E3.2, C2.IN]
+
+  AMP_SD:    [A1.23, R1c.1]
+  AMP_SD_PIN: [R1c.2, C2.SD, E2c.1]
+  AMP_GAIN:  [C2.GAIN, R20.1, R100.1]
+  AMP_GVDD:  [R100.2, C2.GVDD]
+
+  SPK_P:     [C2.OUTP, C3.P]
+  SPK_N:     [C2.OUTN, C3.N]
+
+  BTN_MENU:  [A1.7,  G3a.1]
+  BTN_MEM:   [A1.13, G3b.1]
+  BTN_PREV:  [A1.15, G3c.1]
+  BTN_NEXT:  [A1.16, G3d.1]
+  BTN_SEEK:  [A1.18, G3e.1]
+  BTN_PWR:   [A1.11, G5.1]
+  ENC1_A:    [A1.29, G1a.A]
+  ENC1_B:    [A1.31, G1a.B]
+  ENC1_SW:   [A1.22, G1a.SW1]
+  ENC2_A:    [A1.26, G1b.A]
+  ENC2_B:    [A1.24, G1b.B]
+  ENC2_SW:   [A1.32, G1b.SW1]
+  MODE_SW:   [A1.21, G6.NO]
+
+  GND:
+    [D2.SHELL, D6.IN_N, D6.OUT_N, D10.GND, C2.GND, C1.GND, B1.GND,
+     A1.6, A1.9, A1.14, A1.20, A1.25, A1.30, A1.34, A1.39,
+     A3.GND_5V, C4.3, R20.2,
+     E2a.2, E2b.2, E2c.2,
+     E4.N, E5.N, E6.N, E7a.N, E7b.N,
+     E8a.2, E8b.2, E8c.2, E8d.2, E8e.2,
+     D9.A, C1.SCK, C1.FLT, C1.DEMP, C1.FMT, C2.IN_UNUSED,
+     G3a.2, G3b.2, G3c.2, G3d.2, G3e.2, G5.2,
+     G1a.C, G1a.SW2, G1b.C, G1b.SW2, G6.COM]
+
+# Не цепи, а настройка модулей — генератору схемы не нужны, монтажнику нужны.
+module_config:
+  C1:
+    XSMT: "на 3,3 В платы C1 (не на землю)"
+    note: "SCK/FLT/DEMP/FMT на землю — уже отражено в цепи GND"
+  C2:
+    gain: "26 дБ: R20 на землю, R100 на GVDD; заводской делитель выпаять"
+    unused_channel: "выходы второго канала никуда не подключать"
+  A3:
+    dsi: "шлейф FFC в разъём DSI платы A1, отдельная цепь не описывается"
+
+# Что намеренно не подключено на этом этапе.
+not_connected:
+  - "A1.37 (GPIO26) — сигнал gpio-poweroff, фиксирующий ключ ещё не разведён"
+  - "G6 вторая группа тумблера — резерв"
+  - "C2 второй канал — резерв под стерео"
