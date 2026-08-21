@@ -38,6 +38,7 @@
 | [15-wiring-breadboard.md](docs/15-wiring-breadboard.md) | **Схема соединений для макета**: узел за узлом, что паяем и что на макетке, порядок первого включения |
 | [16-connection-list.md](docs/16-connection-list.md) | **Перечень соединений «откуда → куда»** — 98 строк для монтажа по списку или расстановки в Fritzing |
 | [17-audit-response-wiring.md](docs/17-audit-response-wiring.md) | Ответ на три внешних разбора схемы: критическая правка по MOSFET, `keycode`, дозаказ мелочи |
+| [18-similar-projects.md](docs/18-similar-projects.md) | Разбор двух похожих гибридных приёмников: что забрали, что отклонили |
 
 ## Принятые решения (2026-08-17)
 
