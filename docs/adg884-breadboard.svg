@@ -1,194 +1,132 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 760" width="1180" height="760" font-family="DejaVu Sans, Arial, sans-serif">
-  <rect width="1180" height="760" fill="#ffffff"/>
-
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 640" width="980" height="640" font-family="DejaVu Sans, Arial, sans-serif">
+  <rect width="980" height="640" fill="#ffffff"/>
   <style>
     .w  { stroke:#1a1a1a; stroke-width:2; fill:none; }
     .c  { stroke:#8b1a1a; stroke-width:3; fill:none; }
     .box{ stroke:#8b1a1a; stroke-width:2.5; fill:#fdf8e3; }
     .t  { font-size:15px; fill:#1a1a1a; }
-    .ts { font-size:13px; fill:#444; }
-    .tp { font-size:13px; fill:#8b1a1a; }
-    .tt { font-size:20px; font-weight:bold; fill:#1a1a1a; }
-    .th { font-size:14px; font-weight:bold; fill:#1a1a1a; }
+    .tp { font-size:14px; fill:#8b1a1a; }
+    .tt { font-size:19px; font-weight:bold; fill:#1a1a1a; }
+    .pad{ stroke:#1a7a1a; stroke-width:2.5; fill:#eaf7ea; }
     .dot{ fill:#1a7a1a; }
   </style>
 
-  <text class="tt" x="30" y="34">Аналоговый ключ ADG884 на макетной плате — узел выбора источника</text>
-  <text class="ts" x="30" y="56">Питание ключа 3,3 В. Смещение 1,65 В. Запас по размаху ±1,4 В — наши сигналы после подстроечников укладываются с запасом.</text>
+  <text class="tt" x="26" y="34">Узел на ADG884 — отдельная плата, внешних соединений пока нет</text>
 
-  <!-- ================= источник 1: тюнер ================= -->
-  <text class="th" x="30" y="120">ЭФИР (RDA5807)</text>
-  <text class="t"  x="30" y="150">LOUT</text>
-  <text class="t"  x="30" y="196">ROUT</text>
+  <!-- микросхема -->
+  <rect class="box" x="420" y="150" width="200" height="250"/>
+  <text class="tt" x="450" y="192">ADG884</text>
+  <text class="tp" x="426" y="238">2  S1A</text>
+  <text class="tp" x="426" y="300">5  S1B</text>
+  <text class="tp" x="426" y="352">4  IN1</text>
+  <text class="tp" x="426" y="374">8  IN2</text>
+  <text class="tp" x="566" y="238">D1  3</text>
+  <text class="tp" x="558" y="272">VDD  1</text>
+  <text class="tp" x="558" y="330">GND  6</text>
+  <text class="tp" x="440" y="424">7, 9, 10 — не подключать</text>
 
-  <line class="w" x1="85"  y1="145" x2="140" y2="145"/>
-  <line class="w" x1="85"  y1="191" x2="140" y2="191"/>
-  <rect class="c" x="140" y="135" width="46" height="20"/>
-  <rect class="c" x="140" y="181" width="46" height="20"/>
-  <text class="tp" x="140" y="128">R1 10к</text>
-  <text class="tp" x="140" y="212">R2 10к</text>
-  <line class="w" x1="186" y1="145" x2="240" y2="145"/>
-  <line class="w" x1="186" y1="191" x2="240" y2="191"/>
-  <line class="w" x1="240" y1="145" x2="240" y2="191"/>
-  <circle class="dot" cx="240" cy="168" r="4"/>
-  <line class="w" x1="240" y1="168" x2="290" y2="168"/>
+  <!-- вход A -->
+  <rect class="pad" x="26" y="218" width="86" height="26"/>
+  <text class="t" x="36" y="237">X1 вход A</text>
+  <line class="w" x1="112" y1="231" x2="176" y2="231"/>
+  <line class="c" x1="176" y1="215" x2="176" y2="247"/>
+  <line class="c" x1="188" y1="215" x2="188" y2="247"/>
+  <text class="tp" x="156" y="206">C1 2,2 мк</text>
+  <line class="w" x1="188" y1="231" x2="420" y2="231"/>
+  <circle class="dot" cx="300" cy="231" r="4"/>
 
-  <!-- подстроечник 1 -->
-  <rect class="c" x="290" y="140" width="24" height="56"/>
-  <line class="w" x1="314" y1="168" x2="336" y2="168"/>
-  <polygon points="336,162 336,174 326,168" fill="#8b1a1a"/>
-  <text class="tp" x="272" y="222">RV1 10к</text>
-  <line class="w" x1="302" y1="196" x2="302" y2="232"/>
-  <line class="w" x1="272" y1="232" x2="332" y2="232"/>
-  <line class="w" x1="288" y1="240" x2="316" y2="240"/>
-  <line class="w" x1="294" y1="247" x2="310" y2="247"/>
+  <!-- вход B -->
+  <rect class="pad" x="26" y="280" width="86" height="26"/>
+  <text class="t" x="36" y="299">X2 вход B</text>
+  <line class="w" x1="112" y1="293" x2="176" y2="293"/>
+  <line class="c" x1="176" y1="277" x2="176" y2="309"/>
+  <line class="c" x1="188" y1="277" x2="188" y2="309"/>
+  <text class="tp" x="156" y="330">C2 2,2 мк</text>
+  <line class="w" x1="188" y1="293" x2="420" y2="293"/>
+  <circle class="dot" cx="240" cy="293" r="4"/>
 
-  <!-- разделительный конденсатор 1 -->
-  <line class="w" x1="336" y1="168" x2="392" y2="168"/>
-  <line class="c" x1="392" y1="152" x2="392" y2="184"/>
-  <line class="c" x1="404" y1="152" x2="404" y2="184"/>
-  <text class="tp" x="368" y="144">C1 2,2 мк</text>
-  <line class="w" x1="404" y1="168" x2="480" y2="168"/>
-  <circle class="dot" cx="452" cy="168" r="4"/>
+  <!-- R1 к смещению -->
+  <line class="w" x1="300" y1="231" x2="300" y2="452"/>
+  <rect class="c" x="290" y="360" width="20" height="46"/>
+  <text class="tp" x="314" y="388">R1 100к</text>
 
-  <!-- ================= источник 2: ЦАП ================= -->
-  <text class="th" x="30" y="360">ИНТЕРНЕТ (PCM5102A)</text>
-  <text class="t"  x="30" y="390">L OUT</text>
-  <text class="t"  x="30" y="436">R OUT</text>
+  <!-- R2 к смещению -->
+  <line class="w" x1="240" y1="293" x2="240" y2="452"/>
+  <rect class="c" x="230" y="360" width="20" height="46"/>
+  <text class="tp" x="150" y="388">R2 100к</text>
 
-  <line class="w" x1="95"  y1="385" x2="140" y2="385"/>
-  <line class="w" x1="95"  y1="431" x2="140" y2="431"/>
-  <rect class="c" x="140" y="375" width="46" height="20"/>
-  <rect class="c" x="140" y="421" width="46" height="20"/>
-  <text class="tp" x="140" y="368">R3 10к</text>
-  <text class="tp" x="140" y="452">R4 10к</text>
-  <line class="w" x1="186" y1="385" x2="240" y2="385"/>
-  <line class="w" x1="186" y1="431" x2="240" y2="431"/>
-  <line class="w" x1="240" y1="385" x2="240" y2="431"/>
-  <circle class="dot" cx="240" cy="408" r="4"/>
-  <line class="w" x1="240" y1="408" x2="290" y2="408"/>
+  <!-- шина смещения -->
+  <line class="w" x1="150" y1="452" x2="300" y2="452"/>
+  <circle class="dot" cx="240" cy="452" r="4"/>
+  <circle class="dot" cx="300" cy="452" r="4"/>
+  <text class="t" x="248" y="478">BIAS 1,65 В</text>
 
-  <rect class="c" x="290" y="380" width="24" height="56"/>
-  <line class="w" x1="314" y1="408" x2="336" y2="408"/>
-  <polygon points="336,402 336,414 326,408" fill="#8b1a1a"/>
-  <text class="tp" x="272" y="462">RV2 10к</text>
-  <line class="w" x1="302" y1="436" x2="302" y2="472"/>
-  <line class="w" x1="272" y1="472" x2="332" y2="472"/>
-  <line class="w" x1="288" y1="480" x2="316" y2="480"/>
-  <line class="w" x1="294" y1="487" x2="310" y2="487"/>
+  <!-- делитель смещения -->
+  <line class="w" x1="150" y1="452" x2="150" y2="392"/>
+  <rect class="c" x="140" y="346" width="20" height="46"/>
+  <text class="tp" x="60" y="374">R3 10к</text>
+  <line class="w" x1="150" y1="346" x2="150" y2="300"/>
+  <line class="w" x1="150" y1="300" x2="66" y2="300"/>
+  <line class="w" x1="66" y1="300" x2="66" y2="360"/>
 
-  <line class="w" x1="336" y1="408" x2="392" y2="408"/>
-  <line class="c" x1="392" y1="392" x2="392" y2="424"/>
-  <line class="c" x1="404" y1="392" x2="404" y2="424"/>
-  <text class="tp" x="368" y="384">C2 2,2 мк</text>
-  <line class="w" x1="404" y1="408" x2="480" y2="408"/>
-  <circle class="dot" cx="452" cy="408" r="4"/>
+  <line class="w" x1="150" y1="452" x2="150" y2="500"/>
+  <rect class="c" x="140" y="500" width="20" height="46"/>
+  <text class="tp" x="60" y="528">R4 10к</text>
+  <line class="w" x1="150" y1="546" x2="150" y2="576"/>
+  <line class="w" x1="120" y1="576" x2="180" y2="576"/>
+  <line class="w" x1="132" y1="584" x2="168" y2="584"/>
+  <line class="w" x1="142" y1="592" x2="158" y2="592"/>
+  <circle class="dot" cx="150" cy="452" r="4"/>
 
-  <!-- ================= узел смещения ================= -->
-  <text class="th" x="404" y="600">УЗЕЛ СМЕЩЕНИЯ 1,65 В</text>
-  <line class="w" x1="452" y1="168" x2="452" y2="250"/>
-  <rect class="c" x="442" y="250" width="20" height="46"/>
-  <text class="tp" x="466" y="278">R5 100к</text>
-  <line class="w" x1="452" y1="296" x2="452" y2="540"/>
+  <!-- C3 по смещению -->
+  <line class="w" x1="300" y1="452" x2="360" y2="452"/>
+  <line class="c" x1="344" y1="490" x2="376" y2="490"/>
+  <line class="c" x1="344" y1="502" x2="376" y2="502"/>
+  <line class="w" x1="360" y1="452" x2="360" y2="490"/>
+  <text class="tp" x="384" y="502">C3 10 мк</text>
+  <line class="w" x1="360" y1="502" x2="360" y2="540"/>
+  <line class="w" x1="330" y1="540" x2="390" y2="540"/>
+  <line class="w" x1="342" y1="548" x2="378" y2="548"/>
+  <line class="w" x1="352" y1="556" x2="368" y2="556"/>
 
-  <line class="w" x1="452" y1="408" x2="536" y2="408"/>
-  <line class="w" x1="536" y1="408" x2="536" y2="330"/>
+  <!-- выход -->
+  <line class="w" x1="620" y1="231" x2="700" y2="231"/>
+  <line class="c" x1="700" y1="215" x2="700" y2="247"/>
+  <line class="c" x1="712" y1="215" x2="712" y2="247"/>
+  <text class="tp" x="678" y="206">C4 3,3 мк</text>
+  <line class="w" x1="712" y1="231" x2="800" y2="231"/>
+  <rect class="pad" x="800" y="218" width="96" height="26"/>
+  <text class="t" x="810" y="237">X3 выход</text>
 
-  <line class="w" x1="452" y1="408" x2="452" y2="408"/>
-  <rect class="c" x="502" y="440" width="20" height="46"/>
-  <text class="tp" x="526" y="468">R6 100к</text>
-  <line class="w" x1="512" y1="408" x2="512" y2="440"/>
-  <circle class="dot" cx="512" cy="408" r="4"/>
-  <line class="w" x1="512" y1="486" x2="512" y2="540"/>
-  <line class="w" x1="452" y1="540" x2="512" y2="540"/>
-  <circle class="dot" cx="452" cy="540" r="4"/>
-
-  <!-- делитель 3,3 В -->
-  <line class="w" x1="452" y1="540" x2="360" y2="540"/>
-  <line class="w" x1="360" y1="540" x2="360" y2="628"/>
-  <rect class="c" x="350" y="628" width="20" height="46"/>
-  <text class="tp" x="300" y="656">R8 10к</text>
-  <line class="w" x1="360" y1="674" x2="360" y2="706"/>
-  <line class="w" x1="330" y1="706" x2="390" y2="706"/>
-  <line class="w" x1="342" y1="714" x2="378" y2="714"/>
-  <line class="w" x1="352" y1="722" x2="368" y2="722"/>
-
-  <line class="w" x1="360" y1="540" x2="360" y2="470"/>
-  <rect class="c" x="350" y="510" width="20" height="46"/>
-  <text class="tp" x="300" y="538">R7 10к</text>
-  <line class="w" x1="360" y1="510" x2="360" y2="470"/>
-  <text class="t"  x="330" y="462">+3,3 В</text>
-  <circle class="dot" cx="360" cy="540" r="4"/>
-
-  <!-- конденсатор узла смещения -->
-  <line class="w" x1="452" y1="540" x2="452" y2="596"/>
-  <line class="c" x1="436" y1="596" x2="468" y2="596"/>
-  <line class="c" x1="436" y1="608" x2="468" y2="608"/>
-  <text class="tp" x="474" y="612">C4 10 мк</text>
-  <line class="w" x1="452" y1="608" x2="452" y2="640"/>
-  <line class="w" x1="422" y1="640" x2="482" y2="640"/>
-  <line class="w" x1="434" y1="648" x2="470" y2="648"/>
-  <line class="w" x1="444" y1="656" x2="460" y2="656"/>
-
-  <!-- ================= микросхема ================= -->
-  <rect class="box" x="600" y="150" width="200" height="270"/>
-  <text class="th" x="612" y="180">ADG884</text>
-  <text class="ts" x="612" y="200">на переходнике</text>
-  <text class="ts" x="612" y="216">MSOP-10 → DIP</text>
-
-  <text class="tp" x="606" y="262">2  S1A</text>
-  <text class="tp" x="606" y="336">5  S1B</text>
-  <text class="tp" x="606" y="392">4  IN1</text>
-  <text class="tp" x="606" y="412">8  IN2</text>
-  <text class="tp" x="742" y="262">D1  3</text>
-  <text class="tp" x="736" y="300">VDD  1</text>
-  <text class="tp" x="736" y="392">GND  6</text>
-
-  <line class="w" x1="480" y1="168" x2="600" y2="168"/>
-  <line class="w" x1="600" y1="168" x2="600" y2="256"/>
-  <line class="w" x1="536" y1="330" x2="600" y2="330"/>
-
-  <line class="w" x1="800" y1="256" x2="860" y2="256"/>
-  <line class="c" x1="860" y1="240" x2="860" y2="272"/>
-  <line class="c" x1="872" y1="240" x2="872" y2="272"/>
-  <text class="tp" x="838" y="232">C5 3,3 мк</text>
-  <line class="w" x1="872" y1="256" x2="960" y2="256"/>
-  <text class="th" x="964" y="250">на вход</text>
-  <text class="th" x="964" y="268">усилителя</text>
-  <text class="ts" x="964" y="288">(это наш E3)</text>
-
-  <!-- питание микросхемы -->
-  <line class="w" x1="800" y1="296" x2="880" y2="296"/>
-  <line class="w" x1="880" y1="296" x2="880" y2="330"/>
-  <line class="c" x1="864" y1="330" x2="896" y2="330"/>
-  <line class="c" x1="864" y1="342" x2="896" y2="342"/>
-  <text class="tp" x="902" y="346">C6 0,1 мк</text>
-  <line class="w" x1="880" y1="342" x2="880" y2="376"/>
-  <line class="w" x1="850" y1="376" x2="910" y2="376"/>
-  <line class="w" x1="862" y1="384" x2="898" y2="384"/>
-  <line class="w" x1="872" y1="392" x2="888" y2="392"/>
-  <line class="w" x1="880" y1="296" x2="880" y2="270"/>
-  <text class="t"  x="900" y="292">+3,3 В</text>
-  <circle class="dot" cx="880" cy="296" r="4"/>
+  <!-- питание -->
+  <line class="w" x1="620" y1="266" x2="740" y2="266"/>
+  <rect class="pad" x="800" y="253" width="96" height="26"/>
+  <text class="t" x="808" y="272">X5 +3,3 В</text>
+  <line class="w" x1="740" y1="266" x2="800" y2="266"/>
+  <circle class="dot" cx="740" cy="266" r="4"/>
+  <line class="w" x1="740" y1="266" x2="740" y2="310"/>
+  <line class="c" x1="724" y1="310" x2="756" y2="310"/>
+  <line class="c" x1="724" y1="322" x2="756" y2="322"/>
+  <text class="tp" x="764" y="322">C5 0,1 мк</text>
+  <line class="w" x1="740" y1="322" x2="740" y2="356"/>
+  <line class="w" x1="710" y1="356" x2="770" y2="356"/>
+  <line class="w" x1="722" y1="364" x2="758" y2="364"/>
+  <line class="w" x1="732" y1="372" x2="748" y2="372"/>
 
   <!-- земля микросхемы -->
-  <line class="w" x1="800" y1="386" x2="830" y2="386"/>
-  <line class="w" x1="830" y1="386" x2="830" y2="430"/>
-  <line class="w" x1="800" y1="430" x2="860" y2="430"/>
-  <line class="w" x1="812" y1="438" x2="848" y2="438"/>
-  <line class="w" x1="822" y1="446" x2="838" y2="446"/>
+  <line class="w" x1="620" y1="324" x2="660" y2="324"/>
+  <line class="w" x1="660" y1="324" x2="660" y2="420"/>
+  <line class="w" x1="660" y1="420" x2="800" y2="420"/>
+  <rect class="pad" x="800" y="407" width="96" height="26"/>
+  <text class="t" x="822" y="426">X6 GND</text>
 
   <!-- управление -->
-  <line class="w" x1="600" y1="386" x2="540" y2="386"/>
-  <line class="w" x1="600" y1="406" x2="570" y2="406"/>
-  <line class="w" x1="570" y1="406" x2="570" y2="386"/>
-  <circle class="dot" cx="570" cy="386" r="4"/>
-  <line class="w" x1="540" y1="386" x2="540" y2="690"/>
-  <text class="th" x="546" y="690">GPIO11 → выбор режима</text>
-  <text class="ts" x="546" y="710">IN1 и IN2 соединены вместе — одна линия управления</text>
-
-  <!-- неиспользуемая секция -->
-  <text class="ts" x="612" y="452">Вторая секция не используется:</text>
-  <text class="ts" x="612" y="470">выводы 7 (S2B), 10 (S2A) и 9 (D2)</text>
-  <text class="ts" x="612" y="488">оставить неподключёнными</text>
+  <line class="w" x1="420" y1="346" x2="330" y2="346"/>
+  <line class="w" x1="420" y1="368" x2="366" y2="368"/>
+  <line class="w" x1="366" y1="368" x2="366" y2="346"/>
+  <circle class="dot" cx="366" cy="346" r="4"/>
+  <line class="w" x1="330" y1="346" x2="330" y2="612"/>
+  <line class="w" x1="330" y1="612" x2="700" y2="612"/>
+  <rect class="pad" x="700" y="599" width="126" height="26"/>
+  <text class="t" x="710" y="618">X4 управление</text>
 </svg>
