@@ -39,6 +39,7 @@
 | [16-connection-list.md](docs/16-connection-list.md) | **Перечень соединений «откуда → куда»** — 98 строк для монтажа по списку или расстановки в Fritzing |
 | [17-audit-response-wiring.md](docs/17-audit-response-wiring.md) | Ответ на три внешних разбора схемы: критическая правка по MOSFET, `keycode`, дозаказ мелочи |
 | [18-similar-projects.md](docs/18-similar-projects.md) | Разбор двух похожих гибридных приёмников: что забрали, что отклонили |
+| [21-board-search-criteria.md](docs/21-board-search-criteria.md) | **Задание на поиск плат ESP32 с экраном**: отсекающие требования и балльная оценка |
 | [20-adg884-pinout.md](docs/20-adg884-pinout.md) | Ключ ADG884: соединения на макетке, вывод за выводом |
 | [19-future-features.md](docs/19-future-features.md) | **Развитие после макета**: часы DS3231 и расписание, стерео, RTL-SDR, младшая ревизия на ESP32-S3 |
 
