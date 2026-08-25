@@ -107,7 +107,9 @@ API умеет сразу отдать готовый плейлист.
 
 Никакого каталога: в устройстве лежит текстовый файл со станциями, которые
 ты сам выбрал. Именно так сделано в большинстве прошивок ESP32-радио
-(например, `stations.csv` в ESP32-MiniWebRadio).
+(например, `/stations.json` в ESP32-MiniWebRadio; в README того же проекта
+всё ещё написано `stations.csv` — README отстал от кода, см.
+[24](24-main-build-p4.md), §2).
 
 Плюсы: ноль внешних зависимостей, работает вечно, полностью под контролем.
 Минусы: нет обнаружения новых станций; когда вещатель меняет URL — чинишь руками.
@@ -206,7 +208,8 @@ vTuner (старые модели) или Airable (новые).
 - API Radio Browser: https://api.radio-browser.info/ и https://docs.radio-browser.info/
   (прочитано 2026-08-17)
 - Живые ответы API — запросы из этого документа, выполнены 2026-08-17
-- ESP32-MiniWebRadio (пример реализации с интеграцией Radio Browser и `stations.csv`):
+- ESP32-MiniWebRadio (пример реализации с интеграцией Radio Browser и
+  списком станций в `/stations.json`):
   https://github.com/schreibfaul1/ESP32-MiniWebRadio (прочитано 2026-08-17)
 - Edzelf/ESP32-Radio (классическая прошивка ESP32-радио):
   https://github.com/Edzelf/ESP32-Radio
