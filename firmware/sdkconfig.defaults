@@ -1,0 +1,14 @@
+# Значения по умолчанию для IP-Radio.
+#
+# Здесь ТОЛЬКО то, в чём я уверена. Остальное — в README.md рядом,
+# в списке «выставить через menuconfig и проверить»: выдумывать имена
+# символов Kconfig, которых может не существовать, значит сломать сборку.
+
+CONFIG_IDF_TARGET="esp32p4"
+
+# Флеш на плате 32 МБ (GD25Q256EYIGR, подтверждено схемой).
+CONFIG_ESPTOOLPY_FLASHSIZE_32MB=y
+
+# Своя таблица разделов, состав — partitions.csv.
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
