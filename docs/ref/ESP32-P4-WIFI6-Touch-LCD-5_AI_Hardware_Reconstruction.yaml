@@ -1,0 +1,1017 @@
+# =============================================================================
+# AI-READABLE HARDWARE DATABASE
+# =============================================================================
+# Board: ESP32-P4-WIFI6-Touch-LCD-5
+# Reconstruction basis:
+#   - user-provided schematic PDF
+#   - official Waveshare board documentation
+#   - official Waveshare repository / hardware resources
+#
+# Evidence model:
+#   confirmed: explicitly visible in schematic or official board documentation
+#   inferred: reconstructed from net names / topology; verify before PCB modification
+#   unknown: not recoverable reliably from the supplied schematic text extraction
+#
+# IMPORTANT:
+# This file is intentionally conservative. It does not invent missing pin mappings.
+# "NC" means explicitly marked not connected / optional in the schematic.
+# =============================================================================
+
+schema_version: "1.0"
+document:
+  title: "ESP32-P4-WIFI6-Touch-LCD-5 — AI-readable hardware reconstruction"
+  board_name: "ESP32-P4-WIFI6-Touch-LCD-5"
+  vendor: "Waveshare"
+  reconstruction_scope: "Maximum-detail structured reconstruction from supplied schematic and official board documentation"
+  source_files:
+    - "ESP32-P4-WIFI6-Touch-LCD-5-Schematic.pdf"
+  evidence_policy:
+    confirmed: "Directly supported by schematic text or official board documentation"
+    inferred: "Topology/net-name reconstruction; not guaranteed"
+    unknown: "Insufficient evidence"
+  notes:
+    - "Do not treat inferred mappings as production-safe without checking the original schematic artwork."
+    - "GPIO matrix below distinguishes dedicated/internal use from merely exposed pins."
+    - "The supplied PDF has two schematic pages; parsed text loses some wire geometry."
+
+board:
+  form_factor:
+    display_size_inch: 5
+    display_resolution: "720x1280"
+    touch_points: 5
+  headline_features:
+    - "ESP32-P4NRW32 main SoC"
+    - "ESP32-C6-MINI-1-N4 wireless coprocessor"
+    - "32 MB external NOR flash"
+    - "32 MB in-package PSRAM in ESP32-P4 package"
+    - "MIPI-CSI 2-lane camera interface"
+    - "MIPI-DSI 2-lane display interface"
+    - "Dual onboard microphone array"
+    - "ES8311 audio codec"
+    - "ES7210 audio front end / ADC"
+    - "MicroSD SDIO"
+    - "USB-to-UART Type-C"
+    - "USB OTG Type-C"
+    - "3.7 V lithium battery interface"
+    - "RTC rechargeable battery interface"
+    - "40-pin expansion header"
+
+architecture:
+  root: "ESP32-P4NRW32"
+  functional_blocks:
+    compute:
+      main_soc: U8
+      wireless_coprocessor: U1
+      external_flash: U10
+    display:
+      mipi_dsi:
+        lane_count: 2
+        signals: [DSI_D0_P, DSI_D0_N, DSI_D1_P, DSI_D1_N, DSI_CLK_P, DSI_CLK_N]
+      touch:
+        interface: "I2C + interrupt + reset"
+        signals: [TP_SDA, TP_SCL, TP_INT, TP_RST]
+      backlight:
+        controller: U9
+        output: VLED+
+    camera:
+      interface: "MIPI-CSI 2-lane"
+      signals: [CSI_D0_P, CSI_D0_N, CSI_D1_P, CSI_D1_N, CSI_CLK_P, CSI_CLK_N, CSI_IO0, CSI_IO1]
+    storage:
+      external_nor_flash: U10
+      microsd: SD1
+    audio:
+      codec: U12
+      adc_frontend: U14
+      speaker_amplifier: U15
+      microphones: [MIC1, MIC2]
+    usb:
+      debug_uart: [H1, U6]
+      otg: H2
+    power:
+      battery_charger: U19
+      main_power_converter: U17
+      digital_3v3_converter: U2
+      p4_dcdc: U5
+      interface_1v8_ldo: U13
+      audio_3v3_ldo: U11
+    expansion:
+      gpio_header: J3
+      c6_programming_header: J7
+
+components:
+  U1:
+    type: "ESP32-C6-MINI-1-N4"
+    function: "Wi-Fi 6 / BLE 5 coprocessor module"
+    evidence: confirmed
+    supply: ESP_3V3
+    exposed_module_pins:
+      - IO0
+      - IO1
+      - IO2
+      - IO3
+      - IO4
+      - IO5
+      - IO6
+      - IO7
+      - IO8
+      - IO9
+      - IO12
+      - IO13
+      - IO14
+      - IO15
+      - IO18
+      - IO19
+      - IO20
+      - IO21
+      - IO22
+      - IO23
+      - RXD0
+      - TXD0
+      - EN
+    known_board_nets:
+      enable: C6_CHIP_PU
+      gpio2: C6_IO2
+      gpio8: C6_IO8
+      gpio9: C6_IO9
+      gpio12: C6_IO12
+      gpio13: C6_IO13
+      uart_rx: C6_U0RXD
+      uart_tx: C6_U0TXD
+    interface_to_main_soc:
+      protocol: "Official documentation states SDIO for ESP32-C6 coprocessor; exact individual SDIO net-to-GPIO mapping is not fully recoverable from parsed text"
+      evidence: confirmed
+    programming:
+      connector: J7
+      signals: [C6_U0RXD, C6_U0TXD, C6_IO9, GND]
+
+  U2:
+    type: "MP1658GTF-Z"
+    function: "3.3 V switching regulator"
+    evidence: confirmed
+    input: VCC_5V
+    output: ESP_3V3
+    key_components:
+      L1: "4.7 uH, 2.8 A"
+      C7: "22 uF"
+      R17: "40.2 kOhm, 1%"
+      R25: "13 kOhm, 1%"
+    notes:
+      - "Output net is explicitly ESP_3V3."
+
+  U5:
+    type: "MP1605GTF-Z"
+    function: "ESP32-P4 associated 1.2 V DCDC / internal power support"
+    evidence: confirmed
+    pins:
+      FB: FB_DCDC
+      EN: EN_DCDC
+      VIN: "not fully recoverable from parsed topology"
+      VOUT: "1.2V"
+    notes:
+      - "Exact surrounding power routing should be checked visually."
+
+  U6:
+    type: "CH343P"
+    function: "USB-to-UART bridge"
+    evidence: confirmed
+    usb_nets:
+      plus: USB_DBG_D_P
+      minus: USB_DBG_D_N
+    uart_to_p4:
+      p4_gpio38: "UART data line; TX/RX orientation should be verified from artwork"
+      p4_gpio37: "UART data line; TX/RX orientation should be verified from artwork"
+    control:
+      dtr: DTR
+      rts: RTS
+    power:
+      VDD5: USB0_5V
+      VIO: ESP_3V3
+    reset_boot_interface:
+      transistor_network: U7
+      controlled_nets: [GPIO35, ESP_EN]
+
+  U7:
+    type: "EMH4T2R"
+    function: "DTR/RTS automatic boot-reset transistor network"
+    evidence: confirmed
+    inputs: [DTR, RTS]
+    outputs_or_controlled_nets: [GPIO35, ESP_EN]
+    confidence: "Topology function confirmed; exact transistor polarity not reconstructed"
+
+  U8:
+    type: "ESP32-P4NRW32"
+    function: "Main application processor"
+    evidence: confirmed
+    package:
+      pin_count: 105
+    memory:
+      in_package_psram: "32 MB according to official board documentation"
+      external_nor_flash: U10
+    clocks:
+      main_crystal: Y1
+      optional_or_secondary_crystal_network: Y2
+    reset:
+      chip_enable: CHIP_PU
+      board_net: ESP_EN
+    special_interfaces:
+      qspi_flash:
+        signals: [FLASH_CS, FLASH_Q, FLASH_WP, FLASH_HD, FLASH_CK, FLASH_D]
+      usb:
+        signals: [USBD_P, USBD_N]
+      camera_mipi_csi:
+        signals: [CSI_DATAP0, CSI_DATAN0, CSI_DATAP1, CSI_DATAN1, CSI_CLKP, CSI_CLKN]
+      display_mipi_dsi:
+        signals: [DSI_DATAP0, DSI_DATAN0, DSI_DATAP1, DSI_DATAN1, DSI_CLKP, DSI_CLKN]
+      i2c_board:
+        signals: [ESP_I2C_SCL, ESP_I2C_SDA]
+    power_domains:
+      main_io: ESP_3V3
+      high_performance: ESP_VDD_HP
+      battery_domain: ESP_VBAT
+      internal_ldo_outputs: [ESP_LDO_VO1, ESP_LDO_VO2, ESP_LDO_VO3, ESP_LDO_VO4]
+      flash_domain: VDD_FLASH
+    gpio_pin_map:
+      GPIO0: {physical_pin: 104, known_net: GPIO0}
+      GPIO1: {physical_pin: 1, known_net: GPIO1}
+      GPIO2: {physical_pin: 2, known_net: GPIO2, board_use: "BOOT-related external option via J2/R108", confidence: inferred}
+      GPIO3: {physical_pin: 3, known_net: GPIO3}
+      GPIO4: {physical_pin: 4, known_net: GPIO4}
+      GPIO5: {physical_pin: 5, known_net: GPIO5}
+      GPIO6: {physical_pin: 6, known_net: C6_IO2, board_use: "ESP32-C6 control/data connection", confidence: confirmed}
+      GPIO7: {physical_pin: 7, known_net: GPIO7, board_use: "MicroSD-related / expansion", confidence: inferred}
+      GPIO8: {physical_pin: 8, known_net: GPIO8, board_use: "MicroSD-related / expansion", confidence: inferred}
+      GPIO9: {physical_pin: 10, known_net: GPIO9, board_use: "ESP32-C6-related", confidence: inferred}
+      GPIO10: {physical_pin: 11, known_net: GPIO10, board_use: "ESP32-C6-related", confidence: inferred}
+      GPIO11: {physical_pin: 12, known_net: GPIO11, board_use: "ESP32-C6-related", confidence: inferred}
+      GPIO12: {physical_pin: 13, known_net: GPIO12, board_use: "ESP32-C6-related", confidence: inferred}
+      GPIO13: {physical_pin: 14, known_net: GPIO13, board_use: "ESP32-C6-related", confidence: inferred}
+      GPIO14: {physical_pin: 15, known_net: GPIO14, board_use: "ESP32-C6 interface group", confidence: inferred}
+      GPIO15: {physical_pin: 16, known_net: GPIO15, board_use: "ESP32-C6 interface group", confidence: inferred}
+      GPIO16: {physical_pin: 17, known_net: GPIO16, board_use: "ESP32-C6 interface group", confidence: inferred}
+      GPIO17: {physical_pin: 18, known_net: GPIO17, board_use: "ESP32-C6 interface group", confidence: inferred}
+      GPIO18: {physical_pin: 19, known_net: GPIO18, board_use: "ESP32-C6 interface group", confidence: inferred}
+      GPIO19: {physical_pin: 20, known_net: GPIO19, board_use: "ESP32-C6 interface group", confidence: inferred}
+      GPIO20: {physical_pin: 22, known_net: BAT_ADC, board_use: "Battery voltage ADC"}
+      GPIO21: {physical_pin: 23, known_net: GPIO21, exposed_on: J3}
+      GPIO22: {physical_pin: 24, known_net: GPIO22, exposed_on: J3}
+      GPIO23: {physical_pin: 25, known_net: GPIO23}
+      GPIO24: {physical_pin: 52, known_net: USB1P1_P, board_use: "USB OTG differential pair", exposed_on: J3}
+      GPIO25: {physical_pin: 53, known_net: USB1P1_N, board_use: "USB OTG differential pair", exposed_on: J3}
+      GPIO26: {physical_pin: 55, known_net: GPIO26, board_use: "Display/control area; exact role not recovered", confidence: inferred}
+      GPIO27: {physical_pin: 56, known_net: GPIO27, board_use: "Display/control area; exact role not recovered", confidence: inferred}
+      GPIO28: {physical_pin: 57, known_net: GPIO28, exposed_on: J3}
+      GPIO29: {physical_pin: 58, known_net: GPIO29, exposed_on: J3}
+      GPIO30: {physical_pin: 60, known_net: GPIO30, exposed_on: J3}
+      GPIO31: {physical_pin: 61, known_net: GPIO31, exposed_on: J3}
+      GPIO32: {physical_pin: 63, known_net: GPIO32, exposed_on: J3}
+      GPIO33: {physical_pin: 64, known_net: GPIO33, board_use: "Display/control area; exact role not recovered", confidence: inferred}
+      GPIO34: {physical_pin: 65, known_net: GPIO34, exposed_on: J3}
+      GPIO35: {physical_pin: 66, known_net: GPIO35, board_use: "Auto boot/reset network", exposed_on: J3}
+      GPIO36: {physical_pin: 68, known_net: GPIO36}
+      GPIO37: {physical_pin: 69, known_net: GPIO37, board_use: "CH343P debug UART", exposed_on: J3}
+      GPIO38: {physical_pin: 70, known_net: GPIO38, board_use: "CH343P debug UART", exposed_on: J3}
+      GPIO39: {physical_pin: 80, known_net: GPIO39, board_use: "MicroSD", confidence: confirmed}
+      GPIO40: {physical_pin: 81, known_net: GPIO40, board_use: "MicroSD", confidence: confirmed}
+      GPIO41: {physical_pin: 82, known_net: GPIO41, board_use: "MicroSD", confidence: confirmed}
+      GPIO42: {physical_pin: 83, known_net: GPIO42, board_use: "MicroSD", confidence: confirmed}
+      GPIO43: {physical_pin: 84, known_net: GPIO43, board_use: "MicroSD", confidence: confirmed}
+      GPIO44: {physical_pin: 86, known_net: GPIO44, board_use: "MicroSD", confidence: confirmed}
+      GPIO45: {physical_pin: 87, known_net: GPIO45, board_use: "MicroSD power/control", confidence: inferred}
+      GPIO46: {physical_pin: 88, known_net: GPIO46, exposed_on: J3}
+      GPIO47: {physical_pin: 89, known_net: GPIO47, exposed_on: J3}
+      GPIO48: {physical_pin: 90, known_net: GPIO48, exposed_on: J3}
+      GPIO49: {physical_pin: 92, known_net: GPIO49, exposed_on: J3}
+      GPIO50: {physical_pin: 93, known_net: GPIO50, exposed_on: J3}
+      GPIO51: {physical_pin: 94, known_net: GPIO51, exposed_on: J3}
+      GPIO52: {physical_pin: 95, known_net: GPIO52, exposed_on: J3}
+      GPIO53: {physical_pin: 97, known_net: GPIO53, board_use: "Audio/control path via R100", confidence: inferred}
+      GPIO54: {physical_pin: 98, known_net: GPIO54, board_use: "ESP32-C6 enable/control through 0R links", confidence: confirmed}
+
+  U9:
+    type: "AP3032KTR-G1"
+    function: "LCD LED backlight boost driver"
+    evidence: confirmed
+    output: VLED+
+    return: VLED_GND
+    control: [BL_EN, LCD_BL_PWM]
+    key_components:
+      L3: "10 uH, 0.72 A"
+      D3: B5819W
+      R61: "3.3 kOhm"
+      R62: "5.1 Ohm"
+      R57: "100 kOhm"
+    display_led_string:
+      count_series: 6
+      nominal_voltage: "19.8 V"
+      max_current: "270 mA"
+
+  U10:
+    type: "GD25Q256EYIGR"
+    function: "External 256 Mbit / 32 MB NOR flash"
+    evidence: confirmed
+    supply: VDD_FLASH
+    interface: "QSPI"
+    signals:
+      cs: FLASH_CS
+      io1_so: FLASH_Q
+      io2_wp: FLASH_WP
+      io3_hold_reset: FLASH_HD
+      sclk: FLASH_CK
+      io0_si: FLASH_D
+    decoupling:
+      C70: "100 nF"
+
+  U11:
+    type: "RT9193-33PB"
+    function: "Audio-domain 3.3 V LDO"
+    evidence: confirmed
+    output: A3V3
+
+  U12:
+    type: ES8311
+    function: "Low-power audio codec"
+    evidence: confirmed
+    power:
+      PVDD: A3V3
+      DVDD: A3V3
+      AVDD: A3V3
+      analog_ground: AGND
+    control:
+      clock: CCLK
+      data: CDATA
+      enable: Codec_CE
+    audio_interface:
+      mclk: I2S_MCLK
+      sclk: I2S_SCLK
+      lrck: I2S_LRCK
+      data_out: I2S_ASDOUT
+      data_in: I2S_DSDIN
+    analog:
+      output_positive: OUTP
+      output_negative: OUTN
+      mic_input_positive_or_dmic_data: "MIC1P/DMIC_SDA"
+      mic_input_negative: MIC1N
+
+  U13:
+    type: "RT9193-18GB"
+    function: "1.8 V interface LDO"
+    evidence: confirmed
+    output: VCC_1.8V
+
+  U14:
+    type: ES7210
+    function: "Multi-channel audio ADC/front end"
+    evidence: confirmed
+    i2c:
+      sda: CDATA
+      scl: CCLK
+      address: "0x40"
+    i2s:
+      mclk: I2S_MCLK
+      sclk: I2S_SCLK
+      lrck: I2S_LRCK
+      data_out: I2S_ASDOUT
+    microphone_inputs:
+      ch1: [MIC1P, MIC1N]
+      ch2: [MIC2P, MIC2N]
+      ch3: [MIC3P, MIC3N]
+      ch4: [MIC4P, MIC4N]
+    power:
+      digital: A3V3
+      analog: A3V3
+      analog_ground: AGND
+    address_configuration:
+      A0: "configured by resistor options"
+      A1: "configured by resistor options"
+
+  U15:
+    type: NS4150B
+    function: "Speaker power amplifier"
+    evidence: confirmed
+    input: [PA_INL_PLUS, PA_INL_MINUS]
+    output: [PA_OUTL_PLUS, PA_OUTL_MINUS]
+    supply: "board 5 V/audio power path; exact net not unambiguously recovered"
+
+  U17:
+    type: SCT12A0DHKR
+    function: "Main high-current switching converter"
+    evidence: confirmed
+    power_inductor: "L8 2.2 uH, 8 A"
+    related_nets: [BAT, Boost_5V, Core_5V]
+    feedback_components:
+      R78: "270 kOhm"
+      R88: "360 kOhm"
+      R92: "110 kOhm"
+      R77: "17.4 kOhm"
+      R86: "200 kOhm"
+    notes:
+      - "Exact input/output rail direction must be verified against graphical schematic."
+
+  U19:
+    type: ETA6098
+    function: "Lithium battery charger / power converter"
+    evidence: confirmed
+    input: VCC_PRIME_5V
+    battery: BAT
+    power_inductor: "L9 2.2 uH, 3 A"
+    capacitors:
+      C169: "47 uF"
+      C170: "10 uF"
+      C168: "1 uF"
+
+  U20:
+    type: ECJ23001-4FCBD6
+    function: "Rotary/encoder-like ADC input device"
+    evidence: inferred
+    pins:
+      OUT: ADC
+      KEY: "KEY / button signal"
+      VDD: VCC_1.8V
+    confidence: inferred
+
+clocks:
+  Y1:
+    frequency: "40 MHz"
+    package: "2.0 x 1.6 mm"
+    connected_to: [XTAL_P, XTAL_N]
+    load_capacitors:
+      C20: "22 pF"
+      C21: "22 pF"
+  Y2:
+    function: "Secondary crystal network"
+    frequency: unknown
+    associated_parts:
+      R40: "10 MOhm"
+      C18: "22 pF"
+      C24: "22 pF"
+    connected_signals: [GPIO0, GPIO1]
+    evidence: confirmed
+    notes:
+      - "Crystal frequency not readable from parsed schematic text."
+
+memory:
+  external_nor_flash:
+    reference: U10
+    part: GD25Q256EYIGR
+    capacity_bits: 268435456
+    capacity_bytes: 33554432
+    capacity_mb_decimal: 32
+    interface: QSPI
+  psram:
+    location: "In-package with ESP32-P4NRW32"
+    capacity_mb: 32
+    source: "Official board documentation"
+
+interfaces:
+  qspi_flash:
+    controller: U8
+    peripheral: U10
+    signals: [FLASH_CS, FLASH_Q, FLASH_WP, FLASH_HD, FLASH_CK, FLASH_D]
+    evidence: confirmed
+
+  i2c_main:
+    controller: U8
+    signals: [ESP_I2C_SCL, ESP_I2C_SDA]
+    known_consumers:
+      - "Camera connector/control area"
+      - "Audio area"
+      - "Touch/display control area"
+    notes:
+      - "Direct mapping of every device to this exact bus is not fully preserved in parsed text."
+
+  audio_control:
+    signals: [CCLK, CDATA]
+    devices: [U12, U14]
+    protocol: "I2C-like control bus"
+    evidence: confirmed
+
+  audio_i2s:
+    signals: [I2S_MCLK, I2S_SCLK, I2S_LRCK, I2S_ASDOUT, I2S_DSDIN]
+    devices: [U12, U14]
+    evidence: confirmed
+
+  microsd:
+    connector: SD1
+    protocol: "SDIO / SDMMC"
+    signals:
+      cmd: GPIO41
+      clk: GPIO42
+      d0: GPIO44
+      d1: GPIO43
+      d2: GPIO39
+      d3: GPIO40
+      card_detect: GPIO45
+    power:
+      net: SD1_VDD
+      source: ESP_3V3
+      switching_device: Q1
+    pull_resistors: [R5, R6, R7, R8, R9, R10]
+    notes:
+      - "Signal-to-pin assignments above follow visible connector ordering and adjacent net labels; verify before firmware register-level configuration."
+
+  camera:
+    connector: J1
+    protocol: "MIPI-CSI 2-lane"
+    differential_pairs:
+      lane0: [CSI_D0_P, CSI_D0_N]
+      lane1: [CSI_D1_P, CSI_D1_N]
+      clock: [CSI_CLK_P, CSI_CLK_N]
+    control: [CSI_IO0, CSI_IO1]
+    shared_i2c: [ESP_I2C_SCL, ESP_I2C_SDA]
+    reference_resistor:
+      net: CSI_REXT
+      resistor: "R55 4.02 kOhm"
+    supported_camera_family:
+      - OV5647
+    evidence: confirmed
+
+  display:
+    connector: J8
+    protocol: "MIPI-DSI 2-lane"
+    differential_pairs:
+      lane0: [DSI_D0_P, DSI_D0_N]
+      lane1: [DSI_D1_P, DSI_D1_N]
+      clock: [DSI_CLK_P, DSI_CLK_N]
+    reference_resistor:
+      net: DSI_REXT
+      resistor: "R56 4.02 kOhm"
+    resolution: "720x1280"
+    evidence: confirmed
+
+  touchscreen:
+    connector: J4
+    supply: VCC_1.8V
+    signals:
+      reset: TP_RST
+      interrupt: TP_INT
+      scl: TP_SCL
+      sda: TP_SDA
+    interface: I2C
+    evidence: confirmed
+
+  usb_debug:
+    connector: H1
+    connector_type: USB_Type_C
+    function: "Power + programming + debugging through USB-to-UART"
+    cc_resistors:
+      R1: "5.1 kOhm"
+      R4: "5.1 kOhm"
+    esd: TVS1
+    data: [USB_DBG_D_P, USB_DBG_D_N]
+    bridge: U6
+
+  usb_otg:
+    connector: H2
+    connector_type: USB_Type_C
+    function: "USB OTG 2.0 High Speed"
+    cc_resistors:
+      R2: "5.1 kOhm"
+      R3: "5.1 kOhm"
+    esd: TVS2
+    p4_usb: [USBD_P, USBD_N]
+    header_usb_pair: [USB1P1_P, USB1P1_N]
+    related_gpio: [GPIO24, GPIO25]
+    power_net: USB1_5V
+    evidence: confirmed
+
+  c6_interface:
+    module: U1
+    main_soc: U8
+    official_protocol: SDIO
+    visible_auxiliary_nets:
+      - C6_IO2
+      - C6_IO8
+      - C6_IO9
+      - C6_IO12
+      - C6_IO13
+      - C6_CHIP_PU
+      - C6_U0RXD
+      - C6_U0TXD
+    notes:
+      - "Official documentation identifies SDIO as the P4-to-C6 protocol."
+      - "Parsed schematic text does not preserve enough wire geometry to assign every SDIO line confidently."
+
+audio:
+  power_domains:
+    digital_analog_supply: A3V3
+    analog_ground: AGND
+  microphone_array:
+    onboard:
+      - reference: MIC1
+        pins: [VDD, GND, DAT]
+        associated_bias: ADC_MICBIAS12
+      - reference: MIC2
+        pins: [VDD, GND, DAT]
+        associated_bias: ADC_MICBIAS12
+    analog_nets:
+      - MIC1_P
+      - MIC1_N
+      - MIC2_P
+      - MIC2_N
+      - ADC_MIC3_P
+      - ADC_MIC3_N
+      - ADC_MIC4_P
+      - ADC_MIC4_N
+  codec_to_amplifier:
+    codec_outputs: [OUTP, OUTN]
+    amplifier_inputs: [PA_INL_PLUS, PA_INL_MINUS]
+    amplifier_outputs: [PA_OUTL_PLUS, PA_OUTL_MINUS]
+    speaker_connector: J5
+    recommended_speaker: "8 Ohm, 2 W"
+  echo_cancellation:
+    device: U14
+    label: AEC
+    evidence: "Official board documentation describes ES7210 as echo-cancellation related audio front end"
+
+power_tree:
+  input_sources:
+    usb_debug:
+      connector: H1
+      net: USB0_5V
+    usb_otg:
+      connector: H2
+      net: USB1_5V
+    lithium_battery:
+      connector: J2
+      nominal_voltage: "3.7 V"
+      net: BAT
+    rtc_battery:
+      connector: H3
+      net: RTC_BAT
+      note: "Rechargeable RTC battery only according to official documentation"
+
+  rails:
+    USB0_5V:
+      source: H1
+      purpose: "Debug USB power input"
+    USB1_5V:
+      source: H2
+      purpose: "USB OTG power path"
+    VCC_PRIME_5V:
+      original_schematic_label: "VCC'_5V"
+      purpose: "Intermediate 5 V power rail"
+    VCC_5V:
+      purpose: "Main 5 V rail / external header supply"
+    Core_5V:
+      purpose: "Core/system switched 5 V rail"
+    Boost_5V:
+      purpose: "Boost converter related rail"
+    ESP_3V3:
+      voltage: "3.3 V"
+      generator: U2
+      consumers:
+        - U8
+        - U1
+        - U6_VIO
+        - SD1
+        - interface_logic
+    VCC_1.8V:
+      voltage: "1.8 V"
+      generator: U13
+      consumers:
+        - touch_interface
+        - display_control_area
+        - U20
+    A3V3:
+      voltage: "3.3 V"
+      generator: U11
+      consumers:
+        - U12
+        - U14
+        - audio_frontend
+    VDD_FLASH:
+      purpose: "External NOR flash supply"
+    ESP_VBAT:
+      purpose: "ESP32-P4 VBAT domain"
+    ESP_VDD_HP:
+      purpose: "ESP32-P4 high-performance power domain"
+    ESP_LDO_VO1:
+      purpose: "ESP32-P4 internal LDO output domain"
+    ESP_LDO_VO2:
+      purpose: "ESP32-P4 internal LDO output domain"
+    ESP_LDO_VO3:
+      purpose: "ESP32-P4 internal LDO output domain"
+    ESP_LDO_VO4:
+      purpose: "ESP32-P4 internal LDO output domain"
+    VLED+:
+      purpose: "LCD LED backlight anode rail"
+
+battery:
+  charger: U19
+  battery_net: BAT
+  voltage_measurement:
+    adc_net: BAT_ADC
+    p4_gpio: GPIO20
+    divider:
+      R12: "200 kOhm"
+      R15: "100 kOhm"
+    capacitor: "C175 100 nF"
+  rtc_backup:
+    connector: H3
+    diode: D2
+    diode_part: B5819WS
+    associated_rail: ESP_VBAT
+
+connectors:
+  H1:
+    type: "USB Type-C"
+    function: "USB-to-UART power/program/debug"
+    signals: [USB0_5V, USB_DBG_D_P, USB_DBG_D_N, CC1, CC2, GND]
+  H2:
+    type: "USB Type-C"
+    function: "USB OTG"
+    signals: [USB1_5V, USBD_P, USBD_N, CC1, CC2, GND]
+  H3:
+    type: "2-pin header"
+    function: "RTC rechargeable battery"
+    signals: [RTC_BAT, GND]
+  J1:
+    type: "15-pin camera connector"
+    function: "MIPI-CSI camera"
+    evidence: confirmed
+  J2:
+    type: "2-pin battery connector"
+    function: "3.7 V lithium battery"
+    signals: [BAT, GND]
+  J3:
+    type: "40-pin 2.54 mm expansion header"
+    compatibility: "Some Raspberry Pi HATs via adapter"
+    signals_visible:
+      - GPIO46
+      - GPIO7
+      - GPIO8
+      - GPIO2
+      - GPIO4
+      - GPIO3
+      - GPIO28
+      - GPIO30
+      - GPIO29
+      - GPIO31
+      - GPIO52
+      - GPIO34
+      - GPIO50
+      - GPIO49
+      - GPIO35
+      - GPIO51
+      - GPIO32
+      - GPIO22
+      - GPIO21
+      - GPIO5
+      - GPIO38
+      - GPIO37
+      - GPIO48
+      - GPIO47
+      - GPIO24
+      - GPIO25
+      - USB1P1_P
+      - USB1P1_N
+      - USBD_P
+      - USBD_N
+      - VCC_5V
+      - ESP_3V3
+      - GND
+    notes:
+      - "Exact physical pin number to signal ordering should be verified from board drawing or schematic artwork before making a cable."
+  J4:
+    type: "6-pin touch connector"
+    signals: [VDD, RST, INT, SCL, SDA, GND]
+    supply: VCC_1.8V
+  J5:
+    type: "2-pin speaker connector"
+    function: speaker_output
+    recommendation: "8 Ohm, 2 W"
+  J7:
+    type: "4-pin programming pads/header"
+    function: "ESP32-C6 programming"
+    signals: [TX, RX, IO9, GND]
+  J8:
+    type: "31-pin display connector"
+    function: "MIPI-DSI LCD"
+    known_signals:
+      - DSI_D0_N
+      - DSI_D0_P
+      - DSI_D1_N
+      - DSI_D1_P
+      - DSI_CLK_N
+      - DSI_CLK_P
+      - ESP_3V3
+      - GND
+
+buttons_and_controls:
+  POWER:
+    function: "Short press power on; long press approximately 2 seconds power off"
+    source: "Official board documentation"
+  BOOT:
+    function: "Enter download mode during power-up/reset"
+  RESET:
+    function: "Reset board/main processor"
+  Key1:
+    function: "User/control key"
+    mapping: unknown
+  Key2:
+    function: "User/control key"
+    mapping: unknown
+  Key3:
+    function: "User/control key"
+    mapping: unknown
+
+leds:
+  LED1:
+    function: "Power indicator"
+    supply: VCC_5V
+    series_resistor: R24
+    resistor_value: "5.1 kOhm"
+
+protection:
+  TVS1:
+    part: LTVS16H5.0ET5G
+    protects: "USB debug/power area"
+  TVS2:
+    part: LTVS16H5.0ET5G
+    protects: "USB OTG/power area"
+  D1:
+    part: SMF5.0CA
+    protects: VCC_5V
+  ED1:
+    part: ESD5451N
+    protects: "I2C/interface lines"
+  ED2:
+    part: ESD5451N
+    protects: "I2C/interface lines"
+  ED3:
+    part: ESD5451N
+    protects: "Expansion/interface area"
+
+reset_boot:
+  main_soc:
+    reset_net: ESP_EN
+    boot_related_gpio: GPIO35
+    automatic_programming:
+      usb_uart: U6
+      control_lines: [DTR, RTS]
+      transistor_network: U7
+    passive_network:
+      R44: "10 kOhm"
+      R45: "4.7 kOhm"
+      C30: "1 uF"
+  c6:
+    enable_net: C6_CHIP_PU
+    main_soc_related_gpio: GPIO54
+    programming_header: J7
+
+net_catalog:
+  critical_signal_groups:
+    flash:
+      - FLASH_CS
+      - FLASH_Q
+      - FLASH_WP
+      - FLASH_HD
+      - FLASH_CK
+      - FLASH_D
+    camera:
+      - CSI_D0_N
+      - CSI_D0_P
+      - CSI_D1_N
+      - CSI_D1_P
+      - CSI_CLK_N
+      - CSI_CLK_P
+      - CSI_IO0
+      - CSI_IO1
+      - CSI_REXT
+    display:
+      - DSI_D0_N
+      - DSI_D0_P
+      - DSI_D1_N
+      - DSI_D1_P
+      - DSI_CLK_N
+      - DSI_CLK_P
+      - DSI_REXT
+      - LCD_BL_PWM
+      - BL_EN
+      - LCD_RESET
+    touch:
+      - TP_SDA
+      - TP_SCL
+      - TP_INT
+      - TP_RST
+    audio:
+      - I2S_MCLK
+      - I2S_SCLK
+      - I2S_LRCK
+      - I2S_ASDOUT
+      - I2S_DSDIN
+      - CCLK
+      - CDATA
+      - Codec_CE
+      - OUTP
+      - OUTN
+      - PA_INL_PLUS
+      - PA_INL_MINUS
+      - PA_OUTL_PLUS
+      - PA_OUTL_MINUS
+    usb:
+      - USB_DBG_D_P
+      - USB_DBG_D_N
+      - USBD_P
+      - USBD_N
+      - USB1P1_P
+      - USB1P1_N
+    wireless:
+      - C6_CHIP_PU
+      - C6_IO2
+      - C6_IO8
+      - C6_IO9
+      - C6_IO12
+      - C6_IO13
+      - C6_U0RXD
+      - C6_U0TXD
+
+component_inventory:
+  integrated_circuits:
+    - {ref: U1, part: ESP32-C6-MINI-1-N4, function: wireless_coprocessor}
+    - {ref: U2, part: MP1658GTF-Z, function: 3v3_buck}
+    - {ref: U3, part: MMDT3906DW, function: usb_power_switching_network}
+    - {ref: U4, part: MMDT3906DW, function: c6_power_control_network}
+    - {ref: U5, part: MP1605GTF-Z, function: p4_dcdc}
+    - {ref: U6, part: CH343P, function: usb_uart}
+    - {ref: U7, part: EMH4T2R, function: auto_boot_reset_network}
+    - {ref: U8, part: ESP32-P4NRW32, function: main_soc}
+    - {ref: U9, part: AP3032KTR-G1, function: lcd_backlight_boost}
+    - {ref: U10, part: GD25Q256EYIGR, function: qspi_nor_flash}
+    - {ref: U11, part: RT9193-33PB, function: audio_3v3_ldo}
+    - {ref: U12, part: ES8311, function: audio_codec}
+    - {ref: U13, part: RT9193-18GB, function: 1v8_ldo}
+    - {ref: U14, part: ES7210, function: multichannel_audio_adc}
+    - {ref: U15, part: NS4150B, function: speaker_amplifier}
+    - {ref: U16, part: MMDT3906DW, function: power_control_network}
+    - {ref: U17, part: SCT12A0DHKR, function: main_power_converter}
+    - {ref: U18, part: MMDT3906DW, function: boost_power_control_network}
+    - {ref: U19, part: ETA6098, function: battery_charger_power_converter}
+    - {ref: U20, part: ECJ23001-4FCBD6, function: adc_input_control}
+
+  inductors:
+    L1: "4.7 uH"
+    L2: "1 uH"
+    L3: "10 uH"
+    L4: "0 Ohm ferrite/link"
+    L5: "0 Ohm ferrite/link"
+    L6: "0 Ohm link"
+    L7: "0 Ohm ferrite/link"
+    L8: "2.2 uH, 8 A"
+    L9: "2.2 uH, 3 A"
+
+  major_diodes:
+    D1: SMF5.0CA
+    D2: B5819WS
+    D3: B5819W
+
+  microphones:
+    MIC1: "Onboard microphone"
+    MIC2: "Onboard microphone"
+
+  crystals:
+    Y1: "40 MHz"
+    Y2: "Secondary crystal, frequency unknown"
+
+analysis_hints_for_ai:
+  safe_to_assume:
+    - "ESP32-P4 is the primary application processor."
+    - "ESP32-C6 provides Wi-Fi 6 and BLE 5 capabilities."
+    - "External flash is 32 MB QSPI NOR."
+    - "Display and camera both use 2-lane MIPI."
+    - "MicroSD uses SDIO/SDMMC."
+    - "Audio uses ES8311 + ES7210 + NS4150B."
+  do_not_assume_without_verification:
+    - "Exact SDIO GPIO mapping between ESP32-P4 and ESP32-C6."
+    - "Exact J3 physical pin-number ordering."
+    - "Exact direction of CH343P TX/RX relative to GPIO37/GPIO38."
+    - "Exact mapping of Key1/Key2/Key3 to GPIO."
+    - "Exact display panel controller IC."
+    - "Exact touch controller IC."
+    - "Exact purpose/frequency of Y2."
+    - "Exact topology of U17 input/output rails."
+  recommended_next_steps:
+    - "Cross-check this YAML against original schematic artwork page-by-page."
+    - "Create a separate verified GPIO-to-header-pin YAML."
+    - "Create a net connectivity graph for automated AI reasoning."
+    - "Add firmware/BSP mappings from the official Waveshare repository."
+    - "Add board revision and PCB revision when available."
+
+source_summary:
+  supplied_schematic:
+    used_for:
+      - "Component references and part numbers"
+      - "Power rails"
+      - "Visible GPIO/net labels"
+      - "Interfaces and connector signal names"
+      - "Passive component values where readable"
+  official_board_documentation:
+    used_for:
+      - "Board-level feature confirmation"
+      - "ESP32-C6 role and SDIO statement"
+      - "Display resolution and 5-point touch"
+      - "Connector functions"
+      - "Speaker recommendation"
+  limitations:
+    - "OCR/parsed schematic text does not preserve all graphical wire crossings and pin geometry."
+    - "Some entries are deliberately marked inferred or unknown instead of guessed."
