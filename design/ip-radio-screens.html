@@ -1,0 +1,933 @@
+<title>Экраны IP-Radio</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --bg: #eeece8;
+    --surface: #f8f7f5;
+    --ink: #1b1a18;
+    --muted: #6f6b65;
+    --faint: #98938c;
+    --line: #dcd8d2;
+    --accent: #9a6410;
+    --shadow: 0 1px 2px rgba(27,26,24,.06), 0 8px 24px rgba(27,26,24,.07);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #131416;
+      --surface: #1a1c1f;
+      --ink: #eceef0;
+      --muted: #8d939a;
+      --faint: #5f666e;
+      --line: #282b2f;
+      --accent: #f5a524;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #131416;
+    --surface: #1a1c1f;
+    --ink: #eceef0;
+    --muted: #8d939a;
+    --faint: #5f666e;
+    --line: #282b2f;
+    --accent: #f5a524;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.35);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 56px 28px 96px; }
+
+  header { border-bottom: 1px solid var(--line); padding-bottom: 30px; margin-bottom: 44px; }
+  .eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px; font-weight: 500; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--accent); margin: 0 0 14px;
+  }
+  h1 {
+    font-size: clamp(30px, 4.4vw, 46px); font-weight: 700; letter-spacing: -1px;
+    margin: 0 0 16px; text-wrap: balance; line-height: 1.12;
+  }
+  .lede { font-size: 17px; color: var(--muted); margin: 0; max-width: 62ch; }
+
+  .specs {
+    display: flex; flex-wrap: wrap; gap: 10px 12px; margin-top: 26px;
+  }
+  .spec {
+    font-family: 'IBM Plex Mono', monospace; font-size: 12.5px;
+    color: var(--muted); background: var(--surface);
+    border: 1px solid var(--line); border-radius: 999px; padding: 5px 13px;
+  }
+  .spec b { color: var(--ink); font-weight: 600; }
+
+  .card { margin-bottom: 60px; }
+  .card-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 14px; }
+  .num {
+    font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 600;
+    color: var(--accent); letter-spacing: 1px;
+    font-variant-numeric: tabular-nums;
+  }
+  .card h2 { font-size: 21px; font-weight: 600; letter-spacing: -0.3px; margin: 0; }
+
+  .screen {
+    position: relative; width: 100%; aspect-ratio: 16 / 9;
+    overflow: hidden; border-radius: 12px;
+    border: 1px solid var(--line); box-shadow: var(--shadow);
+    background: #0e0f11;
+  }
+  .screen-inner {
+    position: absolute; top: 0; left: 0;
+    width: 1280px; height: 720px; transform-origin: top left;
+    transform: scale(0.83);
+  }
+  .note {
+    font-size: 15px; color: var(--muted); margin: 14px 0 0;
+    max-width: 72ch;
+  }
+
+  .closing {
+    border-top: 1px solid var(--line); padding-top: 30px; margin-top: 20px;
+  }
+  .closing h3 { font-size: 17px; font-weight: 600; margin: 0 0 14px; }
+  .closing ul { margin: 0; padding-left: 20px; color: var(--muted); font-size: 15px; }
+  .closing li { margin-bottom: 8px; }
+  .closing li b { color: var(--ink); font-weight: 600; }
+</style>
+
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Гибридный приёмник · ESP32-P4</p>
+    <h1>Образцы экранов интерфейса</h1>
+    <p class="lede">Восемь состояний по спецификации из <code style="font-family:'IBM Plex Mono',monospace;font-size:15px;color:var(--accent)">26-firmware-spec.md</code>. Показаны в натуральном кадре и масштабированы по ширине страницы — мелкий текст на приборе будет крупнее, чем здесь.</p>
+    <div class="specs">
+      <span class="spec">кадр <b>1280&times;720</b>, альбомный</span>
+      <span class="spec">панель <b>720&times;1280</b>, поворот через PPA</span>
+      <span class="spec">янтарь — <b>эфир</b></span>
+      <span class="spec">циан — <b>интернет</b></span>
+    </div>
+  </header>
+
+  <section class="card">
+    <div class="card-head">
+      <span class="num">01</span>
+      <h2>Эфир — станция с RDS</h2>
+    </div>
+    <div class="screen"><div class="screen-inner">
+<div style="width: 1280px; height: 720px; background: #0e0f11; color: #f2f3f5; font-family: 'IBM Plex Sans', system-ui, sans-serif; display: flex; flex-direction: column; overflow: hidden;">
+
+  <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 32px 0 32px;">
+    <div style="display: flex; align-items: baseline; gap: 10px;">
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 500; color: #9aa1a9; letter-spacing: 0.5px;">21:47</div>
+      <div style="font-size: 15px; color: #5f666e;">ср, 26 авг</div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 22px;">
+      <div style="display: flex; align-items: center; gap: 8px; color: #9aa1a9;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 9.5h3l4.5-3.5v12L7 14.5H4z"/><path d="M15.5 9.5a4 4 0 0 1 0 5"/><path d="M18 7a7.5 7.5 0 0 1 0 10"/></svg>
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 17px; font-weight: 500;">42</span>
+      </div>
+      <div style="color: #9aa1a9; display: flex; align-items: center;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2.5 8.5a15 15 0 0 1 19 0"/><path d="M5.5 12a10.5 10.5 0 0 1 13 0"/><path d="M8.5 15.5a6 6 0 0 1 7 0"/><circle cx="12" cy="19" r="1.1" fill="currentColor" stroke="none"/></svg>
+      </div>
+      <div style="display: flex; align-items: center; gap: 9px; background: #2a2110; border: 1px solid #6b5216; border-radius: 999px; padding: 7px 16px 7px 12px; color: #f5a524;">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 11v10"/><circle cx="12" cy="8.5" r="2.2"/><path d="M7.7 4.2a6.5 6.5 0 0 0 0 8.6"/><path d="M16.3 4.2a6.5 6.5 0 0 1 0 8.6"/></svg>
+        <span style="font-size: 15px; font-weight: 600; letter-spacing: 1.2px;">ЭФИР</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 0 40px;">
+    <div style="font-size: 15px; font-weight: 600; letter-spacing: 3px; color: #5f666e;">RDS</div>
+    <div style="font-size: 116px; font-weight: 700; line-height: 1; letter-spacing: -2px; color: #f2f3f5; text-align: center;">RETRO FM</div>
+    <div style="display: flex; align-items: baseline; gap: 16px; margin-top: 18px;">
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 52px; font-weight: 600; color: #f5a524; letter-spacing: -1px;">102.50</div>
+      <div style="font-size: 26px; color: #9aa1a9;">МГц</div>
+      <div style="font-size: 16px; font-weight: 600; letter-spacing: 1.5px; color: #f5a524; border: 1px solid #6b5216; border-radius: 6px; padding: 5px 12px; align-self: center; margin-left: 6px;">FM</div>
+    </div>
+    <div style="display: flex; align-items: flex-end; gap: 5px; height: 26px; margin-top: 22px;">
+      <div style="width: 8px; height: 10px; background: #f5a524; border-radius: 2px;"></div>
+      <div style="width: 8px; height: 14px; background: #f5a524; border-radius: 2px;"></div>
+      <div style="width: 8px; height: 18px; background: #f5a524; border-radius: 2px;"></div>
+      <div style="width: 8px; height: 22px; background: #f5a524; border-radius: 2px;"></div>
+      <div style="width: 8px; height: 26px; background: #2a2e34; border-radius: 2px;"></div>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 12px; padding: 0 32px 18px 32px;">
+    <div style="background: #16181b; border: 1px solid #2a2e34; border-radius: 12px; padding: 12px 12px 11px 12px; display: flex; flex-direction: column; gap: 7px; height: 88px; box-sizing: border-box;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; color: #5f666e;">P1</span>
+        <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.8px; color: #f5a524; background: #2a2110; border-radius: 4px; padding: 2px 6px;">FM</span>
+      </div>
+      <div style="font-size: 18px; font-weight: 500; color: #c8cdd3; line-height: 1.2;">Маяк</div>
+    </div>
+    <div style="background: #16181b; border: 1px solid #2a2e34; border-radius: 12px; padding: 12px 12px 11px 12px; display: flex; flex-direction: column; gap: 7px; height: 88px; box-sizing: border-box;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; color: #5f666e;">P2</span>
+        <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.8px; color: #3ec5d8; background: #0f2529; border-radius: 4px; padding: 2px 6px;">NET</span>
+      </div>
+      <div style="font-size: 18px; font-weight: 500; color: #c8cdd3; line-height: 1.2;">Radio Record</div>
+    </div>
+    <div style="background: #2a2110; border: 2px solid #f5a524; border-radius: 12px; padding: 11px 11px 10px 11px; display: flex; flex-direction: column; gap: 7px; height: 88px; box-sizing: border-box;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 700; color: #f5a524;">P3</span>
+        <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.8px; color: #0e0f11; background: #f5a524; border-radius: 4px; padding: 2px 6px;">FM</span>
+      </div>
+      <div style="font-size: 18px; font-weight: 600; color: #f2f3f5; line-height: 1.2;">RETRO FM</div>
+    </div>
+    <div style="background: #16181b; border: 1px solid #2a2e34; border-radius: 12px; padding: 12px 12px 11px 12px; display: flex; flex-direction: column; gap: 7px; height: 88px; box-sizing: border-box;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; color: #5f666e;">P4</span>
+        <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.8px; color: #3ec5d8; background: #0f2529; border-radius: 4px; padding: 2px 6px;">NET</span>
+      </div>
+      <div style="font-size: 18px; font-weight: 500; color: #c8cdd3; line-height: 1.2;">Джаз ФМ</div>
+    </div>
+    <div style="background: #16181b; border: 1px solid #2a2e34; border-radius: 12px; padding: 12px 12px 11px 12px; display: flex; flex-direction: column; gap: 7px; height: 88px; box-sizing: border-box;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; color: #5f666e;">P5</span>
+        <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.8px; color: #f5a524; background: #2a2110; border-radius: 4px; padding: 2px 6px;">FM</span>
+      </div>
+      <div style="font-size: 18px; font-weight: 500; color: #c8cdd3; line-height: 1.2;">Европа Плюс</div>
+    </div>
+    <div style="background: #16181b; border: 1px solid #2a2e34; border-radius: 12px; padding: 12px 12px 11px 12px; display: flex; flex-direction: column; gap: 7px; height: 88px; box-sizing: border-box;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; color: #5f666e;">P6</span>
+        <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.8px; color: #3ec5d8; background: #0f2529; border-radius: 4px; padding: 2px 6px;">NET</span>
+      </div>
+      <div style="font-size: 18px; font-weight: 500; color: #c8cdd3; line-height: 1.2;">Nightwave</div>
+    </div>
+    <div style="background: #16181b; border: 1px solid #2a2e34; border-radius: 12px; padding: 12px 12px 11px 12px; display: flex; flex-direction: column; gap: 7px; height: 88px; box-sizing: border-box;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; color: #5f666e;">P7</span>
+        <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.8px; color: #f5a524; background: #2a2110; border-radius: 4px; padding: 2px 6px;">FM</span>
+      </div>
+      <div style="font-size: 18px; font-weight: 500; color: #c8cdd3; line-height: 1.2;">Дорожное</div>
+    </div>
+    <div style="background: #101214; border: 1px dashed #2a2e34; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; height: 88px; box-sizing: border-box;">
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; color: #3a4046;">P8</span>
+      <div style="font-size: 15px; color: #3a4046;">пусто</div>
+    </div>
+  </div>
+
+  <div style="border-top: 1px solid #1c1f23; padding: 13px 32px; display: flex; justify-content: center; gap: 30px; font-size: 15px; color: #646b73;">
+    <span><span style="color: #9aa1a9; font-weight: 500;">Энкодер 1</span> — станции</span>
+    <span style="color: #2a2e34;">·</span>
+    <span><span style="color: #9aa1a9; font-weight: 500;">Энкодер 2</span> — громкость</span>
+    <span style="color: #2a2e34;">·</span>
+    <span><span style="color: #9aa1a9; font-weight: 500;">нажатие</span> — mute</span>
+  </div>
+
+</div>
+    </div></div>
+    <p class="note">Название из RDS крупно по центру, частота под ним. Активен пресет P3 с меткой FM. Слева вверху — время мелким шрифтом, как требует ТЗ.</p>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <span class="num">02</span>
+      <h2>Эфир — станция без RDS</h2>
+    </div>
+    <div class="screen"><div class="screen-inner">
+<div style="width: 1280px; height: 720px; background: #0e0f11; color: #f2f3f5; font-family: 'IBM Plex Sans', system-ui, sans-serif; display: flex; flex-direction: column; overflow: hidden;">
+
+  <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 32px 0 32px;">
+    <div style="display: flex; align-items: baseline; gap: 10px;">
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 500; color: #9aa1a9; letter-spacing: 0.5px;">21:52</div>
+      <div style="font-size: 15px; color: #5f666e;">ср, 26 авг</div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 22px;">
+      <div style="display: flex; align-items: center; gap: 8px; color: #9aa1a9;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 9.5h3l4.5-3.5v12L7 14.5H4z"/><path d="M15.5 9.5a4 4 0 0 1 0 5"/><path d="M18 7a7.5 7.5 0 0 1 0 10"/></svg>
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 17px; font-weight: 500;">42</span>
+      </div>
+      <div style="color: #9aa1a9; display: flex; align-items: center;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2.5 8.5a15 15 0 0 1 19 0"/><path d="M5.5 12a10.5 10.5 0 0 1 13 0"/><path d="M8.5 15.5a6 6 0 0 1 7 0"/><circle cx="12" cy="19" r="1.1" fill="currentColor" stroke="none"/></svg>
+      </div>
+      <div style="display: flex; align-items: center; gap: 9px; background: #2a2110; border: 1px solid #6b5216; border-radius: 999px; padding: 7px 16px 7px 12px; color: #f5a524;">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 11v10"/><circle cx="12" cy="8.5" r="2.2"/><path d="M7.7 4.2a6.5 6.5 0 0 0 0 8.6"/><path d="M16.3 4.2a6.5 6.5 0 0 1 0 8.6"/></svg>
+        <span style="font-size: 15px; font-weight: 600; letter-spacing: 1.2px;">ЭФИР</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 0 40px;">
+    <div style="display: flex; align-items: baseline; gap: 20px;">
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 132px; font-weight: 600; line-height: 1; letter-spacing: -4px; color: #f5a524;">69.80</div>
+      <div style="font-size: 40px; color: #9aa1a9; font-weight: 400;">МГц</div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 14px; margin-top: 26px;">
+      <div style="font-size: 20px; font-weight: 600; letter-spacing: 2px; color: #f5a524; border: 1px solid #6b5216; border-radius: 8px; padding: 8px 26px;">УКВ</div>
+      <div style="font-size: 20px; font-weight: 500; letter-spacing: 2px; color: #3a4046; border: 1px solid #232628; border-radius: 8px; padding: 8px 26px;">FM</div>
+    </div>
+    <div style="font-size: 19px; color: #5f666e; margin-top: 22px;">RDS не передаётся</div>
+    <div style="display: flex; align-items: flex-end; gap: 5px; height: 26px; margin-top: 20px;">
+      <div style="width: 8px; height: 10px; background: #f5a524; border-radius: 2px;"></div>
+      <div style="width: 8px; height: 14px; background: #f5a524; border-radius: 2px;"></div>
+      <div style="width: 8px; height: 18px; background: #2a2e34; border-radius: 2px;"></div>
+      <div style="width: 8px; height: 22px; background: #2a2e34; border-radius: 2px;"></div>
+      <div style="width: 8px; height: 26px; background: #2a2e34; border-radius: 2px;"></div>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 12px; padding: 0 32px 18px 32px;">
+    <div style="background: #16181b; border: 1px solid #2a2e34; border-radius: 12px; padding: 12px 12px 11px 12px; display: flex; flex-direction: column; gap: 7px; height: 88px; box-sizing: border-box;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; color: #5f666e;">P1</span>
+        <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.8px; color: #f5a524; background: #2a2110; border-radius: 4px; padding: 2px 6px;">FM</span>
+      </div>
+      <div style="font-size: 18px; font-weight: 500; color: #c8cdd3; line-height: 1.2;">Маяк</div>
+    </div>
+    <div style="background: #16181b; border: 1px solid #2a2e34; border-radius: 12px; padding: 12px 12px 11px 12px; display: flex; flex-direction: column; gap: 7px; height: 88px; box-sizing: border-box;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; color: #5f666e;">P2</span>
+        <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.8px; color: #3ec5d8; background: #0f2529; border-radius: 4px; padding: 2px 6px;">NET</span>
+      </div>
+      <div style="font-size: 18px; font-weight: 500; color: #c8cdd3; line-height: 1.2;">Radio Record</div>
+    </div>
+    <div style="background: #16181b; border: 1px solid #2a2e34; border-radius: 12px; padding: 12px 12px 11px 12px; display: flex; flex-direction: column; gap: 7px; height: 88px; box-sizing: border-box;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; color: #5f666e;">P3</span>
+        <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.8px; color: #f5a524; background: #2a2110; border-radius: 4px; padding: 2px 6px;">FM</span>
+      </div>
+      <div style="font-size: 18px; font-weight: 500; color: #c8cdd3; line-height: 1.2;">RETRO FM</div>
+    </div>
+    <div style="background: #16181b; border: 1px solid #2a2e34; border-radius: 12px; padding: 12px 12px 11px 12px; display: flex; flex-direction: column; gap: 7px; height: 88px; box-sizing: border-box;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; color: #5f666e;">P4</span>
+        <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.8px; color: #3ec5d8; background: #0f2529; border-radius: 4px; padding: 2px 6px;">NET</span>
+      </div>
+      <div style="font-size: 18px; font-weight: 500; color: #c8cdd3; line-height: 1.2;">Джаз ФМ</div>
+    </div>
+    <div style="background: #16181b; border: 1px solid #2a2e34; border-radius: 12px; padding: 12px 12px 11px 12px; display: flex; flex-direction: column; gap: 7px; height: 88px; box-sizing: border-box;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; color: #5f666e;">P5</span>
+        <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.8px; color: #f5a524; background: #2a2110; border-radius: 4px; padding: 2px 6px;">FM</span>
+      </div>
+      <div style="font-size: 18px; font-weight: 500; color: #c8cdd3; line-height: 1.2;">Европа Плюс</div>
+    </div>
+    <div style="background: #16181b; border: 1px solid #2a2e34; border-radius: 12px; padding: 12px 12px 11px 12px; display: flex; flex-direction: column; gap: 7px; height: 88px; box-sizing: border-box;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; color: #5f666e;">P6</span>
+        <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.8px; color: #3ec5d8; background: #0f2529; border-radius: 4px; padding: 2px 6px;">NET</span>
+      </div>
+      <div style="font-size: 18px; font-weight: 500; color: #c8cdd3; line-height: 1.2;">Nightwave</div>
+    </div>
+    <div style="background: #16181b; border: 1px solid #2a2e34; border-radius: 12px; padding: 12px 12px 11px 12px; display: flex; flex-direction: column; gap: 7px; height: 88px; box-sizing: border-box;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; color: #5f666e;">P7</span>
+        <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.8px; color: #f5a524; background: #2a2110; border-radius: 4px; padding: 2px 6px;">FM</span>
+      </div>
+      <div style="font-size: 18px; font-weight: 500; color: #c8cdd3; line-height: 1.2;">Дорожное</div>
+    </div>
+    <div style="background: #101214; border: 1px dashed #2a2e34; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; height: 88px; box-sizing: border-box;">
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; color: #3a4046;">P8</span>
+      <div style="font-size: 15px; color: #3a4046;">пусто</div>
+    </div>
+  </div>
+
+  <div style="border-top: 1px solid #1c1f23; padding: 13px 32px; display: flex; justify-content: center; gap: 30px; font-size: 15px; color: #646b73;">
+    <span><span style="color: #9aa1a9; font-weight: 500;">Энкодер 1</span> — станции</span>
+    <span style="color: #2a2e34;">·</span>
+    <span><span style="color: #9aa1a9; font-weight: 500;">Энкодер 2</span> — громкость</span>
+    <span style="color: #2a2e34;">·</span>
+    <span><span style="color: #9aa1a9; font-weight: 500;">MEM</span> — записать на пресет</span>
+  </div>
+
+</div>
+    </div></div>
+    <p class="note">Названия нет, поэтому крупно сама частота. Показан второй диапазон — УКВ, 65,8–74 МГц, которого в черновике ТЗ не было. На экране диапазоны подписаны коротко: «УКВ» и «FM», без OIRT и CCIR.</p>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <span class="num">03</span>
+      <h2>Интернет-радио — играет</h2>
+    </div>
+    <div class="screen"><div class="screen-inner">
+<div style="width: 1280px; height: 720px; background: #0e0f11; color: #f2f3f5; font-family: 'IBM Plex Sans', system-ui, sans-serif; display: flex; flex-direction: column; overflow: hidden;">
+
+  <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 32px 0 32px;">
+    <div style="display: flex; align-items: baseline; gap: 10px;">
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 500; color: #9aa1a9; letter-spacing: 0.5px;">22:03</div>
+      <div style="font-size: 15px; color: #5f666e;">ср, 26 авг</div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 22px;">
+      <div style="display: flex; align-items: center; gap: 8px; color: #9aa1a9;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 9.5h3l4.5-3.5v12L7 14.5H4z"/><path d="M15.5 9.5a4 4 0 0 1 0 5"/><path d="M18 7a7.5 7.5 0 0 1 0 10"/></svg>
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 17px; font-weight: 500;">42</span>
+      </div>
+      <div style="color: #3ec5d8; display: flex; align-items: center;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2.5 8.5a15 15 0 0 1 19 0"/><path d="M5.5 12a10.5 10.5 0 0 1 13 0"/><path d="M8.5 15.5a6 6 0 0 1 7 0"/><circle cx="12" cy="19" r="1.1" fill="currentColor" stroke="none"/></svg>
+      </div>
+      <div style="display: flex; align-items: center; gap: 9px; background: #0f2529; border: 1px solid #1c5b66; border-radius: 999px; padding: 7px 16px 7px 12px; color: #3ec5d8;">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17"/><path d="M12 3.5c2.3 2.4 3.5 5.4 3.5 8.5s-1.2 6.1-3.5 8.5c-2.3-2.4-3.5-5.4-3.5-8.5S9.7 5.9 12 3.5z"/></svg>
+        <span style="font-size: 15px; font-weight: 600; letter-spacing: 1.2px;">ИНТЕРНЕТ</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; padding: 0 60px;">
+    <div style="font-size: 92px; font-weight: 700; line-height: 1.05; letter-spacing: -1.5px; color: #f2f3f5; text-align: center;">Radio Record</div>
+    <div style="font-size: 34px; font-weight: 400; color: #3ec5d8; margin-top: 22px; text-align: center;">Sunlike — Fading Signals</div>
+    <div style="display: flex; align-items: center; gap: 20px; margin-top: 34px;">
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 15px; font-weight: 500; color: #646b73; letter-spacing: 0.5px;">MP3 · 128 kbps</div>
+      <div style="width: 1px; height: 18px; background: #2a2e34;"></div>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 15px; color: #646b73;">буфер</span>
+        <div style="width: 132px; height: 8px; background: #1e2126; border-radius: 4px; overflow: hidden;">
+          <div style="width: 108px; height: 8px; background: #3ec5d8; border-radius: 4px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 12px; padding: 0 32px 18px 32px;">
+    <div style="background: #16181b; border: 1px solid #2a2e34; border-radius: 12px; padding: 12px 12px 11px 12px; display: flex; flex-direction: column; gap: 7px; height: 88px; box-sizing: border-box;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; color: #5f666e;">P1</span>
+        <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.8px; color: #f5a524; background: #2a2110; border-radius: 4px; padding: 2px 6px;">FM</span>
+      </div>
+      <div style="font-size: 18px; font-weight: 500; color: #c8cdd3; line-height: 1.2;">Маяк</div>
+    </div>
+    <div style="background: #0f2529; border: 2px solid #3ec5d8; border-radius: 12px; padding: 11px 11px 10px 11px; display: flex; flex-direction: column; gap: 7px; height: 88px; box-sizing: border-box;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 700; color: #3ec5d8;">P2</span>
+        <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.8px; color: #0e0f11; background: #3ec5d8; border-radius: 4px; padding: 2px 6px;">NET</span>
+      </div>
+      <div style="font-size: 18px; font-weight: 600; color: #f2f3f5; line-height: 1.2;">Radio Record</div>
+    </div>
+    <div style="background: #16181b; border: 1px solid #2a2e34; border-radius: 12px; padding: 12px 12px 11px 12px; display: flex; flex-direction: column; gap: 7px; height: 88px; box-sizing: border-box;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; color: #5f666e;">P3</span>
+        <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.8px; color: #f5a524; background: #2a2110; border-radius: 4px; padding: 2px 6px;">FM</span>
+      </div>
+      <div style="font-size: 18px; font-weight: 500; color: #c8cdd3; line-height: 1.2;">RETRO FM</div>
+    </div>
+    <div style="background: #16181b; border: 1px solid #2a2e34; border-radius: 12px; padding: 12px 12px 11px 12px; display: flex; flex-direction: column; gap: 7px; height: 88px; box-sizing: border-box;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; color: #5f666e;">P4</span>
+        <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.8px; color: #3ec5d8; background: #0f2529; border-radius: 4px; padding: 2px 6px;">NET</span>
+      </div>
+      <div style="font-size: 18px; font-weight: 500; color: #c8cdd3; line-height: 1.2;">Джаз ФМ</div>
+    </div>
+    <div style="background: #16181b; border: 1px solid #2a2e34; border-radius: 12px; padding: 12px 12px 11px 12px; display: flex; flex-direction: column; gap: 7px; height: 88px; box-sizing: border-box;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; color: #5f666e;">P5</span>
+        <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.8px; color: #f5a524; background: #2a2110; border-radius: 4px; padding: 2px 6px;">FM</span>
+      </div>
+      <div style="font-size: 18px; font-weight: 500; color: #c8cdd3; line-height: 1.2;">Европа Плюс</div>
+    </div>
+    <div style="background: #16181b; border: 1px solid #2a2e34; border-radius: 12px; padding: 12px 12px 11px 12px; display: flex; flex-direction: column; gap: 7px; height: 88px; box-sizing: border-box;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; color: #5f666e;">P6</span>
+        <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.8px; color: #3ec5d8; background: #0f2529; border-radius: 4px; padding: 2px 6px;">NET</span>
+      </div>
+      <div style="font-size: 18px; font-weight: 500; color: #c8cdd3; line-height: 1.2;">Nightwave</div>
+    </div>
+    <div style="background: #16181b; border: 1px solid #2a2e34; border-radius: 12px; padding: 12px 12px 11px 12px; display: flex; flex-direction: column; gap: 7px; height: 88px; box-sizing: border-box;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; color: #5f666e;">P7</span>
+        <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.8px; color: #f5a524; background: #2a2110; border-radius: 4px; padding: 2px 6px;">FM</span>
+      </div>
+      <div style="font-size: 18px; font-weight: 500; color: #c8cdd3; line-height: 1.2;">Дорожное</div>
+    </div>
+    <div style="background: #101214; border: 1px dashed #2a2e34; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; height: 88px; box-sizing: border-box;">
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; color: #3a4046;">P8</span>
+      <div style="font-size: 15px; color: #3a4046;">пусто</div>
+    </div>
+  </div>
+
+  <div style="border-top: 1px solid #1c1f23; padding: 13px 32px; display: flex; justify-content: center; gap: 30px; font-size: 15px; color: #646b73;">
+    <span><span style="color: #9aa1a9; font-weight: 500;">Энкодер 1</span> — станции</span>
+    <span style="color: #2a2e34;">·</span>
+    <span><span style="color: #9aa1a9; font-weight: 500;">Энкодер 2</span> — громкость</span>
+    <span style="color: #2a2e34;">·</span>
+    <span><span style="color: #9aa1a9; font-weight: 500;">нажатие</span> — mute</span>
+  </div>
+
+</div>
+    </div></div>
+    <p class="note">Метаданные ICY строкой под названием, кодек и заполнение буфера мелко. Активен пресет P2 с меткой NET.</p>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <span class="num">04</span>
+      <h2>Интернет-радио — буферизация</h2>
+    </div>
+    <div class="screen"><div class="screen-inner">
+<div style="width: 1280px; height: 720px; background: #0e0f11; color: #f2f3f5; font-family: 'IBM Plex Sans', system-ui, sans-serif; display: flex; flex-direction: column; overflow: hidden;">
+
+  <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 32px 0 32px;">
+    <div style="display: flex; align-items: baseline; gap: 10px;">
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 500; color: #9aa1a9; letter-spacing: 0.5px;">22:05</div>
+      <div style="font-size: 15px; color: #5f666e;">ср, 26 авг</div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 22px;">
+      <div style="display: flex; align-items: center; gap: 8px; color: #9aa1a9;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 9.5h3l4.5-3.5v12L7 14.5H4z"/><path d="M15.5 9.5a4 4 0 0 1 0 5"/><path d="M18 7a7.5 7.5 0 0 1 0 10"/></svg>
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 17px; font-weight: 500;">42</span>
+      </div>
+      <div style="color: #3ec5d8; display: flex; align-items: center;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2.5 8.5a15 15 0 0 1 19 0"/><path d="M5.5 12a10.5 10.5 0 0 1 13 0"/><path d="M8.5 15.5a6 6 0 0 1 7 0"/><circle cx="12" cy="19" r="1.1" fill="currentColor" stroke="none"/></svg>
+      </div>
+      <div style="display: flex; align-items: center; gap: 9px; background: #0f2529; border: 1px solid #1c5b66; border-radius: 999px; padding: 7px 16px 7px 12px; color: #3ec5d8;">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17"/><path d="M12 3.5c2.3 2.4 3.5 5.4 3.5 8.5s-1.2 6.1-3.5 8.5c-2.3-2.4-3.5-5.4-3.5-8.5S9.7 5.9 12 3.5z"/></svg>
+        <span style="font-size: 15px; font-weight: 600; letter-spacing: 1.2px;">ИНТЕРНЕТ</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; padding: 0 60px;">
+    <div style="display: flex; align-items: center; gap: 12px; color: #5f666e; font-size: 16px; margin-bottom: 22px;">
+      <span style="color: #f5a524; font-weight: 500;">ЭФИР</span>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15"/><path d="M14 7l5 5-5 5"/></svg>
+      <span style="color: #3ec5d8; font-weight: 500;">ИНТЕРНЕТ</span>
+      <span style="margin-left: 6px;">— пресет P4</span>
+    </div>
+    <div style="font-size: 92px; font-weight: 700; line-height: 1.05; letter-spacing: -1.5px; color: #f2f3f5; text-align: center;">Джаз ФМ</div>
+    <div style="font-size: 32px; font-weight: 400; color: #9aa1a9; margin-top: 24px;">Подключение… буферизация</div>
+    <div style="width: 460px; height: 10px; background: #1e2126; border-radius: 5px; overflow: hidden; margin-top: 30px;">
+      <div style="width: 168px; height: 10px; background: #3ec5d8; border-radius: 5px;"></div>
+    </div>
+    <div style="font-size: 15px; color: #5f666e; margin-top: 16px;">поток открыт, наполняется буфер</div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 12px; padding: 0 32px 18px 32px;">
+    <div style="background: #16181b; border: 1px solid #2a2e34; border-radius: 12px; padding: 12px 12px 11px 12px; display: flex; flex-direction: column; gap: 7px; height: 88px; box-sizing: border-box;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; color: #5f666e;">P1</span>
+        <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.8px; color: #f5a524; background: #2a2110; border-radius: 4px; padding: 2px 6px;">FM</span>
+      </div>
+      <div style="font-size: 18px; font-weight: 500; color: #c8cdd3; line-height: 1.2;">Маяк</div>
+    </div>
+    <div style="background: #16181b; border: 1px solid #2a2e34; border-radius: 12px; padding: 12px 12px 11px 12px; display: flex; flex-direction: column; gap: 7px; height: 88px; box-sizing: border-box;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; color: #5f666e;">P2</span>
+        <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.8px; color: #3ec5d8; background: #0f2529; border-radius: 4px; padding: 2px 6px;">NET</span>
+      </div>
+      <div style="font-size: 18px; font-weight: 500; color: #c8cdd3; line-height: 1.2;">Radio Record</div>
+    </div>
+    <div style="background: #16181b; border: 1px solid #2a2e34; border-radius: 12px; padding: 12px 12px 11px 12px; display: flex; flex-direction: column; gap: 7px; height: 88px; box-sizing: border-box;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; color: #5f666e;">P3</span>
+        <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.8px; color: #f5a524; background: #2a2110; border-radius: 4px; padding: 2px 6px;">FM</span>
+      </div>
+      <div style="font-size: 18px; font-weight: 500; color: #c8cdd3; line-height: 1.2;">RETRO FM</div>
+    </div>
+    <div style="background: #0f2529; border: 2px solid #3ec5d8; border-radius: 12px; padding: 11px 11px 10px 11px; display: flex; flex-direction: column; gap: 7px; height: 88px; box-sizing: border-box;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 700; color: #3ec5d8;">P4</span>
+        <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.8px; color: #0e0f11; background: #3ec5d8; border-radius: 4px; padding: 2px 6px;">NET</span>
+      </div>
+      <div style="font-size: 18px; font-weight: 600; color: #f2f3f5; line-height: 1.2;">Джаз ФМ</div>
+    </div>
+    <div style="background: #16181b; border: 1px solid #2a2e34; border-radius: 12px; padding: 12px 12px 11px 12px; display: flex; flex-direction: column; gap: 7px; height: 88px; box-sizing: border-box;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; color: #5f666e;">P5</span>
+        <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.8px; color: #f5a524; background: #2a2110; border-radius: 4px; padding: 2px 6px;">FM</span>
+      </div>
+      <div style="font-size: 18px; font-weight: 500; color: #c8cdd3; line-height: 1.2;">Европа Плюс</div>
+    </div>
+    <div style="background: #16181b; border: 1px solid #2a2e34; border-radius: 12px; padding: 12px 12px 11px 12px; display: flex; flex-direction: column; gap: 7px; height: 88px; box-sizing: border-box;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; color: #5f666e;">P6</span>
+        <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.8px; color: #3ec5d8; background: #0f2529; border-radius: 4px; padding: 2px 6px;">NET</span>
+      </div>
+      <div style="font-size: 18px; font-weight: 500; color: #c8cdd3; line-height: 1.2;">Nightwave</div>
+    </div>
+    <div style="background: #16181b; border: 1px solid #2a2e34; border-radius: 12px; padding: 12px 12px 11px 12px; display: flex; flex-direction: column; gap: 7px; height: 88px; box-sizing: border-box;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; color: #5f666e;">P7</span>
+        <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.8px; color: #f5a524; background: #2a2110; border-radius: 4px; padding: 2px 6px;">FM</span>
+      </div>
+      <div style="font-size: 18px; font-weight: 500; color: #c8cdd3; line-height: 1.2;">Дорожное</div>
+    </div>
+    <div style="background: #101214; border: 1px dashed #2a2e34; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; height: 88px; box-sizing: border-box;">
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; color: #3a4046;">P8</span>
+      <div style="font-size: 15px; color: #3a4046;">пусто</div>
+    </div>
+  </div>
+
+  <div style="border-top: 1px solid #1c1f23; padding: 13px 32px; display: flex; justify-content: center; gap: 30px; font-size: 15px; color: #646b73;">
+    <span><span style="color: #9aa1a9; font-weight: 500;">MODE</span> — вернуться в эфир</span>
+    <span style="color: #2a2e34;">·</span>
+    <span><span style="color: #9aa1a9; font-weight: 500;">Энкодер 2</span> — громкость</span>
+    <span style="color: #2a2e34;">·</span>
+    <span><span style="color: #9aa1a9; font-weight: 500;">нажатие</span> — mute</span>
+  </div>
+
+</div>
+    </div></div>
+    <p class="note">Нажат пресет P4 типа NET, прибор сам ушёл из эфира в интернет. Пока наполняется буфер, на экране написано что происходит, а не тишина.</p>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <span class="num">05</span>
+      <h2>Меню настроек</h2>
+    </div>
+    <div class="screen"><div class="screen-inner">
+<div style="width: 1280px; height: 720px; background: #0e0f11; color: #f2f3f5; font-family: 'IBM Plex Sans', system-ui, sans-serif; display: flex; flex-direction: column; overflow: hidden;">
+
+  <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 32px 0 32px;">
+    <div style="display: flex; align-items: baseline; gap: 10px;">
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 500; color: #9aa1a9; letter-spacing: 0.5px;">22:11</div>
+      <div style="font-size: 15px; color: #5f666e;">ср, 26 авг</div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 22px;">
+      <div style="display: flex; align-items: center; gap: 8px; color: #9aa1a9;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 9.5h3l4.5-3.5v12L7 14.5H4z"/><path d="M15.5 9.5a4 4 0 0 1 0 5"/><path d="M18 7a7.5 7.5 0 0 1 0 10"/></svg>
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 17px; font-weight: 500;">42</span>
+      </div>
+      <div style="color: #3ec5d8; display: flex; align-items: center;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2.5 8.5a15 15 0 0 1 19 0"/><path d="M5.5 12a10.5 10.5 0 0 1 13 0"/><path d="M8.5 15.5a6 6 0 0 1 7 0"/><circle cx="12" cy="19" r="1.1" fill="currentColor" stroke="none"/></svg>
+      </div>
+      <div style="display: flex; align-items: center; gap: 9px; background: #0f2529; border: 1px solid #1c5b66; border-radius: 999px; padding: 7px 16px 7px 12px; color: #3ec5d8;">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17"/><path d="M12 3.5c2.3 2.4 3.5 5.4 3.5 8.5s-1.2 6.1-3.5 8.5c-2.3-2.4-3.5-5.4-3.5-8.5S9.7 5.9 12 3.5z"/></svg>
+        <span style="font-size: 15px; font-weight: 600; letter-spacing: 1.2px;">ИНТЕРНЕТ</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding: 22px 40px 14px 40px;">
+    <div style="font-size: 34px; font-weight: 600; letter-spacing: -0.3px;">Настройки</div>
+  </div>
+
+  <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 8px; padding: 0 40px; overflow: hidden;">
+
+    <div style="display: flex; align-items: center; gap: 22px; height: 74px; padding: 0 22px; border-radius: 12px; background: #16181b; box-sizing: border-box;">
+      <div style="color: #9aa1a9; display: flex;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 11v10"/><circle cx="12" cy="8.5" r="2.2"/><path d="M7.7 4.2a6.5 6.5 0 0 0 0 8.6"/><path d="M16.3 4.2a6.5 6.5 0 0 1 0 8.6"/></svg>
+      </div>
+      <div style="flex-grow: 1; font-size: 25px; font-weight: 500; color: #d8dde2;">Станции эфира</div>
+      <div style="font-size: 17px; color: #5f666e;">7 сохранено</div>
+      <div style="color: #3a4046; display: flex;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
+      </div>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 22px; height: 74px; padding: 0 20px; border-radius: 12px; background: #2a2110; border: 2px solid #f5a524; box-sizing: border-box;">
+      <div style="color: #f5a524; display: flex;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17"/><path d="M12 3.5c2.3 2.4 3.5 5.4 3.5 8.5s-1.2 6.1-3.5 8.5c-2.3-2.4-3.5-5.4-3.5-8.5S9.7 5.9 12 3.5z"/></svg>
+      </div>
+      <div style="flex-grow: 1; font-size: 25px; font-weight: 600; color: #f2f3f5;">Станции интернет</div>
+      <div style="font-size: 17px; color: #b78a3c;">34 сохранено</div>
+      <div style="color: #f5a524; display: flex;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
+      </div>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 22px; height: 74px; padding: 0 22px; border-radius: 12px; background: #16181b; box-sizing: border-box;">
+      <div style="color: #9aa1a9; display: flex;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M2.5 8.5a15 15 0 0 1 19 0"/><path d="M5.5 12a10.5 10.5 0 0 1 13 0"/><path d="M8.5 15.5a6 6 0 0 1 7 0"/><circle cx="12" cy="19" r="1.1" fill="currentColor" stroke="none"/></svg>
+      </div>
+      <div style="flex-grow: 1; font-size: 25px; font-weight: 500; color: #d8dde2;">Wi-Fi</div>
+      <div style="font-size: 17px; color: #5f666e;">HomeNet_5G</div>
+      <div style="color: #3a4046; display: flex;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
+      </div>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 22px; height: 74px; padding: 0 22px; border-radius: 12px; background: #16181b; box-sizing: border-box;">
+      <div style="color: #9aa1a9; display: flex;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5.2l3.2 2"/></svg>
+      </div>
+      <div style="flex-grow: 1; font-size: 25px; font-weight: 500; color: #d8dde2;">Часы</div>
+      <div style="font-size: 17px; color: #5f666e;">NTP, UTC+3</div>
+      <div style="color: #3a4046; display: flex;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
+      </div>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 22px; height: 74px; padding: 0 22px; border-radius: 12px; background: #16181b; box-sizing: border-box;">
+      <div style="color: #9aa1a9; display: flex;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.4M12 19.1v2.4M2.5 12h2.4M19.1 12h2.4M5.2 5.2l1.7 1.7M17.1 17.1l1.7 1.7M18.8 5.2l-1.7 1.7M6.9 17.1l-1.7 1.7"/></svg>
+      </div>
+      <div style="flex-grow: 1; font-size: 25px; font-weight: 500; color: #d8dde2;">Яркость</div>
+      <div style="font-size: 17px; color: #5f666e;">80 %</div>
+      <div style="color: #3a4046; display: flex;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
+      </div>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 22px; height: 74px; padding: 0 22px; border-radius: 12px; background: #16181b; box-sizing: border-box;">
+      <div style="color: #9aa1a9; display: flex;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.5"/><circle cx="12" cy="7.8" r="1" fill="currentColor" stroke="none"/></svg>
+      </div>
+      <div style="flex-grow: 1; font-size: 25px; font-weight: 500; color: #d8dde2;">Состояние прибора</div>
+      <div style="font-size: 17px; color: #5f666e;">v0.1</div>
+      <div style="color: #3a4046; display: flex;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="border-top: 1px solid #1c1f23; padding: 13px 32px; margin-top: 18px; display: flex; justify-content: center; gap: 30px; font-size: 15px; color: #646b73;">
+    <span><span style="color: #9aa1a9; font-weight: 500;">Энкодер 1</span> — выбор</span>
+    <span style="color: #2a2e34;">·</span>
+    <span><span style="color: #9aa1a9; font-weight: 500;">нажатие</span> — войти</span>
+    <span style="color: #2a2e34;">·</span>
+    <span><span style="color: #9aa1a9; font-weight: 500;">кнопка энкодера 2</span> — назад</span>
+  </div>
+
+</div>
+    </div></div>
+    <p class="note">Крупные строки списка, справа у каждой — текущее значение, чтобы не заходить внутрь ради проверки. Выделение ведётся энкодером.</p>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <span class="num">06</span>
+      <h2>Настройка эфира — шкала</h2>
+    </div>
+    <div class="screen"><div class="screen-inner">
+<div style="width: 1280px; height: 720px; background: #0e0f11; color: #f2f3f5; font-family: 'IBM Plex Sans', system-ui, sans-serif; display: flex; flex-direction: column; overflow: hidden;">
+
+  <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 32px 0 32px;">
+    <div style="display: flex; align-items: baseline; gap: 10px;">
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 500; color: #9aa1a9; letter-spacing: 0.5px;">22:19</div>
+      <div style="font-size: 15px; color: #5f666e;">ср, 26 авг</div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 22px;">
+      <div style="display: flex; align-items: center; gap: 8px; color: #9aa1a9;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 9.5h3l4.5-3.5v12L7 14.5H4z"/><path d="M15.5 9.5a4 4 0 0 1 0 5"/><path d="M18 7a7.5 7.5 0 0 1 0 10"/></svg>
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 17px; font-weight: 500;">42</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 9px; background: #2a2110; border: 1px solid #6b5216; border-radius: 999px; padding: 7px 16px 7px 12px; color: #f5a524;">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 11v10"/><circle cx="12" cy="8.5" r="2.2"/><path d="M7.7 4.2a6.5 6.5 0 0 0 0 8.6"/><path d="M16.3 4.2a6.5 6.5 0 0 1 0 8.6"/></svg>
+        <span style="font-size: 15px; font-weight: 600; letter-spacing: 1.2px;">ЭФИР</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: flex; align-items: center; justify-content: space-between; padding: 20px 40px 0 40px;">
+    <div style="font-size: 28px; font-weight: 600;">Настройка эфира</div>
+    <div style="display: flex; background: #16181b; border: 1px solid #2a2e34; border-radius: 10px; padding: 4px; gap: 4px;">
+      <div style="font-size: 19px; font-weight: 500; color: #7d848c; padding: 10px 26px; border-radius: 7px;">УКВ</div>
+      <div style="font-size: 19px; font-weight: 600; color: #0e0f11; background: #f5a524; padding: 10px 26px; border-radius: 7px;">FM</div>
+    </div>
+  </div>
+
+  <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; padding: 0 40px;">
+
+    <div style="display: flex; align-items: baseline; justify-content: center; gap: 18px; margin-bottom: 46px;">
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 104px; font-weight: 600; line-height: 1; letter-spacing: -3px; color: #f5a524;">102.50</div>
+      <div style="font-size: 32px; color: #9aa1a9;">МГц</div>
+    </div>
+
+    <div style="position: relative; height: 118px;">
+
+      <div style="position: absolute; left: 0; right: 0; top: 46px; height: 4px; background: #22262b; border-radius: 2px;"></div>
+
+      <div style="position: absolute; left: 3.90%; top: 30px; width: 3px; height: 20px; background: #6b5216; border-radius: 2px;"></div>
+      <div style="position: absolute; left: 16.10%; top: 30px; width: 3px; height: 20px; background: #6b5216; border-radius: 2px;"></div>
+      <div style="position: absolute; left: 37.56%; top: 30px; width: 3px; height: 20px; background: #6b5216; border-radius: 2px;"></div>
+      <div style="position: absolute; left: 59.02%; top: 30px; width: 3px; height: 20px; background: #6b5216; border-radius: 2px;"></div>
+      <div style="position: absolute; left: 83.90%; top: 30px; width: 3px; height: 20px; background: #6b5216; border-radius: 2px;"></div>
+      <div style="position: absolute; left: 91.22%; top: 30px; width: 3px; height: 20px; background: #6b5216; border-radius: 2px;"></div>
+
+      <div style="position: absolute; left: 0%; top: 56px; width: 2px; height: 14px; background: #3a4046;"></div>
+      <div style="position: absolute; left: 12.20%; top: 56px; width: 2px; height: 9px; background: #2a2e34;"></div>
+      <div style="position: absolute; left: 24.39%; top: 56px; width: 2px; height: 14px; background: #3a4046;"></div>
+      <div style="position: absolute; left: 36.59%; top: 56px; width: 2px; height: 9px; background: #2a2e34;"></div>
+      <div style="position: absolute; left: 48.78%; top: 56px; width: 2px; height: 14px; background: #3a4046;"></div>
+      <div style="position: absolute; left: 60.98%; top: 56px; width: 2px; height: 9px; background: #2a2e34;"></div>
+      <div style="position: absolute; left: 73.17%; top: 56px; width: 2px; height: 14px; background: #3a4046;"></div>
+      <div style="position: absolute; left: 85.37%; top: 56px; width: 2px; height: 9px; background: #2a2e34;"></div>
+      <div style="position: absolute; left: 97.56%; top: 56px; width: 2px; height: 14px; background: #3a4046;"></div>
+
+      <div style="position: absolute; left: 0%; top: 76px; font-family: 'IBM Plex Mono', monospace; font-size: 15px; color: #5f666e;">87.5</div>
+      <div style="position: absolute; left: 24.39%; top: 76px; font-family: 'IBM Plex Mono', monospace; font-size: 15px; color: #5f666e;">92.5</div>
+      <div style="position: absolute; left: 48.78%; top: 76px; font-family: 'IBM Plex Mono', monospace; font-size: 15px; color: #5f666e;">97.5</div>
+      <div style="position: absolute; left: 73.17%; top: 76px; font-family: 'IBM Plex Mono', monospace; font-size: 15px; color: #5f666e;">102.5</div>
+      <div style="position: absolute; right: 0; top: 76px; font-family: 'IBM Plex Mono', monospace; font-size: 15px; color: #5f666e;">108.0</div>
+
+      <div style="position: absolute; left: 73.17%; top: 14px; width: 6px; height: 68px; background: #f5a524; border-radius: 3px; margin-left: -2px; box-shadow: 0 0 22px rgba(245,165,36,0.55);"></div>
+      <div style="position: absolute; left: 73.17%; top: 0px; margin-left: -30px; width: 62px; text-align: center; font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; color: #0e0f11; background: #f5a524; border-radius: 5px; padding: 3px 0;">RETRO</div>
+    </div>
+
+    <div style="display: flex; justify-content: center; gap: 12px; margin-top: 34px; font-size: 16px; color: #646b73;">
+      <span style="display: inline-flex; align-items: center; gap: 8px;">
+        <span style="width: 3px; height: 14px; background: #6b5216; border-radius: 2px; display: inline-block;"></span>
+        засечки — станции, найденные автопоиском (6)
+      </span>
+    </div>
+
+  </div>
+
+  <div style="border-top: 1px solid #1c1f23; padding: 13px 32px; display: flex; justify-content: center; gap: 30px; font-size: 15px; color: #646b73;">
+    <span><span style="color: #9aa1a9; font-weight: 500;">Энкодер 1</span> — перестройка</span>
+    <span style="color: #2a2e34;">·</span>
+    <span><span style="color: #9aa1a9; font-weight: 500;">нажатие</span> — автопоиск по диапазону</span>
+    <span style="color: #2a2e34;">·</span>
+    <span><span style="color: #9aa1a9; font-weight: 500;">MEM</span> — на пресет</span>
+  </div>
+
+</div>
+    </div></div>
+    <p class="note">Засечки на шкале — станции, найденные автопоиском. Сверху переключатель диапазона. Бегунок подписан именем текущей станции.</p>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <span class="num">07</span>
+      <h2>Экранная клавиатура</h2>
+    </div>
+    <div class="screen"><div class="screen-inner">
+<div style="width: 1280px; height: 720px; background: #0e0f11; color: #f2f3f5; font-family: 'IBM Plex Sans', system-ui, sans-serif; display: flex; flex-direction: column; overflow: hidden;">
+
+  <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 32px 0 32px;">
+    <div style="display: flex; align-items: baseline; gap: 10px;">
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 500; color: #9aa1a9; letter-spacing: 0.5px;">22:24</div>
+      <div style="font-size: 15px; color: #5f666e;">ср, 26 авг</div>
+    </div>
+    <div style="font-size: 17px; color: #7d848c;">Название пресета P3</div>
+  </div>
+
+  <div style="padding: 16px 40px 0 40px;">
+    <div style="background: #16181b; border: 2px solid #f5a524; border-radius: 12px; padding: 16px 22px; display: flex; align-items: center; gap: 4px;">
+      <span style="font-size: 38px; font-weight: 500; letter-spacing: 0.3px;">Ретро ФМ</span>
+      <span style="width: 3px; height: 42px; background: #f5a524; border-radius: 2px; margin-left: 4px;"></span>
+    </div>
+  </div>
+
+  <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; gap: 10px; padding: 0 40px;">
+
+    <div style="display: flex; gap: 10px; justify-content: center;">
+      <div style="width: 90px; height: 72px; background: #1e2126; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 500; color: #d8dde2;">Й</div>
+      <div style="width: 90px; height: 72px; background: #1e2126; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 500; color: #d8dde2;">Ц</div>
+      <div style="width: 90px; height: 72px; background: #1e2126; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 500; color: #d8dde2;">У</div>
+      <div style="width: 90px; height: 72px; background: #1e2126; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 500; color: #d8dde2;">К</div>
+      <div style="width: 90px; height: 72px; background: #1e2126; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 500; color: #d8dde2;">Е</div>
+      <div style="width: 90px; height: 72px; background: #1e2126; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 500; color: #d8dde2;">Н</div>
+      <div style="width: 90px; height: 72px; background: #1e2126; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 500; color: #d8dde2;">Г</div>
+      <div style="width: 90px; height: 72px; background: #1e2126; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 500; color: #d8dde2;">Ш</div>
+      <div style="width: 90px; height: 72px; background: #1e2126; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 500; color: #d8dde2;">Щ</div>
+      <div style="width: 90px; height: 72px; background: #1e2126; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 500; color: #d8dde2;">З</div>
+      <div style="width: 90px; height: 72px; background: #1e2126; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 500; color: #d8dde2;">Х</div>
+      <div style="width: 90px; height: 72px; background: #1e2126; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 500; color: #d8dde2;">Ъ</div>
+    </div>
+
+    <div style="display: flex; gap: 10px; justify-content: center;">
+      <div style="width: 90px; height: 72px; background: #1e2126; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 500; color: #d8dde2;">Ф</div>
+      <div style="width: 90px; height: 72px; background: #1e2126; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 500; color: #d8dde2;">Ы</div>
+      <div style="width: 90px; height: 72px; background: #1e2126; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 500; color: #d8dde2;">В</div>
+      <div style="width: 90px; height: 72px; background: #1e2126; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 500; color: #d8dde2;">А</div>
+      <div style="width: 90px; height: 72px; background: #1e2126; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 500; color: #d8dde2;">П</div>
+      <div style="width: 90px; height: 72px; background: #1e2126; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 500; color: #d8dde2;">Р</div>
+      <div style="width: 90px; height: 72px; background: #1e2126; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 500; color: #d8dde2;">О</div>
+      <div style="width: 90px; height: 72px; background: #1e2126; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 500; color: #d8dde2;">Л</div>
+      <div style="width: 90px; height: 72px; background: #1e2126; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 500; color: #d8dde2;">Д</div>
+      <div style="width: 90px; height: 72px; background: #1e2126; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 500; color: #d8dde2;">Ж</div>
+      <div style="width: 90px; height: 72px; background: #1e2126; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 500; color: #d8dde2;">Э</div>
+    </div>
+
+    <div style="display: flex; gap: 10px; justify-content: center;">
+      <div style="width: 90px; height: 72px; background: #1e2126; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 500; color: #d8dde2;">Я</div>
+      <div style="width: 90px; height: 72px; background: #1e2126; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 500; color: #d8dde2;">Ч</div>
+      <div style="width: 90px; height: 72px; background: #1e2126; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 500; color: #d8dde2;">С</div>
+      <div style="width: 90px; height: 72px; background: #f5a524; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 700; color: #0e0f11; box-shadow: 0 0 0 4px rgba(245,165,36,0.28);">М</div>
+      <div style="width: 90px; height: 72px; background: #1e2126; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 500; color: #d8dde2;">И</div>
+      <div style="width: 90px; height: 72px; background: #1e2126; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 500; color: #d8dde2;">Т</div>
+      <div style="width: 90px; height: 72px; background: #1e2126; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 500; color: #d8dde2;">Ь</div>
+      <div style="width: 90px; height: 72px; background: #1e2126; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 500; color: #d8dde2;">Б</div>
+      <div style="width: 90px; height: 72px; background: #1e2126; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 500; color: #d8dde2;">Ю</div>
+      <div style="width: 140px; height: 72px; background: #24282e; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #9aa1a9;">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 5.5H9.2L3 12l6.2 6.5H20a1.5 1.5 0 0 0 1.5-1.5V7a1.5 1.5 0 0 0-1.5-1.5z"/><path d="M17 9.5l-5 5M12 9.5l5 5"/></svg>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 10px; justify-content: center;">
+      <div style="width: 170px; height: 72px; background: #24282e; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 600; color: #9aa1a9; letter-spacing: 0.5px;">РУС / ENG</div>
+      <div style="width: 140px; height: 72px; background: #24282e; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 600; color: #9aa1a9;">?123</div>
+      <div style="width: 470px; height: 72px; background: #1e2126; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #646b73; letter-spacing: 2px;">ПРОБЕЛ</div>
+      <div style="width: 220px; height: 72px; background: #1d3a22; border: 1px solid #2f6b3a; border-radius: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 21px; font-weight: 600; color: #66d182;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"/></svg>
+        Сохранить
+      </div>
+    </div>
+
+  </div>
+
+  <div style="border-top: 1px solid #1c1f23; padding: 13px 32px; display: flex; justify-content: center; gap: 30px; font-size: 15px; color: #646b73;">
+    <span><span style="color: #9aa1a9; font-weight: 500;">Крутилка</span> — выбор буквы</span>
+    <span style="color: #2a2e34;">·</span>
+    <span><span style="color: #9aa1a9; font-weight: 500;">нажатие</span> — ввод</span>
+    <span style="color: #2a2e34;">·</span>
+    <span><span style="color: #9aa1a9; font-weight: 500;">двойное нажатие</span> — сохранить</span>
+    <span style="color: #2a2e34;">·</span>
+    <span>или пальцем по экрану</span>
+  </div>
+
+</div>
+    </div></div>
+    <p class="note">Раскладка ЙЦУКЕН, клавиша выбрана энкодером и подсвечена. «Сохранить» — отдельная клавиша, она же двойное нажатие энкодера.</p>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <span class="num">08</span>
+      <h2>Ждущий режим</h2>
+    </div>
+    <div class="screen"><div class="screen-inner">
+<div style="width: 1280px; height: 720px; background: #08090a; color: #7d848c; font-family: 'IBM Plex Sans', system-ui, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; position: relative;">
+
+  <div style="font-family: 'IBM Plex Mono', monospace; font-size: 268px; font-weight: 500; line-height: 0.95; letter-spacing: -10px; color: #8d949b;">21:47</div>
+
+  <div style="font-size: 40px; font-weight: 400; color: #4e555c; margin-top: 22px; letter-spacing: 0.5px;">26 августа, среда</div>
+
+  <div style="position: absolute; bottom: 40px; left: 0; right: 0; display: flex; justify-content: center; align-items: center; gap: 12px;">
+    <div style="color: #45403a; display: flex;">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 11v10"/><circle cx="12" cy="8.5" r="2.2"/><path d="M7.7 4.2a6.5 6.5 0 0 0 0 8.6"/><path d="M16.3 4.2a6.5 6.5 0 0 1 0 8.6"/></svg>
+    </div>
+    <div style="font-size: 19px; color: #4e555c;">играет: <span style="color: #8a6a2c; font-weight: 500;">RETRO FM</span></div>
+  </div>
+
+</div>
+    </div></div>
+    <p class="note">Через три минуты без действий: часы во весь экран, яркость приглушена. Внизу мелко — что продолжает играть.</p>
+  </section>
+
+  <div class="closing">
+    <h3>Что здесь проверяется по ТЗ</h3>
+    <ul>
+      <li><b>Время слева вверху мелким шрифтом</b> на всех рабочих экранах, не перекрывая название станции.</li>
+      <li><b>Крупный шрифт названия</b> — требование по читаемости для пожилого пользователя, а не оформление.</li>
+      <li><b>Банк пресетов общий на оба режима</b>, тип хранится в самой ячейке. Нажатие ячейки другого типа само переключает прибор — экран 04 показывает этот переход.</li>
+      <li><b>Полоса подсказок внизу</b> на каждом экране: любой сценарий проходится физическими органами, без касания экрана.</li>
+      <li><b>Два эфирных диапазона</b>, а не один. На экране подписаны коротко — «УКВ» и «FM»; OIRT и CCIR остаются в документации, пользователю они ничего не говорят.</li>
+      <li><b>Режим читается цветом</b> раньше, чем прочитан текст: по бейджу справа вверху, по подсветке пресета, по цвету частоты.</li>
+    </ul>
+  </div>
+
+</div>
+
+<script>
+  (function () {
+    var screens = document.querySelectorAll('.screen');
+    function fit(el) {
+      var inner = el.querySelector('.screen-inner');
+      if (!inner) return;
+      inner.style.transform = 'scale(' + (el.clientWidth / 1280) + ')';
+    }
+    screens.forEach(function (el) {
+      fit(el);
+      if (typeof ResizeObserver !== 'undefined') {
+        new ResizeObserver(function () { fit(el); }).observe(el);
+      }
+    });
+    window.addEventListener('resize', function () { screens.forEach(fit); });
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(function () { screens.forEach(fit); });
+    }
+  })();
+</script>
