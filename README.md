@@ -49,6 +49,7 @@ Q13 закрыт 2026-08-26 — [25](docs/25-station-storage.md), §9.
 | [16-connection-list.md](docs/16-connection-list.md) | **Перечень соединений «откуда → куда»** — 98 строк для монтажа по списку или расстановки в Fritzing |
 | [17-audit-response-wiring.md](docs/17-audit-response-wiring.md) | Ответ на три внешних разбора схемы: критическая правка по MOSFET, `keycode`, дозаказ мелочи |
 | [18-similar-projects.md](docs/18-similar-projects.md) | Разбор двух похожих гибридных приёмников: что забрали, что отклонили |
+| [27-reference-sheet.md](docs/27-reference-sheet.md) | **Лист для сверки**: что берём готового (ESP-ADF, esp_lcd DSI, PPA, esp-hosted), что читаем как референс, и список известных граблей |
 | [26-firmware-spec.md](docs/26-firmware-spec.md) | **ТЗ на прошивку** для внешнего исполнителя: черновик заказчика, дополненный данными проекта и исправленный по принятым решениям |
 | [25-station-storage.md](docs/25-station-storage.md) | **Хранение станций (Q13, решено)**: почему формат прошивки не расширяется, и почему мастером стал наш файл, а `/stations.json` — проекцией |
 | [24-main-build-p4.md](docs/24-main-build-p4.md) | **Перенос основной сборки на ESP32-P4**: что стало основным, формат `/stations.json`, что открылось заново |
