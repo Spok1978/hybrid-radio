@@ -4,7 +4,8 @@ idf_component_register(
          "ipradio_input.c"
          "ipradio_storage.c"
          "ipradio_tuner.c"
+         "ipradio_audio.c"
     INCLUDE_DIRS "."
-    REQUIRES esp_driver_i2c esp_driver_gpio esp_timer esp_psram
-             fatfs sdmmc esp_driver_sdmmc json
+    REQUIRES esp_driver_i2c esp_driver_gpio esp_driver_i2s esp_timer
+             esp_psram fatfs sdmmc esp_driver_sdmmc json
 )

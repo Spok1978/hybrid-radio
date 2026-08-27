@@ -35,6 +35,7 @@
 #include "ipradio_input.h"
 #include "ipradio_storage.h"
 #include "ipradio_tuner.h"
+#include "ipradio_audio.h"
 
 static const char *TAG = "ip-radio";
 
@@ -128,6 +129,14 @@ static void scan_i2c(void)
     s_i2c_bus = bus;
 }
 
+/* Мост между автоматом и железом. Вызывается автоматом после каждого
+ * применённого события. */
+static void on_state_changed(const ipradio_snapshot_t *snap, void *ctx)
+{
+    (void) ctx;
+    ipradio_audio_apply(snap);
+}
+
 void app_main(void)
 {
     ESP_LOGI(TAG, "=== IP-Radio, проверочная сборка ===");
@@ -151,6 +160,21 @@ void app_main(void)
     /* Эфирный тюнер садится на ту же шину I²C, что и узлы платы.
      * Его отсутствие не фатально: прибор останется интернет-радио. */
     ipradio_tuner_init(s_i2c_bus);
+
+    /* Звуковой тракт: I²S на свой ЦАП, линия приглушения усилителя.
+     * Штатный усилитель платы при этом удерживается выключенным. */
+    ESP_ERROR_CHECK(ipradio_audio_init());
+
+    /* Замыкаем круг: любое изменение состояния сразу применяется
+     * к железу. Автомат зовёт это из своей задачи, поэтому
+     * обработчик обязан быть коротким — он и есть короткий. */
+    ipradio_subscribe(on_state_changed, NULL);
+
+    {   /* Применить то, что уже прочитано из хранилища. */
+        ipradio_snapshot_t snap;
+        ipradio_get(&snap);
+        ipradio_audio_apply(&snap);
+    }
 
     ESP_LOGI(TAG, "готово; дальше — проверка связки ADF с сетью через C6");
 
