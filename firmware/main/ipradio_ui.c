@@ -34,6 +34,7 @@
 #include "ipradio_ui_dialog.h"
 #include "ipradio_ui_idle.h"
 #include "ipradio_ui_menu.h"
+#include "ipradio_ui_tune.h"
 #include "ipradio_input.h"
 
 static const char *TAG = "ui";
@@ -261,19 +262,19 @@ static bool modal_filter(const ipradio_event_t *ev, void *ctx)
 
     bool dialog = (ipradio_dialog_current() != IPRADIO_DIALOG_NONE);
     bool menu   = ipradio_menu_visible();
+    bool tune   = ipradio_tune_visible();
 
     /* Долгое нажатие энкодера 1 открывает меню — но только с экрана
      * воспроизведения. Из диалога в меню не проваливаемся: прибор
      * задал вопрос и ждёт ответа. */
     if (ev->type == IPRADIO_EV_MENU) {
-        if (!dialog && !menu) {
+        if (!dialog && !menu && !tune) {
             modal_push(MODAL_OPEN_MENU, 0);
-            return true;
         }
-        return true;   /* и в меню, и в диалоге — просто гасим */
+        return true;   /* поверх модального экрана — просто гасим */
     }
 
-    if (!dialog && !menu) {
+    if (!dialog && !menu && !tune) {
         return false;  /* обычный экран, ничего не перехватываем */
     }
 
@@ -291,7 +292,7 @@ static bool modal_filter(const ipradio_event_t *ev, void *ctx)
      * человеку может понадобиться именно в тот момент, когда прибор
      * что-то от него хочет. */
     case IPRADIO_EV_MUTE_TOGGLE:
-        if (menu) {
+        if (menu || tune) {
             modal_push(MODAL_BACK, 0);
             return true;
         }
@@ -308,14 +309,34 @@ static bool modal_filter(const ipradio_event_t *ev, void *ctx)
  *  Меню
  * ------------------------------------------------------------------ */
 
+static void on_tune_closed(void *ctx)
+{
+    (void) ctx;
+
+    /* Вернулись на меню, а не на воспроизведение: экран настройки
+     * открывался из меню, и выход должен возвращать туда, откуда
+     * вошли. Меню всё это время было под нами и никуда не делось. */
+    ipradio_snapshot_t snap;
+    ipradio_get(&snap);
+    ipradio_menu_update(&snap);
+}
+
 static void on_menu_item(ipradio_menu_item_t item, void *ctx)
 {
     (void) ctx;
 
-    /* Подчинённые экраны (06 настройка эфира, 07 клавиатура и прочие)
-     * ещё не построены. Пока — запись в журнал: молчаливый пункт меню
-     * хуже отсутствующего, человек решит, что прибор завис. */
-    ESP_LOGW(TAG, "пункт меню %d: экран ещё не построен", (int) item);
+    switch (item) {
+    case IPRADIO_MENU_TUNE_FM:
+        ipradio_tune_open(on_tune_closed, NULL);
+        break;
+
+    /* Остальные подчинённые экраны ещё не построены. Пока — запись
+     * в журнал: молчаливый пункт меню хуже отсутствующего, человек
+     * решит, что прибор завис. */
+    default:
+        ESP_LOGW(TAG, "пункт меню %d: экран ещё не построен", (int) item);
+        break;
+    }
 }
 
 static void on_menu_closed(ipradio_menu_item_t item, void *ctx)
@@ -346,32 +367,31 @@ static void drain_modal_queue(void)
         xSemaphoreGive(s_lock);
 
         bool menu = ipradio_menu_visible();
+        bool tune = ipradio_tune_visible();
 
         switch (cmd.kind) {
         case MODAL_OPEN_MENU:
             ipradio_menu_open(on_menu_item, on_menu_closed, NULL);
             break;
 
+        /* Порядок проверок — порядок наложения экранов: настройка
+         * эфира открывается ИЗ меню и лежит поверх него, поэтому
+         * спрашивается первой. */
         case MODAL_MOVE:
-            if (menu) {
-                ipradio_menu_move(cmd.delta);
-            } else {
-                ipradio_dialog_move(cmd.delta);
-            }
+            if (tune)      ipradio_tune_move(cmd.delta);
+            else if (menu) ipradio_menu_move(cmd.delta);
+            else           ipradio_dialog_move(cmd.delta);
             break;
 
         case MODAL_SELECT:
-            if (menu) {
-                ipradio_menu_select();
-            } else {
-                ipradio_dialog_select();
-            }
+            if (tune)      ipradio_tune_select();
+            else if (menu) ipradio_menu_select();
+            else           ipradio_dialog_select();
             break;
 
         case MODAL_BACK:
-            if (menu) {
-                ipradio_menu_back();
-            }
+            if (tune)      ipradio_tune_back();
+            else if (menu) ipradio_menu_back();
             break;
         }
     }
@@ -532,6 +552,7 @@ static void apply_snapshot(const ipradio_snapshot_t *s)
 
     update_dialogs(s);
     ipradio_menu_update(s);
+    ipradio_tune_update(s);
 
     /* Ячейки пресетов: активная подсвечивается цветом своего типа. */
     for (int i = 0; i < PRESET_CELLS; i++) {
@@ -580,7 +601,7 @@ static void service_idle(void)
     /* Диалог важнее ждущего режима: если прибор ждёт ответа человека,
      * прятать вопрос за часами нельзя. */
     if (ipradio_dialog_current() != IPRADIO_DIALOG_NONE ||
-        ipradio_menu_visible()) {
+        ipradio_menu_visible() || ipradio_tune_visible()) {
         should = false;
     }
 
@@ -668,6 +689,11 @@ esp_err_t ipradio_ui_init(void)
     }
 
     derr = ipradio_menu_init(root);
+    if (derr != ESP_OK) {
+        return derr;
+    }
+
+    derr = ipradio_tune_init(root);
     if (derr != ESP_OK) {
         return derr;
     }
