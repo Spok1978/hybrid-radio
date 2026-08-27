@@ -32,6 +32,7 @@
 
 #include "board_pins.h"
 #include "ipradio_state.h"
+#include "ipradio_input.h"
 
 static const char *TAG = "ip-radio";
 
@@ -130,6 +131,10 @@ void app_main(void)
     /* Конечный автомат — единственный владелец состояния (§3).
      * Поднимается раньше всех модулей: они будут слать ему события. */
     ESP_ERROR_CHECK(ipradio_state_init());
+
+    /* Органы управления. Поднимаются после автомата: сразу начнут
+     * слать ему события от человека. */
+    ESP_ERROR_CHECK(ipradio_input_init());
 
     ESP_LOGI(TAG, "готово; дальше — проверка связки ADF с сетью через C6");
 
