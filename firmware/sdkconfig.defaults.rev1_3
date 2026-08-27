@@ -1,0 +1,8 @@
+# Взято дословно из примера 04_wifistation репозитория платы Waveshare.
+# Профиль под ревизию кристалла 1.x. Какая ревизия у нас - покажет
+# проверочная программа при первом запуске.
+# ESP32-P4 rev1.x compatibility profile (including rev1.3).
+CONFIG_ESP32P4_SELECTS_REV_LESS_V3=y
+CONFIG_ESP32P4_REV_MIN_100=y
+CONFIG_SPIRAM_SPEED_200M=y
+CONFIG_SPIRAM_SPEED=200

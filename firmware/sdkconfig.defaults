@@ -1,35 +1,47 @@
 # Значения по умолчанию для IP-Radio.
 #
-# Обновлено 2026-08-27. Вчера здесь стояло три строки, потому что имена
-# символов Kconfig я угадывать отказалась. Теперь их не надо угадывать:
-# ESP-ADF склонирован, и в нём есть готовый набор под нашу цель —
-# examples/player/pipeline_http_mp3/sdkconfig.defaults.esp32p4.
-# Ниже взято оттуда всё, что относится к кристаллу, и НЕ взято то,
-# что относится к чужой плате.
+# История файла за один день:
+#   вчера — три строки, потому что имена символов Kconfig я угадывать
+#           отказалась;
+#   утром — набор из ESP-ADF, examples/player/pipeline_http_mp3/
+#           sdkconfig.defaults.esp32p4;
+#   сейчас — за основу взят набор ВЕНДОРА ПЛАТЫ, examples/esp-idf/
+#           04_wifistation репозитория waveshareteam. Он ближе к нашему
+#           железу, чем общий для кристалла набор ADF.
+#
+# Расхождение, из-за которого пришлось переигрывать: ADF ставит PSRAM
+# на 200 МГц, Waveshare — на 250. Оказалось, что **скорость PSRAM зависит
+# от ревизии кристалла**: 200 для rev1.x, 250 для rev3.x. У ADF стоит
+# консервативное значение, работающее на обеих. Поэтому здесь скорость
+# НЕ задаётся: она приходит из профиля ревизии, см. ниже.
 
 CONFIG_IDF_TARGET="esp32p4"
-CONFIG_IDF_TARGET_ESP32P4=y
-CONFIG_IDF_TARGET_ARCH_RISCV=y
 
-# Частота ядра.
-CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_360=y
-CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ=360
-
-# Ревизия кристалла. n означает «ревизия 3.1 и выше».
-# ЕСЛИ проверочная программа покажет 1.x — переставить в y.
-CONFIG_ESP32P4_SELECTS_REV_LESS_V3=n
+# Флеш на плате 32 МБ (GD25Q256EYIGR, подтверждено схемой).
+CONFIG_ESPTOOLPY_FLASHMODE_QIO=y
+CONFIG_ESPTOOLPY_FLASHSIZE_32MB=y
+CONFIG_ESPTOOLPY_FLASHSIZE="32MB"
 
 # PSRAM: в неё лягут буфер потока и рабочая память декодера.
+# Скорость задаётся профилем ревизии.
 CONFIG_SPIRAM=y
-CONFIG_SPIRAM_SPEED_200M=y
+CONFIG_SPIRAM_XIP_FROM_PSRAM=y
 CONFIG_SPIRAM_ALLOW_STACK_EXTERNAL_MEMORY=y
 
+# Кэш и производительность — значения вендора платы.
+CONFIG_CACHE_L2_CACHE_256KB=y
+CONFIG_CACHE_L2_CACHE_LINE_128B=y
+CONFIG_COMPILER_OPTIMIZATION_PERF=y
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=10240
+CONFIG_FREERTOS_HZ=1000
+
 # Wi-Fi через сопроцессор ESP32-C6.
-# Ключ ESP_WIFI_REMOTE_LIBRARY_HOSTED подтверждён: он стоит именно так
-# в официальном наборе ADF под P4. Раньше был известен только по
-# поисковой выдаче и помечен как непроверенный.
+# Ключ ESP_WIFI_REMOTE_LIBRARY_HOSTED подтверждён по официальному набору
+# ADF под P4; раньше был известен только по поисковой выдаче.
+# Точка доступа нам не нужна — выключена, как и у вендора.
 CONFIG_SLAVE_IDF_TARGET_ESP32C6=y
 CONFIG_ESP_WIFI_REMOTE_LIBRARY_HOSTED=y
+CONFIG_ESP_WIFI_SOFTAP_SUPPORT=n
 
 # Буферы под поток. Значения из набора ADF: интернет-радио — ровно тот
 # сценарий, под который они и подбирались.
@@ -48,25 +60,33 @@ CONFIG_LWIP_UDP_RECVMBOX_SIZE=64
 CONFIG_LWIP_TCPIP_RECVMBOX_SIZE=64
 CONFIG_LWIP_TCP_SACK_OUT=y
 
-# Флеш на плате 32 МБ (GD25Q256EYIGR, подтверждено схемой).
-CONFIG_ESPTOOLPY_FLASHSIZE_32MB=y
-
 # Своя таблица разделов, состав — partitions.csv.
 CONFIG_PARTITION_TABLE_CUSTOM=y
 CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
 
 # --------------------------------------------------------------------
+# ПРОФИЛЬ РЕВИЗИИ — ОБЯЗАТЕЛЬНО ДОБАВИТЬ ОДИН ИЗ ДВУХ
+# --------------------------------------------------------------------
+# Рядом лежат sdkconfig.defaults.rev1_3 и sdkconfig.defaults.rev3_x,
+# взятые дословно у вендора платы. Они задают минимальную ревизию
+# и скорость PSRAM. Какая ревизия у нашего экземпляра — покажет
+# проверочная программа при первом запуске; до этого собирать
+# по консервативному профилю rev1_3.
+#
+# Подключается через SDKCONFIG_DEFAULTS, например:
+#   idf.py -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.rev3_x" build
+#
+# --------------------------------------------------------------------
 # ЧЕГО ЗДЕСЬ СОЗНАТЕЛЬНО НЕТ
 # --------------------------------------------------------------------
-# CONFIG_ESP32_P4_FUNCTION_EV_BOARD=y — в наборе ADF эта строка есть,
-#   но она выбирает звуковой HAL под плату Espressif EV-Board. У нас
-#   плата Waveshare, и её в списке звуковых плат ADF нет. Нам это
-#   и не нужно: звук идёт мимо штатного кодека, через свой PCM5102A
-#   по I²S (docs/26-firmware-spec.md, §2.5).
+# CONFIG_ESP32_P4_FUNCTION_EV_BOARD=y — в наборе ADF есть, но выбирает
+#   звуковой HAL под плату Espressif EV-Board. У нас плата Waveshare,
+#   и её в списке звуковых плат ADF нет. Нам это и не нужно: звук идёт
+#   мимо штатного кодека, через свой PCM5102A по I²S.
 #
 # CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y — в наборе ADF консоль уведена
-#   на USB-Serial/JTAG, потому что так устроен их стенд. У нашей платы
-#   есть мост CH343P на GPIO37/GPIO38, и консоль удобнее оставить на нём.
+#   на USB-Serial/JTAG под их стенд. У нашей платы есть мост CH343P
+#   на GPIO37/GPIO38, консоль удобнее оставить на нём.
 #
-# CONFIG_LVGL_PORT_ENABLE_PPA — поворот кадра. Появится, когда в проект
-#   придёт порт LVGL; сейчас этого символа ещё нет.
+# CONFIG_LVGL_PORT_ENABLE_PPA — поворот кадра. Появится вместе
+#   с портом LVGL; сейчас этого символа ещё нет.
