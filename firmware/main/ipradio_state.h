@@ -1,0 +1,153 @@
+/*
+ * ipradio_state.h — конечный автомат прибора: единственный владелец состояния.
+ *
+ * Требование docs/26-firmware-spec.md, §3: режим, станция, частота,
+ * громкость и mute живут в одном месте. Остальные модули состояние
+ * ЧИТАЮТ, а меняют только отправкой сообщения в очередь. Двух копий
+ * истины быть не должно — из этого прямо следует поведение громкости
+ * (§6.3) и пресетов (§6.2).
+ */
+
+#pragma once
+
+#include <stdbool.h>
+#include <stdint.h>
+
+#include "esp_err.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* ------------------------------------------------------------------ *
+ *  Типы
+ * ------------------------------------------------------------------ */
+
+/** Режим воспроизведения. Физического переключателя нет: режим —
+ *  программное состояние, docs/22-mode-switching.md. */
+typedef enum {
+    IPRADIO_MODE_FM = 0,   /**< эфир: УКВ или FM */
+    IPRADIO_MODE_NET,      /**< интернет-радио   */
+} ipradio_mode_t;
+
+/** Эфирный диапазон. На экране подписывается коротко — «УКВ» и «FM»,
+ *  без OIRT и CCIR (§5.1). */
+typedef enum {
+    IPRADIO_BAND_OIRT = 0, /**< УКВ, 65,8–74 МГц   */
+    IPRADIO_BAND_CCIR,     /**< FM, 87,5–108 МГц   */
+} ipradio_band_t;
+
+/** Состояние сети. Три разных случая недоступности требуют разной
+ *  реакции — docs/26-firmware-spec.md, §5.2. */
+typedef enum {
+    IPRADIO_NET_NOT_CONFIGURED = 0, /**< сохранённых сетей нет вовсе      */
+    IPRADIO_NET_DISCONNECTED,       /**< настроена, связи нет             */
+    IPRADIO_NET_CONNECTING,         /**< идёт подключение                 */
+    IPRADIO_NET_CONNECTED,          /**< связь есть                       */
+} ipradio_net_state_t;
+
+/** Что происходит со звуком прямо сейчас. */
+typedef enum {
+    IPRADIO_PLAY_IDLE = 0,   /**< ничего не играет                       */
+    IPRADIO_PLAY_PLAYING,    /**< играет                                 */
+    IPRADIO_PLAY_BUFFERING,  /**< поток открыт, наполняется буфер        */
+    IPRADIO_PLAY_ERROR,      /**< станция не отвечает                    */
+} ipradio_play_state_t;
+
+/* ------------------------------------------------------------------ *
+ *  Снимок состояния
+ * ------------------------------------------------------------------ */
+
+#define IPRADIO_NAME_MAX   64
+
+/** Полный снимок. Читатели получают копию, а не указатель на живые
+ *  данные: иначе состояние поменяется прямо во время отрисовки. */
+typedef struct {
+    ipradio_mode_t       mode;
+
+    /* Эфир */
+    ipradio_band_t       band;
+    uint32_t             freq_khz;                 /**< текущая частота     */
+    char                 rds_name[IPRADIO_NAME_MAX];   /**< имя из RDS      */
+    bool                 rds_valid;                /**< RDS синхронизирован */
+    uint8_t              signal_level;             /**< 0…100               */
+
+    /* Интернет */
+    char                 station_name[IPRADIO_NAME_MAX]; /**< имя станции   */
+    char                 icy_title[IPRADIO_NAME_MAX];    /**< метаданные    */
+    uint16_t             bitrate_kbps;
+    uint8_t              buffer_fill;              /**< 0…100               */
+
+    /* Общее */
+    ipradio_play_state_t play;
+    ipradio_net_state_t  net;
+    int8_t               active_preset;            /**< 1…N, или -1         */
+
+    /* Громкость: ОДНО логическое значение на оба режима, §6.3.
+     * Поправка на режим применяется при переносе на железо, а не
+     * хранится отдельными значениями. */
+    uint8_t              volume;                   /**< 0…100               */
+    bool                 muted;
+} ipradio_snapshot_t;
+
+/* ------------------------------------------------------------------ *
+ *  События
+ * ------------------------------------------------------------------ */
+
+typedef enum {
+    /* От органов управления */
+    IPRADIO_EV_VOLUME_DELTA,      /**< поворот энкодера 2, arg = ±шаги      */
+    IPRADIO_EV_MUTE_TOGGLE,       /**< нажатие энкодера 2                   */
+    IPRADIO_EV_MODE_TOGGLE,       /**< кнопка MODE                          */
+    IPRADIO_EV_PRESET_PRESSED,    /**< arg = номер ячейки, 1…N              */
+    IPRADIO_EV_PRESET_HOLD,       /**< долгое нажатие: записать текущую     */
+    IPRADIO_EV_TUNE_DELTA,        /**< поворот энкодера 1, arg = ±шаги      */
+    IPRADIO_EV_SELECT,            /**< короткое нажатие энкодера 1          */
+    IPRADIO_EV_MENU,              /**< долгое нажатие энкодера 1            */
+    IPRADIO_EV_POWER,             /**< кнопка питания                       */
+
+    /* От железа и сети */
+    IPRADIO_EV_RDS_UPDATE,        /**< пришло имя станции из RDS            */
+    IPRADIO_EV_ICY_UPDATE,        /**< пришли метаданные потока             */
+    IPRADIO_EV_NET_STATE,         /**< arg = ipradio_net_state_t            */
+    IPRADIO_EV_PLAY_STATE,        /**< arg = ipradio_play_state_t           */
+    IPRADIO_EV_SIGNAL_LEVEL,      /**< arg = 0…100                          */
+    IPRADIO_EV_BUFFER_FILL,       /**< arg = 0…100                          */
+
+    /* Служебное */
+    IPRADIO_EV_TICK,              /**< раз в секунду: часы, ждущий режим    */
+} ipradio_event_type_t;
+
+typedef struct {
+    ipradio_event_type_t type;
+    int32_t              arg;
+    const char          *text;    /**< для RDS и ICY; копируется автоматом  */
+} ipradio_event_t;
+
+/* ------------------------------------------------------------------ *
+ *  Интерфейс
+ * ------------------------------------------------------------------ */
+
+/** Поднять автомат и его задачу. Вызывать один раз при старте. */
+esp_err_t ipradio_state_init(void);
+
+/** Отправить событие. Можно звать из любой задачи и из обработчика
+ *  прерывания (в последнем случае — из нижней половины, не из ISR). */
+esp_err_t ipradio_post(const ipradio_event_t *ev);
+
+/** Короткая форма для событий без текста. */
+esp_err_t ipradio_post_simple(ipradio_event_type_t type, int32_t arg);
+
+/** Получить копию текущего состояния. Безопасно из любой задачи. */
+void ipradio_get(ipradio_snapshot_t *out);
+
+/** Подписка на изменения: вызывается после каждого применённого события.
+ *  Обработчик исполняется в контексте задачи автомата, поэтому должен
+ *  быть коротким — обычно он просто будит задачу интерфейса. */
+typedef void (*ipradio_observer_t)(const ipradio_snapshot_t *snap, void *ctx);
+
+esp_err_t ipradio_subscribe(ipradio_observer_t cb, void *ctx);
+
+#ifdef __cplusplus
+}
+#endif

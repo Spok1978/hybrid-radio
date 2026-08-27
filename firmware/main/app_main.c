@@ -31,6 +31,7 @@
 #include "driver/i2c_master.h"
 
 #include "board_pins.h"
+#include "ipradio_state.h"
 
 static const char *TAG = "ip-radio";
 
@@ -126,9 +127,16 @@ void app_main(void)
     log_chip();
     scan_i2c();
 
+    /* Конечный автомат — единственный владелец состояния (§3).
+     * Поднимается раньше всех модулей: они будут слать ему события. */
+    ESP_ERROR_CHECK(ipradio_state_init());
+
     ESP_LOGI(TAG, "готово; дальше — проверка связки ADF с сетью через C6");
 
+    /* Раз в секунду будим автомат: по этому событию интерфейс
+     * перерисовывает часы и отсчитывает вход в ждущий режим. */
     while (1) {
-        vTaskDelay(pdMS_TO_TICKS(10000));
+        vTaskDelay(pdMS_TO_TICKS(1000));
+        ipradio_post_simple(IPRADIO_EV_TICK, 0);
     }
 }
