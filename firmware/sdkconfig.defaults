@@ -110,3 +110,38 @@ CONFIG_FREERTOS_ENABLE_BACKWARD_COMPATIBILITY=y
 # в списке ADF вариант на нашем кристалле, и он нужен лишь чтобы
 # audio_board скомпилировался. Функции audio_board_init мы не зовём.
 CONFIG_ESP32_P4_FUNCTION_EV_BOARD=y
+
+# --------------------------------------------------------------------
+# Кириллица в интерфейсе
+# --------------------------------------------------------------------
+# Встроенные шрифты LVGL (Montserrat) собраны только под ASCII.
+# Штатный способ добавить кириллицу - конвертер lv_font_conv, но он
+# на Node.js, которого на машине сборки нет.
+#
+# Вместо этого рендерим TTF прямо на плате: LVGL умеет это через
+# lv_tiny_ttf (сборка на stb_truetype). Шрифт кладём в образ файлом,
+# см. main/assets и tools/subset_font.py.
+#
+# Побочная выгода: размер кегля задаётся во время работы, а не при
+# сборке. Двенадцать экранов из 28-screen-mockups.md пользуются шестью
+# кеглями - собирать под каждый отдельную таблицу глифов не придётся.
+#
+# FILE_SUPPORT выключен намеренно: шрифт лежит в образе, читать его
+# с карты незачем, а поддержка файлов тянет за собой лишний код.
+CONFIG_LV_USE_TINY_TTF=y
+# CONFIG_LV_TINY_TTF_FILE_SUPPORT is not set
+CONFIG_LV_TINY_TTF_CACHE_GLYPH_CNT=256
+CONFIG_LV_TINY_TTF_CACHE_KERNING_CNT=256
+
+# Растровые Montserrat 16/20/22/28/48 включались, пока подписи были
+# латиницей. Теперь их никто не зовёт: весь текст идёт нашим DejaVu.
+# Компоновщик и так их выбрасывал - образ после перехода на TTF стал
+# на 72 КБ меньше, - но пусть конфигурация не обещает того, чего нет.
+#
+# Montserrat 14 остаётся: это LV_FONT_DEFAULT, без него LVGL
+# не собирается. В отрисовке он не участвует.
+# CONFIG_LV_FONT_MONTSERRAT_16 is not set
+# CONFIG_LV_FONT_MONTSERRAT_20 is not set
+# CONFIG_LV_FONT_MONTSERRAT_22 is not set
+# CONFIG_LV_FONT_MONTSERRAT_28 is not set
+# CONFIG_LV_FONT_MONTSERRAT_48 is not set

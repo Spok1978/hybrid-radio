@@ -29,6 +29,7 @@
 
 #include "ipradio_state.h"
 #include "ipradio_ui.h"
+#include "ipradio_fonts.h"
 
 static const char *TAG = "ui";
 
@@ -85,11 +86,11 @@ static void build_status_bar(lv_obj_t *root)
 
     /* Время — МЕЛКИМ шрифтом в ЛЕВОМ верхнем углу. Явное требование
      * ТЗ: оно не должно перекрывать название станции. */
-    s_clock = make_label(bar, &lv_font_montserrat_20, COL_TEXT_DIM, "--:--");
+    s_clock = make_label(bar, ipradio_font_20, COL_TEXT_DIM, "--:--");
     lv_obj_align(s_clock, LV_ALIGN_LEFT_MID, 0, 0);
 
     /* Справа: громкость и бейдж режима. */
-    s_vol_text = make_label(bar, &lv_font_montserrat_16, COL_TEXT_DIM, "0");
+    s_vol_text = make_label(bar, ipradio_font_16, COL_TEXT_DIM, "0");
     lv_obj_align(s_vol_text, LV_ALIGN_RIGHT_MID, -150, 0);
 
     s_mode_badge = lv_obj_create(bar);
@@ -100,8 +101,8 @@ static void build_status_bar(lv_obj_t *root)
     lv_obj_set_style_bg_opa(s_mode_badge, LV_OPA_COVER, 0);
     lv_obj_set_style_border_width(s_mode_badge, 1, 0);
 
-    s_mode_text = make_label(s_mode_badge, &lv_font_montserrat_14,
-                             COL_AMBER, "EFIR");
+    s_mode_text = make_label(s_mode_badge, ipradio_font_14,
+                             COL_AMBER, "ЭФИР");
     lv_obj_center(s_mode_text);
 }
 
@@ -109,16 +110,16 @@ static void build_center(lv_obj_t *root)
 {
     /* Крупное название — требование по читаемости с расстояния,
      * а не оформление. Ради него взят самый большой доступный шрифт. */
-    s_title = make_label(root, &lv_font_montserrat_48, COL_TEXT, "");
+    s_title = make_label(root, ipradio_font_48b, COL_TEXT, "");
     lv_obj_set_width(s_title, LV_PCT(90));
     lv_obj_set_style_text_align(s_title, LV_TEXT_ALIGN_CENTER, 0);
     lv_label_set_long_mode(s_title, LV_LABEL_LONG_DOT);
     lv_obj_align(s_title, LV_ALIGN_CENTER, 0, -60);
 
-    s_subtitle = make_label(root, &lv_font_montserrat_28, COL_AMBER, "");
+    s_subtitle = make_label(root, ipradio_font_28, COL_AMBER, "");
     lv_obj_align(s_subtitle, LV_ALIGN_CENTER, 0, 10);
 
-    s_detail = make_label(root, &lv_font_montserrat_16, COL_TEXT_FAINT, "");
+    s_detail = make_label(root, ipradio_font_16, COL_TEXT_FAINT, "");
     lv_obj_align(s_detail, LV_ALIGN_CENTER, 0, 56);
 
     /* Плашка приглушения. Значка в углу мало: человек решит, что прибор
@@ -133,8 +134,8 @@ static void build_center(lv_obj_t *root)
     lv_obj_set_style_border_color(s_mute_badge, lv_color_hex(0x6b2a26), 0);
     lv_obj_set_style_border_width(s_mute_badge, 1, 0);
 
-    lv_obj_t *mt = make_label(s_mute_badge, &lv_font_montserrat_22,
-                              COL_RED, "ZVUK VYKLYUCHEN");
+    lv_obj_t *mt = make_label(s_mute_badge, ipradio_font_22,
+                              COL_RED, "ЗВУК ВЫКЛЮЧЕН");
     lv_obj_center(mt);
     lv_obj_add_flag(s_mute_badge, LV_OBJ_FLAG_HIDDEN);
 }
@@ -170,12 +171,12 @@ static void build_presets(lv_obj_t *root)
         lv_obj_set_style_pad_all(cell, 12, 0);
 
         char num[8];
-        snprintf(num, sizeof(num), "P%d", i + 1);
-        lv_obj_t *n = make_label(cell, &lv_font_montserrat_14,
+        snprintf(num, sizeof(num), "П%d", i + 1);
+        lv_obj_t *n = make_label(cell, ipradio_font_14,
                                  COL_TEXT_FAINT, num);
         lv_obj_align(n, LV_ALIGN_TOP_LEFT, 0, 0);
 
-        s_preset_names[i] = make_label(cell, &lv_font_montserrat_16,
+        s_preset_names[i] = make_label(cell, ipradio_font_16,
                                        COL_TEXT_DIM, "-");
         lv_obj_align(s_preset_names[i], LV_ALIGN_BOTTOM_LEFT, 0, 0);
 
@@ -195,8 +196,8 @@ static void build_hints(lv_obj_t *root)
     lv_obj_set_style_border_color(line, lv_color_hex(0x1c1f23), 0);
     lv_obj_set_style_border_width(line, 1, 0);
 
-    lv_obj_t *t = make_label(line, &lv_font_montserrat_14, COL_TEXT_FAINT,
-        "Enkoder 1 - stancii   |   Enkoder 2 - gromkost   |   nazhatie - mute");
+    lv_obj_t *t = make_label(line, ipradio_font_14, COL_TEXT_FAINT,
+        "Энкодер 1 — станции   •   Энкодер 2 — громкость   •   нажатие — звук");
     lv_obj_center(t);
 }
 
@@ -223,7 +224,7 @@ static void apply_snapshot(const ipradio_snapshot_t *s)
     lv_obj_set_style_border_color(s_mode_badge,
         fm ? lv_color_hex(0x6b5216) : lv_color_hex(0x1c5b66), 0);
     lv_obj_set_style_text_color(s_mode_text, accent, 0);
-    lv_label_set_text(s_mode_text, fm ? "EFIR" : "INTERNET");
+    lv_label_set_text(s_mode_text, fm ? "ЭФИР" : "ИНТЕРНЕТ");
 
     /* Громкость: при mute зачёркнутой её не сделать без своего шрифта,
      * поэтому просто гасим цвет — сигналом служит плашка по центру. */
@@ -244,20 +245,20 @@ static void apply_snapshot(const ipradio_snapshot_t *s)
          * не должно, а частота человеку понятна. */
         if (s->rds_valid && s->rds_name[0]) {
             lv_label_set_text(s_title, s->rds_name);
-            snprintf(buf, sizeof(buf), "%u.%02u MHz",
+            snprintf(buf, sizeof(buf), "%u.%02u МГц",
                      (unsigned) (s->freq_khz / 1000),
                      (unsigned) ((s->freq_khz % 1000) / 10));
             lv_label_set_text(s_subtitle, buf);
             lv_label_set_text(s_detail,
-                (s->band == IPRADIO_BAND_OIRT) ? "UKV" : "FM");
+                (s->band == IPRADIO_BAND_OIRT) ? "УКВ" : "FM");
         } else {
-            snprintf(buf, sizeof(buf), "%u.%02u MHz",
+            snprintf(buf, sizeof(buf), "%u.%02u МГц",
                      (unsigned) (s->freq_khz / 1000),
                      (unsigned) ((s->freq_khz % 1000) / 10));
             lv_label_set_text(s_title, buf);
             lv_label_set_text(s_subtitle,
-                (s->band == IPRADIO_BAND_OIRT) ? "UKV" : "FM");
-            lv_label_set_text(s_detail, "RDS ne peredaetsya");
+                (s->band == IPRADIO_BAND_OIRT) ? "УКВ" : "FM");
+            lv_label_set_text(s_detail, "RDS не передаётся");
         }
     } else {
         lv_label_set_text(s_title,
@@ -267,17 +268,17 @@ static void apply_snapshot(const ipradio_snapshot_t *s)
         case IPRADIO_PLAY_BUFFERING:
             /* На экране пишем, что происходит, а не молчим:
              * тишина без объяснения читается как поломка. */
-            lv_label_set_text(s_subtitle, "Podklyuchenie... buferizaciya");
-            lv_label_set_text(s_detail, "potok otkryt, napolnyaetsya bufer");
+            lv_label_set_text(s_subtitle, "Подключение…");
+            lv_label_set_text(s_detail, "поток открыт, наполняется буфер");
             break;
         case IPRADIO_PLAY_ERROR:
-            lv_label_set_text(s_subtitle, "Stanciya ne otvechaet");
-            lv_label_set_text(s_detail, "Wi-Fi rabotaet, delo v stancii");
+            lv_label_set_text(s_subtitle, "Станция не отвечает");
+            lv_label_set_text(s_detail, "Wi-Fi работает — дело в станции");
             break;
         default:
             lv_label_set_text(s_subtitle,
                 s->icy_title[0] ? s->icy_title : "");
-            snprintf(buf, sizeof(buf), "%u kbps   bufer %u%%",
+            snprintf(buf, sizeof(buf), "%u кбит/с   •   буфер %u %%",
                      (unsigned) s->bitrate_kbps, (unsigned) s->buffer_fill);
             lv_label_set_text(s_detail, buf);
             break;
@@ -349,6 +350,12 @@ esp_err_t ipradio_ui_init(void)
     s_lock = xSemaphoreCreateMutex();
     if (!s_lock) {
         return ESP_ERR_NO_MEM;
+    }
+
+    /* Шрифты - раньше всего: первый же make_label к ним обратится. */
+    esp_err_t err = ipradio_fonts_init();
+    if (err != ESP_OK) {
+        return err;
     }
 
     lv_obj_t *root = lv_screen_active();
