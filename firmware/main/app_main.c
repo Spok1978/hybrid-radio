@@ -36,6 +36,7 @@
 #include "ipradio_storage.h"
 #include "ipradio_tuner.h"
 #include "ipradio_audio.h"
+#include "ipradio_net.h"
 
 static const char *TAG = "ip-radio";
 
@@ -169,6 +170,11 @@ void app_main(void)
      * к железу. Автомат зовёт это из своей задачи, поэтому
      * обработчик обязан быть коротким — он и есть короткий. */
     ipradio_subscribe(on_state_changed, NULL);
+
+    /* Сеть поднимается ПОСЛЕДНЕЙ и не блокирует: эфир не должен ждать
+     * сеть (§3.2). Тюнер к этому моменту уже играет. */
+    ipradio_net_init();
+    ipradio_net_start_sntp("MSK-3");
 
     {   /* Применить то, что уже прочитано из хранилища. */
         ipradio_snapshot_t snap;
