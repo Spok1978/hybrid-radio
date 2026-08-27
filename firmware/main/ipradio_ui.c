@@ -32,6 +32,8 @@
 #include "ipradio_fonts.h"
 #include "ipradio_ui_theme.h"
 #include "ipradio_ui_dialog.h"
+#include "ipradio_ui_idle.h"
+#include "ipradio_input.h"
 
 static const char *TAG = "ui";
 
@@ -474,6 +476,41 @@ void ipradio_ui_notify(const ipradio_snapshot_t *snap)
     xSemaphoreGive(s_lock);
 }
 
+/* ------------------------------------------------------------------ *
+ *  Ждущий режим
+ * ------------------------------------------------------------------ */
+
+/* Порог сторожит задача интерфейса, а не автомат: это свойство экрана,
+ * а не радио. Прибор в ждущем режиме продолжает играть, и автомату
+ * знать о нём незачем.
+ *
+ * Счётчик бездействия ведёт модуль ввода — он и так опрашивает органы
+ * каждые 5 мс, и любое касание сбрасывает счётчик само. Отдельного
+ * учёта здесь не нужно. */
+static void service_idle(void)
+{
+    bool should = (ipradio_input_idle_ms() >= IPRADIO_IDLE_TIMEOUT_MS);
+
+    /* Диалог важнее ждущего режима: если прибор ждёт ответа человека,
+     * прятать вопрос за часами нельзя. */
+    if (ipradio_dialog_current() != IPRADIO_DIALOG_NONE) {
+        should = false;
+    }
+
+    if (should != ipradio_idle_active()) {
+        ipradio_idle_set_active(should);
+    }
+
+    if (should) {
+        /* Часы в ждущем режиме обновляются здесь, а не по снимку:
+         * событий может не быть минутами, а минута на часах меняется
+         * независимо от того, происходит ли что-нибудь с радио. */
+        ipradio_snapshot_t snap;
+        ipradio_get(&snap);
+        ipradio_idle_update(&snap);
+    }
+}
+
 static void ui_task(void *arg)
 {
     (void) arg;
@@ -490,6 +527,7 @@ static void ui_task(void *arg)
         }
 
         drain_modal_queue();
+        service_idle();
 
         uint32_t next = lv_timer_handler();
         if (next == LV_NO_TIMER_READY) {
@@ -533,6 +571,11 @@ esp_err_t ipradio_ui_init(void)
      * значило бы выделять память ровно тогда, когда что-то пошло
      * не так, - худший момент из возможных. */
     esp_err_t derr = ipradio_dialog_init(root);
+    if (derr != ESP_OK) {
+        return derr;
+    }
+
+    derr = ipradio_idle_init(root);
     if (derr != ESP_OK) {
         return derr;
     }

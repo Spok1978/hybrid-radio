@@ -11,6 +11,7 @@ idf_component_register(
          "ipradio_fonts.c"
          "ipradio_ui_theme.c"
          "ipradio_ui_dialog.c"
+         "ipradio_ui_idle.c"
     INCLUDE_DIRS "."
     # Шрифты кладутся в образ как есть и рендерятся на плате
     # (lv_tiny_ttf). Урезаны до латиницы с кириллицей:
@@ -22,5 +23,6 @@ idf_component_register(
              esp_wifi esp_netif esp_event nvs_flash lwip
              esp_http_client esp-tls
              lvgl__lvgl
+             waveshare__esp32_p4_wifi6_touch_lcd_5
              audio_pipeline audio_stream esp-adf-libs audio_sal
 )
