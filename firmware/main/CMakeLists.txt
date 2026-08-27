@@ -9,6 +9,8 @@ idf_component_register(
          "ipradio_ui.c"
          "ipradio_netradio.c"
          "ipradio_fonts.c"
+         "ipradio_ui_theme.c"
+         "ipradio_ui_dialog.c"
     INCLUDE_DIRS "."
     # Шрифты кладутся в образ как есть и рендерятся на плате
     # (lv_tiny_ttf). Урезаны до латиницы с кириллицей:

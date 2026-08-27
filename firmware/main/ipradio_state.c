@@ -44,6 +44,9 @@ static struct {
 } s_observers[MAX_OBSERVERS];
 static size_t s_observer_count;
 
+static ipradio_event_filter_t s_filter;
+static void                  *s_filter_ctx;
+
 /* ------------------------------------------------------------------ *
  *  Громкость
  * ------------------------------------------------------------------ */
@@ -114,7 +117,13 @@ static void apply_mode_toggle(void)
 
     if (!net_playable()) {
         /* Переключение заблокировано. Эфир продолжает играть, а причину
-         * покажет интерфейс — он читает поле net. */
+         * покажет интерфейс — он читает поле net.
+         *
+         * Счётчик поднимаем здесь: без него интерфейс не отличит
+         * «сети нет, и человек только что об этом спросил» от
+         * «сети нет, и никого это не занимает». Диалог должен
+         * появляться в ответ на нажатие, а не висеть сам по себе. */
+        s_state.mode_denied_seq++;
         ESP_LOGI(TAG, "MODE: сети нет (%d), остаёмся в эфире", s_state.net);
         return;
     }
@@ -196,6 +205,20 @@ static void state_task(void *arg)
     for (;;) {
         if (xQueueReceive(s_queue, &e, portMAX_DELAY) != pdTRUE) {
             continue;
+        }
+
+        /* Фильтр — до захвата замка и до применения события.
+         * Он может забрать событие себе: пока висит диалог, энкодер 1
+         * переставляет выделение в нём, а не перебирает станции. */
+        if (s_filter) {
+            ipradio_event_t ev = {
+                .type     = e.type,
+                .arg      = e.arg,
+                .text     = e.has_text ? e.text : NULL,
+            };
+            if (s_filter(&ev, s_filter_ctx)) {
+                continue;
+            }
         }
 
         xSemaphoreTake(s_lock, portMAX_DELAY);
@@ -287,4 +310,22 @@ esp_err_t ipradio_subscribe(ipradio_observer_t cb, void *ctx)
     s_observers[s_observer_count].ctx = ctx;
     s_observer_count++;
     return ESP_OK;
+}
+
+void ipradio_set_event_filter(ipradio_event_filter_t cb, void *ctx)
+{
+    /* Порядок присваивания важен. Ставим: сначала контекст, потом
+     * указатель — иначе задача автомата может вклиниться между ними
+     * и позвать фильтр с чужим контекстом. Снимаем: сначала указатель.
+     *
+     * Замок здесь не нужен и был бы вреден: фильтр ставит задача
+     * интерфейса, а зовёт задача автомата, и брать один замок на два
+     * разных потока событий — прямая дорога к взаимной блокировке. */
+    if (cb) {
+        s_filter_ctx = ctx;
+        s_filter     = cb;
+    } else {
+        s_filter     = NULL;
+        s_filter_ctx = NULL;
+    }
 }

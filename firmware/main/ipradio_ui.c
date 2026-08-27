@@ -30,25 +30,45 @@
 #include "ipradio_state.h"
 #include "ipradio_ui.h"
 #include "ipradio_fonts.h"
+#include "ipradio_ui_theme.h"
+#include "ipradio_ui_dialog.h"
 
 static const char *TAG = "ui";
 
-/* Цвета из макетов. */
-#define COL_BG          lv_color_hex(0x0e0f11)
-#define COL_SURFACE     lv_color_hex(0x16181b)
-#define COL_BORDER      lv_color_hex(0x2a2e34)
-#define COL_TEXT        lv_color_hex(0xf2f3f5)
-#define COL_TEXT_DIM    lv_color_hex(0x9aa1a9)
-#define COL_TEXT_FAINT  lv_color_hex(0x5f666e)
-#define COL_AMBER       lv_color_hex(0xf5a524)   /* эфир    */
-#define COL_CYAN        lv_color_hex(0x3ec5d8)   /* интернет */
-#define COL_RED         lv_color_hex(0xf05b52)   /* mute    */
-
 #define PRESET_CELLS    8
 
-static SemaphoreHandle_t  s_lock;      /* защищает снимок ниже */
+static SemaphoreHandle_t  s_lock;      /* защищает снимок и очередь ниже */
 static ipradio_snapshot_t s_pending;
 static volatile bool      s_dirty;
+
+/* Последний увиденный счётчик отказов кнопке MODE. Диалог поднимается,
+ * когда значение в снимке от него отличается, — то есть в ответ
+ * на нажатие, а не просто потому, что сеть недоступна. */
+static uint16_t s_seen_denied_seq;
+
+/* Показан ли уже диалог про молчащую станцию. Без этого он всплывал бы
+ * заново при каждом снимке: IPRADIO_PLAY_ERROR — состояние, а не
+ * событие, и держится, пока его не сменят. */
+static bool s_station_dead_shown;
+
+/* Команды диалогу от органов управления.
+ *
+ * Фильтр событий работает в задаче автомата, а трогать виджеты можно
+ * только из задачи LVGL (правило 1 в шапке файла). Поэтому фильтр
+ * не рисует, а складывает команду сюда, и её разбирает ui_task.
+ * Кольцо короткое: быстрее, чем человек крутит энкодер, команды
+ * не приходят, а переполнение означало бы, что интерфейс завис —
+ * и лишние повороты тогда всё равно не нужны. */
+#define MODAL_QUEUE_LEN 8
+
+typedef struct {
+    bool is_select;   /* true — подтверждение, false — сдвиг выделения */
+    int  delta;
+} modal_cmd_t;
+
+static modal_cmd_t s_modal_q[MODAL_QUEUE_LEN];
+static uint8_t     s_modal_head;
+static uint8_t     s_modal_count;
 
 /* Виджеты, которые меняются по состоянию. */
 static lv_obj_t *s_clock;
@@ -66,15 +86,10 @@ static lv_obj_t *s_preset_names[PRESET_CELLS];
  *  Сборка экрана
  * ------------------------------------------------------------------ */
 
-static lv_obj_t *make_label(lv_obj_t *parent, const lv_font_t *font,
-                            lv_color_t color, const char *text)
-{
-    lv_obj_t *l = lv_label_create(parent);
-    lv_obj_set_style_text_font(l, font, 0);
-    lv_obj_set_style_text_color(l, color, 0);
-    lv_label_set_text(l, text ? text : "");
-    return l;
-}
+/* Раньше здесь был свой make_label. Уехал в ipradio_ui_theme.c,
+ * когда экранов стало больше одного: цвета и форма подписей
+ * должны быть общими, иначе разъедутся. */
+#define make_label ipradio_ui_label
 
 static void build_status_bar(lv_obj_t *root)
 {
@@ -205,6 +220,147 @@ static void build_hints(lv_obj_t *root)
  *  Обновление по состоянию
  * ------------------------------------------------------------------ */
 
+/* ------------------------------------------------------------------ *
+ *  Диалоги недоступности сети
+ * ------------------------------------------------------------------ */
+
+/* Фильтр событий: пока диалог открыт, энкодер 1 принадлежит ему.
+ * Работает в задаче автомата, поэтому только складывает команду
+ * в кольцо — рисует ui_task. */
+static bool modal_filter(const ipradio_event_t *ev, void *ctx)
+{
+    (void) ctx;
+
+    bool select;
+    int  delta = 0;
+
+    switch (ev->type) {
+    case IPRADIO_EV_TUNE_DELTA:
+        select = false;
+        delta  = (int) ev->arg;
+        break;
+    case IPRADIO_EV_SELECT:
+        select = true;
+        break;
+
+    /* Всё остальное проходит насквозь намеренно. Громкость, звук
+     * и питание обязаны работать поверх любого диалога: прибор
+     * не должен становиться неуправляемым из-за плашки на экране. */
+    default:
+        return false;
+    }
+
+    xSemaphoreTake(s_lock, portMAX_DELAY);
+    if (s_modal_count < MODAL_QUEUE_LEN) {
+        uint8_t tail = (uint8_t) ((s_modal_head + s_modal_count) % MODAL_QUEUE_LEN);
+        s_modal_q[tail].is_select = select;
+        s_modal_q[tail].delta     = delta;
+        s_modal_count++;
+    }
+    xSemaphoreGive(s_lock);
+
+    return true;   /* до автомата событие не доходит */
+}
+
+static void drain_modal_queue(void)
+{
+    for (;;) {
+        modal_cmd_t cmd;
+
+        xSemaphoreTake(s_lock, portMAX_DELAY);
+        if (s_modal_count == 0) {
+            xSemaphoreGive(s_lock);
+            return;
+        }
+        cmd = s_modal_q[s_modal_head];
+        s_modal_head = (uint8_t) ((s_modal_head + 1) % MODAL_QUEUE_LEN);
+        s_modal_count--;
+        xSemaphoreGive(s_lock);
+
+        if (cmd.is_select) {
+            ipradio_dialog_select();
+        } else {
+            ipradio_dialog_move(cmd.delta);
+        }
+    }
+}
+
+static void on_dialog_action(ipradio_dialog_action_t action, void *ctx)
+{
+    (void) ctx;
+
+    /* Диалог закрылся сам, перехват снимаем здесь. */
+    ipradio_set_event_filter(NULL, NULL);
+
+    switch (action) {
+    case IPRADIO_DIALOG_ACT_BACK_TO_FM:
+        /* Возврат в эфир разрешён всегда — на этом стоит §5.2. */
+        ipradio_post_simple(IPRADIO_EV_MODE_TOGGLE, 0);
+        break;
+
+    case IPRADIO_DIALOG_ACT_SETUP_WIFI:
+    case IPRADIO_DIALOG_ACT_PICK_STATION:
+        /* Экраны настройки и выбора станции ещё не построены
+         * (05 и 07 из макетов). Пока — запись в журнал, чтобы отказ
+         * был видимым: молчаливая кнопка хуже отсутствующей. */
+        ESP_LOGW(TAG, "экран для действия %d ещё не построен", (int) action);
+        break;
+
+    case IPRADIO_DIALOG_ACT_DISMISS:
+    default:
+        break;
+    }
+}
+
+static void raise_dialog(ipradio_dialog_kind_t kind, const char *detail)
+{
+    ipradio_dialog_show(kind, detail, on_dialog_action, NULL);
+    ipradio_set_event_filter(modal_filter, NULL);
+}
+
+static void update_dialogs(const ipradio_snapshot_t *s)
+{
+    /* 1. Человек нажал MODE, а сети нет. Счётчик изменился — значит
+     *    нажатие было именно сейчас, а не когда-то раньше. */
+    if (s->mode_denied_seq != s_seen_denied_seq) {
+        s_seen_denied_seq = s->mode_denied_seq;
+
+        if (s->net == IPRADIO_NET_NOT_CONFIGURED) {
+            raise_dialog(IPRADIO_DIALOG_WIFI_NOT_CONFIGURED, NULL);
+        } else {
+            /* Имя сети сюда придёт из модуля сети, когда появится
+             * его хранение; пока показываем безымянный вариант. */
+            raise_dialog(IPRADIO_DIALOG_WIFI_NO_LINK, NULL);
+        }
+        return;
+    }
+
+    /* 2. Станция молчит. Это состояние, а не событие, поэтому
+     *    поднимаем один раз за переход. */
+    bool dead = (s->mode == IPRADIO_MODE_NET) &&
+                (s->play == IPRADIO_PLAY_ERROR);
+
+    if (dead && !s_station_dead_shown) {
+        s_station_dead_shown = true;
+        raise_dialog(IPRADIO_DIALOG_STATION_DEAD,
+                     s->station_name[0] ? s->station_name : NULL);
+    } else if (!dead) {
+        s_station_dead_shown = false;
+    }
+
+    /* 3. Связь вернулась — плашку убираем сами, без участия человека.
+     *    Это правило 5 из §5.2: как только сеть есть, всё работает
+     *    снова и ничего нажимать не надо. */
+    if (s->net == IPRADIO_NET_CONNECTED) {
+        ipradio_dialog_kind_t k = ipradio_dialog_current();
+        if (k == IPRADIO_DIALOG_WIFI_NO_LINK ||
+            k == IPRADIO_DIALOG_WIFI_NOT_CONFIGURED) {
+            ipradio_dialog_hide();
+            ipradio_set_event_filter(NULL, NULL);
+        }
+    }
+}
+
 static void apply_snapshot(const ipradio_snapshot_t *s)
 {
     bool fm = (s->mode == IPRADIO_MODE_FM);
@@ -287,6 +443,8 @@ static void apply_snapshot(const ipradio_snapshot_t *s)
 
     lv_obj_set_style_text_color(s_subtitle, accent, 0);
 
+    update_dialogs(s);
+
     /* Ячейки пресетов: активная подсвечивается цветом своего типа. */
     for (int i = 0; i < PRESET_CELLS; i++) {
         bool active = (s->active_preset == i + 1);
@@ -331,6 +489,8 @@ static void ui_task(void *arg)
             apply_snapshot(&snap);
         }
 
+        drain_modal_queue();
+
         uint32_t next = lv_timer_handler();
         if (next == LV_NO_TIMER_READY) {
             next = 20;
@@ -367,6 +527,15 @@ esp_err_t ipradio_ui_init(void)
     build_center(root);
     build_presets(root);
     build_hints(root);
+
+    /* Плашки недоступности сети строятся сразу, а показываются
+     * по состоянию. Собирать их в момент, когда сеть уже отвалилась,
+     * значило бы выделять память ровно тогда, когда что-то пошло
+     * не так, - худший момент из возможных. */
+    esp_err_t derr = ipradio_dialog_init(root);
+    if (derr != ESP_OK) {
+        return derr;
+    }
 
     /* Первая отрисовка по текущему состоянию, чтобы экран не был
      * пустым до первого события. */
