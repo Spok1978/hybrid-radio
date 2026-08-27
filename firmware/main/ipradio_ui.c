@@ -33,9 +33,12 @@
 #include "ipradio_ui_theme.h"
 #include "ipradio_ui_dialog.h"
 #include "ipradio_ui_idle.h"
+#include "ipradio_ui_menu.h"
 #include "ipradio_input.h"
 
 static const char *TAG = "ui";
+
+static void apply_snapshot(const ipradio_snapshot_t *s);
 
 #define PRESET_CELLS    8
 
@@ -63,9 +66,16 @@ static bool s_station_dead_shown;
  * и лишние повороты тогда всё равно не нужны. */
 #define MODAL_QUEUE_LEN 8
 
+typedef enum {
+    MODAL_MOVE = 0,   /* сдвинуть выделение   */
+    MODAL_SELECT,     /* подтвердить          */
+    MODAL_BACK,       /* уровень вверх        */
+    MODAL_OPEN_MENU,  /* открыть меню         */
+} modal_kind_t;
+
 typedef struct {
-    bool is_select;   /* true — подтверждение, false — сдвиг выделения */
-    int  delta;
+    modal_kind_t kind;
+    int          delta;
 } modal_cmd_t;
 
 static modal_cmd_t s_modal_q[MODAL_QUEUE_LEN];
@@ -226,42 +236,98 @@ static void build_hints(lv_obj_t *root)
  *  Диалоги недоступности сети
  * ------------------------------------------------------------------ */
 
-/* Фильтр событий: пока диалог открыт, энкодер 1 принадлежит ему.
+/* Фильтр событий. Ставится один раз при подъёме интерфейса и висит
+ * всегда: ставить и снимать его при каждом диалоге значило бы
+ * заводить ещё одно состояние, которое можно рассинхронизировать.
+ * Решение принимается здесь, по обстановке.
+ *
  * Работает в задаче автомата, поэтому только складывает команду
- * в кольцо — рисует ui_task. */
+ * в кольцо — рисует ui_task (правило 1 в шапке файла). */
+static void modal_push(modal_kind_t kind, int delta)
+{
+    xSemaphoreTake(s_lock, portMAX_DELAY);
+    if (s_modal_count < MODAL_QUEUE_LEN) {
+        uint8_t tail = (uint8_t) ((s_modal_head + s_modal_count) % MODAL_QUEUE_LEN);
+        s_modal_q[tail].kind  = kind;
+        s_modal_q[tail].delta = delta;
+        s_modal_count++;
+    }
+    xSemaphoreGive(s_lock);
+}
+
 static bool modal_filter(const ipradio_event_t *ev, void *ctx)
 {
     (void) ctx;
 
-    bool select;
-    int  delta = 0;
+    bool dialog = (ipradio_dialog_current() != IPRADIO_DIALOG_NONE);
+    bool menu   = ipradio_menu_visible();
+
+    /* Долгое нажатие энкодера 1 открывает меню — но только с экрана
+     * воспроизведения. Из диалога в меню не проваливаемся: прибор
+     * задал вопрос и ждёт ответа. */
+    if (ev->type == IPRADIO_EV_MENU) {
+        if (!dialog && !menu) {
+            modal_push(MODAL_OPEN_MENU, 0);
+            return true;
+        }
+        return true;   /* и в меню, и в диалоге — просто гасим */
+    }
+
+    if (!dialog && !menu) {
+        return false;  /* обычный экран, ничего не перехватываем */
+    }
 
     switch (ev->type) {
     case IPRADIO_EV_TUNE_DELTA:
-        select = false;
-        delta  = (int) ev->arg;
-        break;
-    case IPRADIO_EV_SELECT:
-        select = true;
-        break;
+        modal_push(MODAL_MOVE, (int) ev->arg);
+        return true;
 
-    /* Всё остальное проходит насквозь намеренно. Громкость, звук
-     * и питание обязаны работать поверх любого диалога: прибор
-     * не должен становиться неуправляемым из-за плашки на экране. */
+    case IPRADIO_EV_SELECT:
+        modal_push(MODAL_SELECT, 0);
+        return true;
+
+    /* Нажатие энкодера 2. В меню это «назад» (§5.3), в диалоге —
+     * по-прежнему mute: диалог закрывается своими кнопками, а звук
+     * человеку может понадобиться именно в тот момент, когда прибор
+     * что-то от него хочет. */
+    case IPRADIO_EV_MUTE_TOGGLE:
+        if (menu) {
+            modal_push(MODAL_BACK, 0);
+            return true;
+        }
+        return false;
+
+    /* Громкость и питание проходят насквозь всегда: прибор не должен
+     * становиться неуправляемым из-за плашки на экране. */
     default:
         return false;
     }
+}
 
-    xSemaphoreTake(s_lock, portMAX_DELAY);
-    if (s_modal_count < MODAL_QUEUE_LEN) {
-        uint8_t tail = (uint8_t) ((s_modal_head + s_modal_count) % MODAL_QUEUE_LEN);
-        s_modal_q[tail].is_select = select;
-        s_modal_q[tail].delta     = delta;
-        s_modal_count++;
-    }
-    xSemaphoreGive(s_lock);
+/* ------------------------------------------------------------------ *
+ *  Меню
+ * ------------------------------------------------------------------ */
 
-    return true;   /* до автомата событие не доходит */
+static void on_menu_item(ipradio_menu_item_t item, void *ctx)
+{
+    (void) ctx;
+
+    /* Подчинённые экраны (06 настройка эфира, 07 клавиатура и прочие)
+     * ещё не построены. Пока — запись в журнал: молчаливый пункт меню
+     * хуже отсутствующего, человек решит, что прибор завис. */
+    ESP_LOGW(TAG, "пункт меню %d: экран ещё не построен", (int) item);
+}
+
+static void on_menu_closed(ipradio_menu_item_t item, void *ctx)
+{
+    (void) item;
+    (void) ctx;
+
+    /* Меню закрылось — экран под ним мог устареть, пока его не было
+     * видно: снимки в это время приходили, но рисовать их было некуда. */
+    ipradio_snapshot_t snap;
+    ipradio_get(&snap);
+    apply_snapshot(&snap);
 }
 
 static void drain_modal_queue(void)
@@ -279,10 +345,34 @@ static void drain_modal_queue(void)
         s_modal_count--;
         xSemaphoreGive(s_lock);
 
-        if (cmd.is_select) {
-            ipradio_dialog_select();
-        } else {
-            ipradio_dialog_move(cmd.delta);
+        bool menu = ipradio_menu_visible();
+
+        switch (cmd.kind) {
+        case MODAL_OPEN_MENU:
+            ipradio_menu_open(on_menu_item, on_menu_closed, NULL);
+            break;
+
+        case MODAL_MOVE:
+            if (menu) {
+                ipradio_menu_move(cmd.delta);
+            } else {
+                ipradio_dialog_move(cmd.delta);
+            }
+            break;
+
+        case MODAL_SELECT:
+            if (menu) {
+                ipradio_menu_select();
+            } else {
+                ipradio_dialog_select();
+            }
+            break;
+
+        case MODAL_BACK:
+            if (menu) {
+                ipradio_menu_back();
+            }
+            break;
         }
     }
 }
@@ -290,9 +380,6 @@ static void drain_modal_queue(void)
 static void on_dialog_action(ipradio_dialog_action_t action, void *ctx)
 {
     (void) ctx;
-
-    /* Диалог закрылся сам, перехват снимаем здесь. */
-    ipradio_set_event_filter(NULL, NULL);
 
     switch (action) {
     case IPRADIO_DIALOG_ACT_BACK_TO_FM:
@@ -317,7 +404,6 @@ static void on_dialog_action(ipradio_dialog_action_t action, void *ctx)
 static void raise_dialog(ipradio_dialog_kind_t kind, const char *detail)
 {
     ipradio_dialog_show(kind, detail, on_dialog_action, NULL);
-    ipradio_set_event_filter(modal_filter, NULL);
 }
 
 static void update_dialogs(const ipradio_snapshot_t *s)
@@ -358,7 +444,6 @@ static void update_dialogs(const ipradio_snapshot_t *s)
         if (k == IPRADIO_DIALOG_WIFI_NO_LINK ||
             k == IPRADIO_DIALOG_WIFI_NOT_CONFIGURED) {
             ipradio_dialog_hide();
-            ipradio_set_event_filter(NULL, NULL);
         }
     }
 }
@@ -446,6 +531,7 @@ static void apply_snapshot(const ipradio_snapshot_t *s)
     lv_obj_set_style_text_color(s_subtitle, accent, 0);
 
     update_dialogs(s);
+    ipradio_menu_update(s);
 
     /* Ячейки пресетов: активная подсвечивается цветом своего типа. */
     for (int i = 0; i < PRESET_CELLS; i++) {
@@ -493,7 +579,8 @@ static void service_idle(void)
 
     /* Диалог важнее ждущего режима: если прибор ждёт ответа человека,
      * прятать вопрос за часами нельзя. */
-    if (ipradio_dialog_current() != IPRADIO_DIALOG_NONE) {
+    if (ipradio_dialog_current() != IPRADIO_DIALOG_NONE ||
+        ipradio_menu_visible()) {
         should = false;
     }
 
@@ -579,6 +666,15 @@ esp_err_t ipradio_ui_init(void)
     if (derr != ESP_OK) {
         return derr;
     }
+
+    derr = ipradio_menu_init(root);
+    if (derr != ESP_OK) {
+        return derr;
+    }
+
+    /* Перехват органов управления. Ставится один раз и висит всегда:
+     * фильтр сам разбирается, есть ли на экране что-то модальное. */
+    ipradio_set_event_filter(modal_filter, NULL);
 
     /* Первая отрисовка по текущему состоянию, чтобы экран не был
      * пустым до первого события. */
