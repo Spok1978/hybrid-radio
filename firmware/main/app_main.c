@@ -37,6 +37,7 @@
 #include "ipradio_tuner.h"
 #include "ipradio_audio.h"
 #include "ipradio_net.h"
+#include "ipradio_ui.h"
 
 static const char *TAG = "ip-radio";
 
@@ -173,6 +174,10 @@ void app_main(void)
 
     /* Сеть поднимается ПОСЛЕДНЕЙ и не блокирует: эфир не должен ждать
      * сеть (§3.2). Тюнер к этому моменту уже играет. */
+    /* Интерфейс. Панель и тач поднимает BSP платы; здесь только
+     * экраны. Подписку на автомат модуль делает сам. */
+    ipradio_ui_init();
+
     ipradio_net_init();
     ipradio_net_start_sntp("MSK-3");
 
