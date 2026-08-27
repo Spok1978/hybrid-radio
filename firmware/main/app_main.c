@@ -34,8 +34,12 @@
 #include "ipradio_state.h"
 #include "ipradio_input.h"
 #include "ipradio_storage.h"
+#include "ipradio_tuner.h"
 
 static const char *TAG = "ip-radio";
+
+/* Общая шина платы: её открывает опрос и дальше пользуются все. */
+static i2c_master_bus_handle_t s_i2c_bus;
 
 /* Кто должен отзываться на шине: штатные узлы платы плюс наши. */
 static const struct {
@@ -119,7 +123,9 @@ static void scan_i2c(void)
         ESP_LOGW(TAG, "  никто не ответил — проверить питание и провода");
     }
 
-    i2c_del_master_bus(bus);
+    /* Шину НЕ закрываем: её делят тюнер, тач и кодеки платы.
+     * Отдаём наружу, чтобы тюнер сел на неё же. */
+    s_i2c_bus = bus;
 }
 
 void app_main(void)
@@ -141,6 +147,10 @@ void app_main(void)
     /* Органы управления. Поднимаются после автомата: сразу начнут
      * слать ему события от человека. */
     ESP_ERROR_CHECK(ipradio_input_init());
+
+    /* Эфирный тюнер садится на ту же шину I²C, что и узлы платы.
+     * Его отсутствие не фатально: прибор останется интернет-радио. */
+    ipradio_tuner_init(s_i2c_bus);
 
     ESP_LOGI(TAG, "готово; дальше — проверка связки ADF с сетью через C6");
 
