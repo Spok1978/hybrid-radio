@@ -310,6 +310,10 @@ esp_wifi_init();
 | Странности после `git pull` в ADF | перепутаны ветки master и `release/v2.x`, §1.1 |
 | `install.ps1` у ADF ставит инструменты подо все чипы и/или падает | **огрех в самом скрипте**, см. §1.7 — вызывать скрипт ESP-IDF напрямую |
 | Подмодуль `esp-idf` пуст после клонирования с `--recursive` | бывает: он самый большой и отваливается. Лечится `git submodule update --init --recursive esp-idf` |
+| `Failed to resolve component 'esp-adf-libs'` (или `esp-sr`) при том, что каталог существует | подмодуль числится проинициализированным, а внутри пусто. `git submodule status` показывает `+`, но файлов нет. Лечится `git submodule update --init --force components/esp-adf-libs` |
+| В компонентах ADF `unknown type name 'xSemaphoreHandle'`, `portTICK_RATE_MS` undeclared | ADF `release/v2.x` пользуется именами FreeRTOS, убранными из заголовков IDF 5.5. Штатный ключ `CONFIG_FREERTOS_ENABLE_BACKWARD_COMPATIBILITY=y` возвращает их — патчить ADF не нужно |
+| Сборка падает в `audio_board/lyrat_v4_3/` на `TOUCH_PAD_NUM9 undeclared` | плата в Kconfig ADF не выбрана, взялась первая по списку — LyraT на ESP32. `audio_board` компилируется всегда, его тянет `audio_stream`. Выбрать `CONFIG_ESP32_P4_FUNCTION_EV_BOARD=y`: он нужен лишь чтобы компонент собрался, звуковой тракт мы его не зовём |
+| Модуль добавлен, собралось, а размер образа не изменился | никто не вызывает точку входа модуля — компоновщик выбросил его целиком. Проверять по `.bin binary size`, а не по факту успешной сборки |
 | Панель молчит или сыплет мусором | тайминги и число линий DSI, §1.2 |
 | Картинка есть, но рвётся при перерисовке | `num_fbs` по умолчанию равен единице, §1.2 |
 | Артефакты по краям после поворота | билинейная интерполяция SRM, §1.3 |

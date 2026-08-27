@@ -38,6 +38,7 @@
 #include "ipradio_audio.h"
 #include "ipradio_net.h"
 #include "ipradio_ui.h"
+#include "ipradio_netradio.h"
 
 static const char *TAG = "ip-radio";
 
@@ -180,6 +181,10 @@ void app_main(void)
 
     ipradio_net_init();
     ipradio_net_start_sntp("MSK-3");
+
+    /* Конвейер интернет-радио. Поднимается один раз и остаётся
+     * поднятым: возврат из эфира не должен стоить лишних секунд. */
+    ipradio_netradio_init();
 
     {   /* Применить то, что уже прочитано из хранилища. */
         ipradio_snapshot_t snap;
