@@ -42,6 +42,7 @@
 #include "ipradio_ui_stations.h"
 #include "ipradio_ui_diag.h"
 #include "ipradio_ui_brightness.h"
+#include "ipradio_ui_clock.h"
 #include "ipradio_input.h"
 
 static const char *TAG = "ui";
@@ -284,6 +285,10 @@ static const modal_screen_t MODALS[] = {
       ipradio_brightness_ui_select,  NULL,
       ipradio_brightness_ui_back },
 
+    { ipradio_clock_ui_visible,   ipradio_clock_ui_move,
+      ipradio_clock_ui_select,    NULL,
+      ipradio_clock_ui_back },
+
     { ipradio_diag_ui_visible,    NULL,
       NULL,                       NULL,
       ipradio_diag_ui_back },
@@ -476,6 +481,10 @@ static void on_menu_item(ipradio_menu_item_t item, void *ctx)
 
     case IPRADIO_MENU_BRIGHTNESS:
         ipradio_brightness_ui_open(on_search_closed, NULL);
+        break;
+
+    case IPRADIO_MENU_CLOCK:
+        ipradio_clock_ui_open(on_search_closed, NULL);
         break;
 
     /* Остальные подчинённые экраны ещё не построены. Пока — запись
@@ -838,6 +847,11 @@ static void ui_task(void *arg)
             if (ipradio_search_ui_visible()) {
                 ipradio_search_ui_poll();
             }
+            /* На экране часов идут секунды: обновляем чаще, чем
+             * приходят события автомата. */
+            if (ipradio_clock_ui_visible()) {
+                ipradio_clock_ui_poll();
+            }
 
             bsp_display_unlock();
         }
@@ -977,6 +991,12 @@ esp_err_t ipradio_ui_init(void)
     }
 
     derr = ipradio_brightness_ui_init(root);
+    if (derr != ESP_OK) {
+        bsp_display_unlock();
+        return derr;
+    }
+
+    derr = ipradio_clock_ui_init(root);
     if (derr != ESP_OK) {
         bsp_display_unlock();
         return derr;
