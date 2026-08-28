@@ -3,7 +3,7 @@
  *
  * Схема конвейера:
  *
- *     http_stream  →  automatic decoder  →  i2s_stream  →  PCM5102A
+ *     http_stream  →  decoder  →  громкость (ALC)  →  i2s_stream  →  ЦАП
  *
  * Три решения, которые стоит держать в голове.
  *
@@ -35,6 +35,7 @@
 #include "http_stream.h"
 #include "i2s_stream.h"
 #include "esp_decoder.h"
+#include "audio_alc.h"
 #include "ringbuf.h"
 
 #include "board_pins.h"
@@ -49,6 +50,7 @@ static const char *TAG = "netradio";
 static audio_pipeline_handle_t s_pipeline;
 static audio_element_handle_t  s_http;
 static audio_element_handle_t  s_decoder;
+static audio_element_handle_t  s_alc;
 static audio_element_handle_t  s_i2s;
 static audio_event_iface_handle_t s_events;
 
@@ -141,6 +143,13 @@ static void events_task(void *arg)
             i2s_stream_set_clk(s_i2s, info.sample_rates,
                                info.bits, info.channels);
 
+            /* Регулятору тоже надо знать про каналы: моно и стерео
+             * он обрабатывает по-разному, а станции бывают и такие,
+             * и такие. */
+            if (s_alc && info.channels > 0) {
+                alc_volume_setup_set_channel(s_alc, info.channels);
+            }
+
             ipradio_post_simple(IPRADIO_EV_PLAY_STATE, IPRADIO_PLAY_PLAYING);
             s_retries = 0;      /* заиграло — счётчик попыток сбрасываем */
             continue;
@@ -224,8 +233,20 @@ esp_err_t ipradio_netradio_init(void)
     s_decoder = esp_decoder_init(&dec_cfg, decoders,
                                  sizeof(decoders) / sizeof(decoders[0]));
 
-    /* Выход: I²S на наш PCM5102A. Выводы те же, что у модуля audio;
-     * MCLK не используется — у ЦАП вывод тактирования на земле. */
+    /* Регулятор громкости. Отдельным элементом, а не умножением
+     * отсчётов на выходе декодера: буферами владеет ADF, и лезть
+     * в них своим кодом значит спорить с ним за одни и те же данные
+     * в двух задачах сразу.
+     *
+     * Стоит ПОСЛЕ декодера и ДО вывода: до декодера регулировать
+     * нечего - там сжатый поток. */
+    alc_volume_setup_cfg_t alc_cfg = DEFAULT_ALC_VOLUME_SETUP_CONFIG();
+    alc_cfg.channel = 2;
+    s_alc = alc_volume_setup_init(&alc_cfg);
+
+    /* Выход: I²S на наш PCM5102A. Порт нулевой - им владеет ТОЛЬКО
+     * этот конвейер. Выводы те же, что описаны в board_pins.h;
+     * MCLK не используется - у ЦАП вывод тактирования на земле. */
     i2s_stream_cfg_t i2s_cfg = I2S_STREAM_CFG_DEFAULT();
     i2s_cfg.type = AUDIO_STREAM_WRITER;
     i2s_cfg.std_cfg.gpio_cfg.mclk = I2S_GPIO_UNUSED;
@@ -235,17 +256,18 @@ esp_err_t ipradio_netradio_init(void)
     i2s_cfg.std_cfg.gpio_cfg.din  = I2S_GPIO_UNUSED;
     s_i2s = i2s_stream_init(&i2s_cfg);
 
-    if (!s_http || !s_decoder || !s_i2s) {
+    if (!s_http || !s_decoder || !s_alc || !s_i2s) {
         ESP_LOGE(TAG, "не собрались элементы конвейера");
         return ESP_ERR_NO_MEM;
     }
 
     audio_pipeline_register(s_pipeline, s_http,    "http");
     audio_pipeline_register(s_pipeline, s_decoder, "dec");
+    audio_pipeline_register(s_pipeline, s_alc,     "alc");
     audio_pipeline_register(s_pipeline, s_i2s,     "i2s");
 
-    const char *order[] = { "http", "dec", "i2s" };
-    audio_pipeline_link(s_pipeline, &order[0], 3);
+    const char *order[] = { "http", "dec", "alc", "i2s" };
+    audio_pipeline_link(s_pipeline, &order[0], 4);
 
     audio_event_iface_cfg_t evt_cfg = AUDIO_EVENT_IFACE_DEFAULT_CFG();
     s_events = audio_event_iface_init(&evt_cfg);
@@ -308,4 +330,40 @@ esp_err_t ipradio_netradio_stop(void)
 bool ipradio_netradio_active(void)
 {
     return s_active;
+}
+
+/* ------------------------------------------------------------------ *
+ *  Громкость
+ * ------------------------------------------------------------------ */
+
+void ipradio_netradio_set_volume(uint8_t logical, bool mute)
+{
+    if (!s_alc) {
+        return;
+    }
+
+    /* Шкала ALC - децибелы, от -64 до +63, где 0 означает «как есть».
+     * Это уже логарифм, поэтому таблица множителей, которая была
+     * в звуковом модуле, здесь не нужна: достаточно линейно разложить
+     * ход ручки по децибелам.
+     *
+     * Берём диапазон 40 дБ. Это примерно четыре «вдвое тише» подряд -
+     * привычный ход для приёмника. Растянуть шире значит сделать
+     * нижнюю половину ручки бесполезной: разницу между -55 и -60 дБ
+     * на слух уже не отличить.
+     *
+     * Ноль шкалы и mute - не «очень тихо», а тишина: -64 дБ, при
+     * котором ALC отдаёт молчание. */
+    int db;
+
+    if (mute || logical == 0) {
+        db = -64;
+    } else {
+        if (logical > 100) {
+            logical = 100;
+        }
+        db = -40 + ((int) logical * 40) / 100;
+    }
+
+    alc_volume_setup_set_volume(s_alc, db);
 }

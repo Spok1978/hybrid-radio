@@ -37,6 +37,16 @@ esp_err_t ipradio_netradio_stop(void);
 /** Играет ли что-нибудь прямо сейчас. */
 bool ipradio_netradio_active(void);
 
+/** Громкость интернет-потока.
+ *
+ *  Делается регулятором ALC внутри конвейера, а не умножением
+ *  отсчётов в обход: отсчётами владеет ADF, и лезть в его буферы
+ *  значит спорить с ним за одни и те же данные.
+ *
+ *  @param logical  0…100, та же шкала, что у автомата
+ *  @param mute     заглушить независимо от уровня */
+void ipradio_netradio_set_volume(uint8_t logical, bool mute);
+
 #ifdef __cplusplus
 }
 #endif
