@@ -8,6 +8,7 @@ idf_component_register(
          "ipradio_net.c"
          "ipradio_ui.c"
          "ipradio_netradio.c"
+         "ipradio_bridge.c"
          "ipradio_fonts.c"
          "ipradio_ui_theme.c"
          "ipradio_ui_dialog.c"

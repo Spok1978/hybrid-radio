@@ -6,6 +6,7 @@
  * гонок между обработчиками событий нет по построению.
  */
 
+#include <stdio.h>
 #include <string.h>
 
 #include "freertos/FreeRTOS.h"
@@ -17,6 +18,8 @@
 
 #include "board_pins.h"
 #include "ipradio_state.h"
+#include "ipradio_storage.h"
+#include "ipradio_tuner.h"
 
 static const char *TAG = "state";
 
@@ -132,6 +135,227 @@ static void apply_mode_toggle(void)
     s_state.play = IPRADIO_PLAY_BUFFERING;
 }
 
+/* ------------------------------------------------------------------ *
+ *  Пресеты
+ * ------------------------------------------------------------------ */
+
+/* Перенести содержимое ячейки в состояние.
+ *
+ * Тип хранится в самой ячейке, поэтому нажатие пресета САМО переключает
+ * режим (docs/22-mode-switching.md). Из-за этого и отпал тумблер:
+ * переключать было нечего — режим следует за станцией. */
+static bool load_preset(const ipradio_preset_t *p, int8_t cell)
+{
+    if (!p->used) {
+        return false;
+    }
+
+    if (p->type == IPRADIO_MODE_NET && !net_playable()) {
+        /* Интернетная ячейка при недоступной сети. Ведём себя так же,
+         * как с кнопкой MODE: эфир не прерываем, а причину покажет
+         * интерфейс. По §5.2 такие ячейки и гаснуть должны заранее,
+         * но нажатие всё равно надо обработать — кнопка физическая,
+         * погасить её невозможно. */
+        s_state.mode_denied_seq++;
+        ESP_LOGI(TAG, "пресет %d интернетный, а сети нет", cell);
+        return false;
+    }
+
+    s_state.mode          = p->type;
+    s_state.active_preset = cell;
+
+    if (p->type == IPRADIO_MODE_FM) {
+        s_state.band     = p->band;
+        s_state.freq_khz = p->freq_khz;
+        s_state.play     = IPRADIO_PLAY_PLAYING;
+
+        /* Имя из ячейки кладём в RDS-поле только как заглушку до
+         * первого настоящего RDS: иначе экран остался бы пустым
+         * на те секунды, что чип ловит синхронизацию. Признак
+         * rds_valid при этом НЕ ставим — это не данные из эфира. */
+        snprintf(s_state.rds_name, sizeof(s_state.rds_name), "%s", p->name);
+        s_state.rds_valid = false;
+    } else {
+        snprintf(s_state.station_name, sizeof(s_state.station_name),
+                 "%s", p->name);
+        s_state.icy_title[0] = '\0';
+        s_state.play = IPRADIO_PLAY_BUFFERING;
+    }
+
+    return true;
+}
+
+static void apply_preset_pressed(int32_t cell)
+{
+    if (cell < 1 || cell > IPRADIO_PRESET_MAX) {
+        return;
+    }
+
+    ipradio_store_t store;
+    ipradio_storage_get(&store);
+    load_preset(&store.presets[cell - 1], (int8_t) cell);
+}
+
+/* Долгое нажатие — записать в ячейку то, что играет сейчас (§6.2). */
+static void apply_preset_hold(int32_t cell)
+{
+    if (cell < 1 || cell > IPRADIO_PRESET_MAX) {
+        return;
+    }
+
+    ipradio_store_t store;
+    ipradio_storage_get(&store);
+
+    ipradio_preset_t *p = &store.presets[cell - 1];
+    memset(p, 0, sizeof(*p));
+    p->used = true;
+    p->type = s_state.mode;
+
+    if (s_state.mode == IPRADIO_MODE_FM) {
+        p->band     = s_state.band;
+        p->freq_khz = s_state.freq_khz;
+        /* Имя берём из RDS, если оно настоящее. Подставлять частоту
+         * вместо имени не надо: она и так на экране, а пустое имя
+         * честно говорит, что станцию стоит подписать вручную. */
+        if (s_state.rds_valid) {
+            snprintf(p->name, sizeof(p->name), "%s", s_state.rds_name);
+        }
+    } else {
+        snprintf(p->name, sizeof(p->name), "%s", s_state.station_name);
+        /* Адрес потока автомат не хранит — он живёт в ячейке, откуда
+         * станция и была взята. Перенести его сюда сможет тот, кто
+         * умеет искать станции; пока запись интернетной ячейки
+         * сохраняет только имя. */
+    }
+
+    s_state.active_preset = (int8_t) cell;
+
+    if (ipradio_storage_save(&store) == ESP_OK) {
+        ESP_LOGI(TAG, "пресет %d записан", (int) cell);
+    } else {
+        ESP_LOGW(TAG, "пресет %d записать не удалось", (int) cell);
+    }
+}
+
+/* Перебор сохранённых станций энкодером 1 (§6.1).
+ *
+ * Перебираем ТОЛЬКО ячейки текущего режима. Иначе один щелчок мог бы
+ * увести из эфира в интернет и обратно, и человек не понимал бы,
+ * почему звук пропадает на секунды. Смена режима — дело кнопки MODE
+ * и прямого нажатия на ячейку другого типа. */
+static void apply_station_step(int32_t steps)
+{
+    if (steps == 0) {
+        return;
+    }
+
+    ipradio_store_t store;
+    ipradio_storage_get(&store);
+
+    int8_t list[IPRADIO_PRESET_MAX];
+    int    n = 0;
+    int    cur = -1;
+
+    for (int i = 0; i < IPRADIO_PRESET_MAX; i++) {
+        if (!store.presets[i].used || store.presets[i].type != s_state.mode) {
+            continue;
+        }
+        if (s_state.active_preset == i + 1) {
+            cur = n;
+        }
+        list[n++] = (int8_t) (i + 1);
+    }
+
+    if (n == 0) {
+        return;   /* перебирать нечего */
+    }
+
+    /* По кругу: список короткий, и упор в край заставлял бы крутить
+     * обратно. Если текущей станции в списке нет (только включились
+     * или сменили режим), начинаем с первой. */
+    int next = (cur < 0) ? 0 : (cur + (int) steps) % n;
+    if (next < 0) {
+        next += n;
+    }
+
+    load_preset(&store.presets[list[next] - 1], list[next]);
+}
+
+/* ------------------------------------------------------------------ *
+ *  Перестройка частоты
+ * ------------------------------------------------------------------ */
+
+static void apply_freq_delta(int32_t steps)
+{
+    if (s_state.mode != IPRADIO_MODE_FM || steps == 0) {
+        return;
+    }
+
+    uint32_t step = (s_state.band == IPRADIO_BAND_OIRT)
+                    ? TUNER_STEP_OIRT_KHZ : TUNER_STEP_CCIR_KHZ;
+    uint32_t lo   = (s_state.band == IPRADIO_BAND_OIRT)
+                    ? TUNER_OIRT_MIN_KHZ : TUNER_CCIR_MIN_KHZ;
+    uint32_t hi   = (s_state.band == IPRADIO_BAND_OIRT)
+                    ? TUNER_OIRT_MAX_KHZ : TUNER_CCIR_MAX_KHZ;
+
+    int64_t f = (int64_t) s_state.freq_khz + (int64_t) steps * (int64_t) step;
+
+    /* У края останавливаемся, а не заворачиваемся. Заворот выглядел бы
+     * как скачок через весь диапазон — на приёмнике так не бывает
+     * и быть не должно. */
+    if (f < (int64_t) lo) f = lo;
+    if (f > (int64_t) hi) f = hi;
+
+    s_state.freq_khz = (uint32_t) f;
+
+    /* Ручная перестройка уводит с пресета: мы больше не на нём. */
+    s_state.active_preset = -1;
+    s_state.rds_name[0]   = '\0';
+    s_state.rds_valid     = false;
+}
+
+static void apply_band_toggle(void)
+{
+    if (s_state.mode != IPRADIO_MODE_FM) {
+        return;
+    }
+
+    s_state.band = (s_state.band == IPRADIO_BAND_OIRT)
+                   ? IPRADIO_BAND_CCIR : IPRADIO_BAND_OIRT;
+
+    /* Частота из прежнего диапазона в новом невозможна — становимся
+     * на его нижнюю границу. */
+    s_state.freq_khz = (s_state.band == IPRADIO_BAND_OIRT)
+                       ? TUNER_OIRT_MIN_KHZ : TUNER_CCIR_MIN_KHZ;
+
+    s_state.active_preset = -1;
+    s_state.rds_name[0]   = '\0';
+    s_state.rds_valid     = false;
+}
+
+/* ------------------------------------------------------------------ *
+ *  Выключение
+ * ------------------------------------------------------------------ */
+
+static void apply_power(void)
+{
+    /* Сохраняем то, что должно пережить выключение, ПОКА питание есть.
+     * Откладывать это на мост нельзя: он в этот момент уже глушит
+     * железо, и порядок операций становится важен. */
+    ipradio_store_t store;
+    ipradio_storage_get(&store);
+
+    store.settings.volume        = s_state.volume;
+    store.settings.last_mode     = s_state.mode;
+    store.settings.last_band     = s_state.band;
+    store.settings.last_freq_khz = s_state.freq_khz;
+    store.settings.last_preset   = s_state.active_preset;
+    ipradio_storage_save_settings(&store.settings);
+
+    s_state.power_off = true;
+    ESP_LOGI(TAG, "запрошено выключение, настройки сохранены");
+}
+
 static void apply_event(const queued_event_t *e)
 {
     switch (e->type) {
@@ -148,6 +372,30 @@ static void apply_event(const queued_event_t *e)
 
     case IPRADIO_EV_MODE_TOGGLE:
         apply_mode_toggle();
+        break;
+
+    case IPRADIO_EV_TUNE_DELTA:
+        apply_station_step(e->arg);
+        break;
+
+    case IPRADIO_EV_FREQ_DELTA:
+        apply_freq_delta(e->arg);
+        break;
+
+    case IPRADIO_EV_BAND_TOGGLE:
+        apply_band_toggle();
+        break;
+
+    case IPRADIO_EV_PRESET_PRESSED:
+        apply_preset_pressed(e->arg);
+        break;
+
+    case IPRADIO_EV_PRESET_HOLD:
+        apply_preset_hold(e->arg);
+        break;
+
+    case IPRADIO_EV_POWER:
+        apply_power();
         break;
 
     case IPRADIO_EV_NET_STATE:
@@ -241,17 +489,33 @@ esp_err_t ipradio_state_init(void)
         return ESP_ERR_NO_MEM;
     }
 
-    /* Состояние при старте. Настоящие значения приедут из хранилища,
-     * когда появится модуль storage; пока — разумные умолчания. */
+    /* Стартовое состояние берём из хранилища: прибор должен включаться
+     * там же, где его выключили. Если карты нет или файл побит,
+     * storage отдаёт умолчания — отдельной ветки на этот случай
+     * здесь не нужно. */
     memset(&s_state, 0, sizeof(s_state));
-    s_state.mode          = IPRADIO_MODE_FM;
-    s_state.band          = IPRADIO_BAND_CCIR;
-    s_state.freq_khz      = 102500;
-    s_state.volume        = 40;
+
+    ipradio_store_t store;
+    ipradio_storage_get(&store);
+
+    s_state.volume        = store.settings.volume;
+    s_state.band          = store.settings.last_band;
+    s_state.freq_khz      = store.settings.last_freq_khz;
+    s_state.active_preset = store.settings.last_preset;
     s_state.muted         = false;
     s_state.play          = IPRADIO_PLAY_IDLE;
     s_state.net           = IPRADIO_NET_NOT_CONFIGURED;
-    s_state.active_preset = -1;
+
+    /* Режим при старте — ВСЕГДА эфирный, даже если выключились
+     * в интернетном. Сети на этот момент ещё нет, и стартовать
+     * в режиме, который заведомо молчит, нельзя (§5.2, правило 4).
+     * Вернуться к последней интернетной станции — дело моста,
+     * и только когда сеть действительно поднимется. */
+    s_state.mode = IPRADIO_MODE_FM;
+
+    if (s_state.freq_khz == 0) {
+        s_state.freq_khz = 102500;
+    }
 
     BaseType_t ok = xTaskCreate(state_task, "ipradio_state",
                                 STATE_TASK_STACK, NULL,

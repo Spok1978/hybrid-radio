@@ -372,7 +372,7 @@ void ipradio_tune_move(int delta)
     /* Перестройка идёт через автомат, а не прямым вызовом тюнера:
      * иначе состояние в автомате разъедется с тем, что в чипе,
      * и главный экран показал бы старую частоту. */
-    ipradio_post_simple(IPRADIO_EV_TUNE_DELTA, delta);
+    ipradio_post_simple(IPRADIO_EV_FREQ_DELTA, delta);
 }
 
 void ipradio_tune_select(void)

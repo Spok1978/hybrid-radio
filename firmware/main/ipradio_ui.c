@@ -26,6 +26,7 @@
 
 #include "esp_log.h"
 #include "lvgl.h"
+#include "bsp/esp-bsp.h"
 
 #include "ipradio_state.h"
 #include "ipradio_ui.h"
@@ -626,29 +627,46 @@ static void service_idle(void)
     }
 }
 
+/* Собственного вызова lv_timer_handler здесь НЕТ, и это важно.
+ * LVGL крутит задача, поднятая BSP платы внутри bsp_display_start();
+ * второй такой цикл означал бы двух хозяев у одной библиотеки.
+ *
+ * Наша задача делает другое: переносит снимок состояния на виджеты,
+ * разбирает команды модальных экранов и следит за бездействием.
+ * Всё это трогает виджеты, поэтому идёт под замком BSP. */
 static void ui_task(void *arg)
 {
     (void) arg;
 
     for (;;) {
+        bool have_snap = false;
+        ipradio_snapshot_t snap;
+
+        xSemaphoreTake(s_lock, portMAX_DELAY);
         if (s_dirty) {
-            ipradio_snapshot_t snap;
-            xSemaphoreTake(s_lock, portMAX_DELAY);
-            snap    = s_pending;
-            s_dirty = false;
-            xSemaphoreGive(s_lock);
+            snap      = s_pending;
+            s_dirty   = false;
+            have_snap = true;
+        }
+        xSemaphoreGive(s_lock);
 
-            apply_snapshot(&snap);
+        /* Замок берём один раз на всю пачку работы, а не на каждый
+         * вызов: чередоваться с задачей отрисовки посреди перерисовки
+         * экрана значит показать человеку полуобновлённую картинку. */
+        if (bsp_display_lock(100)) {
+            if (have_snap) {
+                apply_snapshot(&snap);
+            }
+            drain_modal_queue();
+            service_idle();
+            bsp_display_unlock();
         }
 
-        drain_modal_queue();
-        service_idle();
-
-        uint32_t next = lv_timer_handler();
-        if (next == LV_NO_TIMER_READY) {
-            next = 20;
-        }
-        vTaskDelay(pdMS_TO_TICKS(next > 20 ? 20 : next));
+        /* 50 мс - шаг обновления часов и отсчёта бездействия. Чаще
+         * незачем: минута на часах меняется раз в минуту, а реакция
+         * на энкодер идёт через кольцо команд и от этого шага
+         * не зависит. */
+        vTaskDelay(pdMS_TO_TICKS(50));
     }
 }
 
@@ -665,9 +683,48 @@ esp_err_t ipradio_ui_init(void)
         return ESP_ERR_NO_MEM;
     }
 
+    /* Панель, тач и сам LVGL поднимает BSP платы. Один вызов делает
+     * всё: MIPI-DSI, драйвер HX8394, GT911, буферы отрисовки и задачу
+     * LVGL. Своего кода это не требует - см. docs/27, §1.4.
+     *
+     * Поворот на 90 градусов: панель физически книжная, 720x1280,
+     * а прибор стоит горизонтально. Поворот делает железо (PPA),
+     * не процессор.
+     *
+     * TEAR_AVOID_MODE_TRIPLE_PARTIAL - значение по умолчанию у BSP:
+     * три буфера, частичная отрисовка. Полноэкранные буферы при
+     * повороте делят пропускную способность PSRAM с периферией,
+     * и интерфейс начинает дёргаться (docs/27, таблица граблей). */
+    bsp_display_cfg_t disp_cfg = {
+        .lv_adapter_cfg  = ESP_LV_ADAPTER_DEFAULT_CONFIG(),
+        .rotation        = ESP_LV_ADAPTER_ROTATE_90,
+        .tear_avoid_mode = ESP_LV_ADAPTER_TEAR_AVOID_MODE_TRIPLE_PARTIAL,
+        .touch_flags = { .swap_xy = 0, .mirror_x = 0, .mirror_y = 0 },
+    };
+
+    if (bsp_display_start_with_config(&disp_cfg) == NULL) {
+        /* Панель не поднялась. Раньше этот случай ронял бы весь
+         * прибор, потому что дальше шли вызовы LVGL по пустому
+         * указателю. Теперь выходим честно: радио продолжит играть
+         * вслепую, органы управления работают, а причина видна
+         * в журнале. Приёмник без экрана - неудобно; приёмник,
+         * который не включается из-за экрана, - сломан. */
+        ESP_LOGE(TAG, "панель не поднялась, интерфейса не будет");
+        return ESP_ERR_NOT_FOUND;
+    }
+
+    bsp_display_backlight_on();
+
+    /* Дальше всё трогает виджеты, а значит идёт под замком. */
+    if (!bsp_display_lock(1000)) {
+        ESP_LOGE(TAG, "не удалось взять замок LVGL");
+        return ESP_ERR_TIMEOUT;
+    }
+
     /* Шрифты - раньше всего: первый же make_label к ним обратится. */
     esp_err_t err = ipradio_fonts_init();
     if (err != ESP_OK) {
+        bsp_display_unlock();
         return err;
     }
 
@@ -687,26 +744,31 @@ esp_err_t ipradio_ui_init(void)
      * не так, - худший момент из возможных. */
     esp_err_t derr = ipradio_dialog_init(root);
     if (derr != ESP_OK) {
+        bsp_display_unlock();
         return derr;
     }
 
     derr = ipradio_idle_init(root);
     if (derr != ESP_OK) {
+        bsp_display_unlock();
         return derr;
     }
 
     derr = ipradio_menu_init(root);
     if (derr != ESP_OK) {
+        bsp_display_unlock();
         return derr;
     }
 
     derr = ipradio_tune_init(root);
     if (derr != ESP_OK) {
+        bsp_display_unlock();
         return derr;
     }
 
     derr = ipradio_keyboard_init(root);
     if (derr != ESP_OK) {
+        bsp_display_unlock();
         return derr;
     }
 
@@ -720,13 +782,12 @@ esp_err_t ipradio_ui_init(void)
     ipradio_get(&snap);
     apply_snapshot(&snap);
 
+    bsp_display_unlock();
+
     ipradio_subscribe(on_state, NULL);
 
     xTaskCreate(ui_task, "ipradio_ui", 6144, NULL, 4, NULL);
 
-    ESP_LOGI(TAG, "интерфейс поднят: главный экран");
-    ESP_LOGW(TAG, "надписи латиницей: кириллический шрифт LVGL");
-    ESP_LOGW(TAG, "  ещё не сгенерирован (docs/26, §7)");
-
+    ESP_LOGI(TAG, "интерфейс поднят: 1280x720, поворот 90, подписи русские");
     return ESP_OK;
 }
