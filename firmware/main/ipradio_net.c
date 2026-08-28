@@ -57,6 +57,7 @@ static const char *TAG = "net";
 static EventGroupHandle_t   s_wifi_events;
 static ipradio_net_state_t  s_state = IPRADIO_NET_NOT_CONFIGURED;
 static bool                 s_have_credentials;
+static bool                 s_wifi_started;
 static char                 s_mirror[64];   /* выбранное зеркало */
 
 /* ------------------------------------------------------------------ *
@@ -148,6 +149,7 @@ esp_err_t ipradio_net_init(void)
         s_have_credentials = true;
         ESP_LOGI(TAG, "сохранённая сеть: %s", (char *) wc.sta.ssid);
         ESP_ERROR_CHECK(esp_wifi_start());
+        s_wifi_started = true;
     } else {
         ESP_LOGW(TAG, "сеть не настроена — интернет-станции недоступны");
         set_state(IPRADIO_NET_NOT_CONFIGURED);
@@ -174,7 +176,133 @@ esp_err_t ipradio_net_connect(const char *ssid, const char *pass)
     }
 
     esp_wifi_stop();
-    return esp_wifi_start();
+    esp_err_t err = esp_wifi_start();
+    s_wifi_started = (err == ESP_OK);
+    return err;
+}
+
+/* ------------------------------------------------------------------ *
+ *  Поиск сетей
+ * ------------------------------------------------------------------ */
+
+bool ipradio_net_has_credentials(void)
+{
+    return s_have_credentials;
+}
+
+const char *ipradio_net_ssid(void)
+{
+    /* Имя берём у драйвера, а не храним своё: он и так его держит
+     * в NVS, и две копии рано или поздно разошлись бы. Буфер
+     * статический, потому что отдаём указатель наружу. */
+    static char ssid[IPRADIO_SSID_MAX];
+
+    wifi_config_t wc;
+    if (esp_wifi_get_config(WIFI_IF_STA, &wc) == ESP_OK) {
+        snprintf(ssid, sizeof(ssid), "%s", (const char *) wc.sta.ssid);
+    } else {
+        ssid[0] = '\0';
+    }
+    return ssid;
+}
+
+int ipradio_net_scan(ipradio_ap_t *out, int max_items)
+{
+    if (!out || max_items <= 0) {
+        return -1;
+    }
+
+    /* Драйвер мог быть и не запущен: при ненастроенной сети мы его
+     * не поднимаем, чтобы не гонять радио впустую. А сканировать
+     * без запущенного драйвера нельзя - поднимаем здесь.
+     * Останавливать обратно не надо: человек пришёл настраивать
+     * сеть, значит через минуту она понадобится. */
+    if (!s_wifi_started) {
+        esp_err_t err = esp_wifi_start();
+        if (err != ESP_OK) {
+            ESP_LOGE(TAG, "Wi-Fi не запустился: %s", esp_err_to_name(err));
+            return -1;
+        }
+        s_wifi_started = true;
+    }
+
+    /* Активное сканирование: посылаем запросы, а не ждём маяков.
+     * Пассивное надёжнее для скрытых сетей, но занимает секунды
+     * на каждый канал, и человек успевает решить, что прибор завис. */
+    wifi_scan_config_t cfg = {
+        .ssid = NULL,
+        .bssid = NULL,
+        .channel = 0,              /* все каналы */
+        .show_hidden = false,      /* к скрытой всё равно не подключиться
+                                      без ручного ввода имени */
+        .scan_type = WIFI_SCAN_TYPE_ACTIVE,
+        .scan_time.active = { .min = 60, .max = 150 },
+    };
+
+    esp_err_t err = esp_wifi_scan_start(&cfg, true /* блокирующе */);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "сканирование не пошло: %s", esp_err_to_name(err));
+        return -1;
+    }
+
+    uint16_t found = 0;
+    esp_wifi_scan_get_ap_num(&found);
+    if (found == 0) {
+        return 0;
+    }
+
+    /* Просим у драйвера больше, чем покажем: одна и та же сеть
+     * приходит по разу на каждую точку доступа, и после склейки
+     * дубликатов список заметно короче исходного. */
+    uint16_t want = found;
+    if (want > IPRADIO_SCAN_MAX * 3) {
+        want = IPRADIO_SCAN_MAX * 3;
+    }
+
+    wifi_ap_record_t *recs = calloc(want, sizeof(*recs));
+    if (!recs) {
+        esp_wifi_clear_ap_list();
+        return -1;
+    }
+
+    err = esp_wifi_scan_get_ap_records(&want, recs);
+    if (err != ESP_OK) {
+        free(recs);
+        return -1;
+    }
+
+    /* Склейка дубликатов. Драйвер отдаёт список, отсортированный
+     * по убыванию уровня, поэтому первая встреченная запись сети -
+     * она же сильнейшая, и достаточно пропускать последующие. */
+    int n = 0;
+    for (uint16_t i = 0; i < want && n < max_items; i++) {
+        const char *ssid = (const char *) recs[i].ssid;
+        if (!ssid[0]) {
+            continue;             /* скрытая: показывать нечего */
+        }
+
+        bool seen = false;
+        for (int j = 0; j < n; j++) {
+            if (strcmp(out[j].ssid, ssid) == 0) {
+                seen = true;
+                break;
+            }
+        }
+        if (seen) {
+            continue;
+        }
+
+        snprintf(out[n].ssid, sizeof(out[n].ssid), "%s", ssid);
+        out[n].rssi = recs[i].rssi;
+        out[n].open = (recs[i].authmode == WIFI_AUTH_OPEN);
+        n++;
+    }
+
+    free(recs);
+    esp_wifi_clear_ap_list();
+
+    ESP_LOGI(TAG, "найдено сетей: %u, показываем %d", (unsigned) found, n);
+    return n;
 }
 
 /* ------------------------------------------------------------------ *

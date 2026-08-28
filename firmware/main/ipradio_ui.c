@@ -37,6 +37,7 @@
 #include "ipradio_ui_menu.h"
 #include "ipradio_ui_tune.h"
 #include "ipradio_ui_keyboard.h"
+#include "ipradio_ui_wifi.h"
 #include "ipradio_input.h"
 
 static const char *TAG = "ui";
@@ -266,18 +267,19 @@ static bool modal_filter(const ipradio_event_t *ev, void *ctx)
     bool menu   = ipradio_menu_visible();
     bool tune   = ipradio_tune_visible();
     bool kb     = ipradio_keyboard_visible();
+    bool wifi   = ipradio_wifi_ui_visible();
 
     /* Долгое нажатие энкодера 1 открывает меню — но только с экрана
      * воспроизведения. Из диалога в меню не проваливаемся: прибор
      * задал вопрос и ждёт ответа. */
     if (ev->type == IPRADIO_EV_MENU) {
-        if (!dialog && !menu && !tune && !kb) {
+        if (!dialog && !menu && !tune && !kb && !wifi) {
             modal_push(MODAL_OPEN_MENU, 0);
         }
         return true;   /* поверх модального экрана — просто гасим */
     }
 
-    if (!dialog && !menu && !tune && !kb) {
+    if (!dialog && !menu && !tune && !kb && !wifi) {
         return false;  /* обычный экран, ничего не перехватываем */
     }
 
@@ -295,7 +297,7 @@ static bool modal_filter(const ipradio_event_t *ev, void *ctx)
      * человеку может понадобиться именно в тот момент, когда прибор
      * что-то от него хочет. */
     case IPRADIO_EV_MUTE_TOGGLE:
-        if (menu || tune || kb) {
+        if (menu || tune || kb || wifi) {
             modal_push(MODAL_BACK, 0);
             return true;
         }
@@ -324,6 +326,23 @@ static void on_tune_closed(void *ctx)
     ipradio_menu_update(&snap);
 }
 
+static void on_wifi_closed(void *ctx)
+{
+    (void) ctx;
+
+    /* Возвращаемся туда, откуда пришли. Экран сети открывается
+     * из двух мест — из меню и из диалога 10, — и в первом случае
+     * под нами меню, которому надо обновить значения справа:
+     * состояние Wi-Fi там как раз и написано. */
+    ipradio_snapshot_t snap;
+    ipradio_get(&snap);
+    if (ipradio_menu_visible()) {
+        ipradio_menu_update(&snap);
+    } else {
+        apply_snapshot(&snap);
+    }
+}
+
 static void on_menu_item(ipradio_menu_item_t item, void *ctx)
 {
     (void) ctx;
@@ -331,6 +350,10 @@ static void on_menu_item(ipradio_menu_item_t item, void *ctx)
     switch (item) {
     case IPRADIO_MENU_TUNE_FM:
         ipradio_tune_open(on_tune_closed, NULL);
+        break;
+
+    case IPRADIO_MENU_WIFI:
+        ipradio_wifi_ui_open(on_wifi_closed, NULL);
         break;
 
     /* Остальные подчинённые экраны ещё не построены. Пока — запись
@@ -372,6 +395,7 @@ static void drain_modal_queue(void)
         bool menu = ipradio_menu_visible();
         bool tune = ipradio_tune_visible();
         bool kb   = ipradio_keyboard_visible();
+        bool wifi = ipradio_wifi_ui_visible();
 
         switch (cmd.kind) {
         case MODAL_OPEN_MENU:
@@ -383,6 +407,7 @@ static void drain_modal_queue(void)
          * спрашивается первой. */
         case MODAL_MOVE:
             if (kb)        ipradio_keyboard_move(cmd.delta);
+            else if (wifi) ipradio_wifi_ui_move(cmd.delta);
             else if (tune) ipradio_tune_move(cmd.delta);
             else if (menu) ipradio_menu_move(cmd.delta);
             else           ipradio_dialog_move(cmd.delta);
@@ -390,6 +415,7 @@ static void drain_modal_queue(void)
 
         case MODAL_SELECT:
             if (kb)        ipradio_keyboard_select();
+            else if (wifi) ipradio_wifi_ui_select();
             else if (tune) ipradio_tune_select();
             else if (menu) ipradio_menu_select();
             else           ipradio_dialog_select();
@@ -397,6 +423,7 @@ static void drain_modal_queue(void)
 
         case MODAL_BACK:
             if (kb)        ipradio_keyboard_back();
+            else if (wifi) ipradio_wifi_ui_back();
             else if (tune) ipradio_tune_back();
             else if (menu) ipradio_menu_back();
             break;
@@ -415,11 +442,15 @@ static void on_dialog_action(ipradio_dialog_action_t action, void *ctx)
         break;
 
     case IPRADIO_DIALOG_ACT_SETUP_WIFI:
+        /* Прямой переход в настройку сети — то, ради чего диалог 10
+         * вообще показывается (§5.2, случай 1). */
+        ipradio_wifi_ui_open(on_wifi_closed, NULL);
+        break;
+
     case IPRADIO_DIALOG_ACT_PICK_STATION:
-        /* Экраны настройки и выбора станции ещё не построены
-         * (05 и 07 из макетов). Пока — запись в журнал, чтобы отказ
-         * был видимым: молчаливая кнопка хуже отсутствующей. */
-        ESP_LOGW(TAG, "экран для действия %d ещё не построен", (int) action);
+        /* Экран выбора станции ещё не построен. Пока — запись
+         * в журнал: молчаливая кнопка хуже отсутствующей. */
+        ESP_LOGW(TAG, "экран выбора станции ещё не построен");
         break;
 
     case IPRADIO_DIALOG_ACT_DISMISS:
@@ -560,6 +591,7 @@ static void apply_snapshot(const ipradio_snapshot_t *s)
     update_dialogs(s);
     ipradio_menu_update(s);
     ipradio_tune_update(s);
+    ipradio_wifi_ui_update(s);
 
     /* Ячейки пресетов: активная подсвечивается цветом своего типа. */
     for (int i = 0; i < PRESET_CELLS; i++) {
@@ -609,7 +641,7 @@ static void service_idle(void)
      * прятать вопрос за часами нельзя. */
     if (ipradio_dialog_current() != IPRADIO_DIALOG_NONE ||
         ipradio_menu_visible() || ipradio_tune_visible() ||
-        ipradio_keyboard_visible()) {
+        ipradio_keyboard_visible() || ipradio_wifi_ui_visible()) {
         should = false;
     }
 
@@ -659,6 +691,18 @@ static void ui_task(void *arg)
             }
             drain_modal_queue();
             service_idle();
+
+            /* Экран выбора сети обновляем здесь, а не только по снимку
+             * состояния: результат сканирования приезжает из своей
+             * задачи и события автомата не порождает. Ждать очередного
+             * тика значило бы показывать «идёт поиск» ещё секунду
+             * после того, как он закончился. */
+            if (ipradio_wifi_ui_visible()) {
+                ipradio_snapshot_t s;
+                ipradio_get(&s);
+                ipradio_wifi_ui_update(&s);
+            }
+
             bsp_display_unlock();
         }
 
@@ -767,6 +811,12 @@ esp_err_t ipradio_ui_init(void)
     }
 
     derr = ipradio_keyboard_init(root);
+    if (derr != ESP_OK) {
+        bsp_display_unlock();
+        return derr;
+    }
+
+    derr = ipradio_wifi_ui_init(root);
     if (derr != ESP_OK) {
         bsp_display_unlock();
         return derr;
