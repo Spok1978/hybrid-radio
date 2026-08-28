@@ -38,6 +38,7 @@
 #include "ipradio_ui_tune.h"
 #include "ipradio_ui_keyboard.h"
 #include "ipradio_ui_wifi.h"
+#include "ipradio_ui_search.h"
 #include "ipradio_input.h"
 
 static const char *TAG = "ui";
@@ -268,18 +269,19 @@ static bool modal_filter(const ipradio_event_t *ev, void *ctx)
     bool tune   = ipradio_tune_visible();
     bool kb     = ipradio_keyboard_visible();
     bool wifi   = ipradio_wifi_ui_visible();
+    bool srch   = ipradio_search_ui_visible();
 
     /* Долгое нажатие энкодера 1 открывает меню — но только с экрана
      * воспроизведения. Из диалога в меню не проваливаемся: прибор
      * задал вопрос и ждёт ответа. */
     if (ev->type == IPRADIO_EV_MENU) {
-        if (!dialog && !menu && !tune && !kb && !wifi) {
+        if (!dialog && !menu && !tune && !kb && !wifi && !srch) {
             modal_push(MODAL_OPEN_MENU, 0);
         }
         return true;   /* поверх модального экрана — просто гасим */
     }
 
-    if (!dialog && !menu && !tune && !kb && !wifi) {
+    if (!dialog && !menu && !tune && !kb && !wifi && !srch) {
         return false;  /* обычный экран, ничего не перехватываем */
     }
 
@@ -297,7 +299,7 @@ static bool modal_filter(const ipradio_event_t *ev, void *ctx)
      * человеку может понадобиться именно в тот момент, когда прибор
      * что-то от него хочет. */
     case IPRADIO_EV_MUTE_TOGGLE:
-        if (menu || tune || kb || wifi) {
+        if (menu || tune || kb || wifi || srch) {
             modal_push(MODAL_BACK, 0);
             return true;
         }
@@ -343,6 +345,19 @@ static void on_wifi_closed(void *ctx)
     }
 }
 
+static void on_search_closed(void *ctx)
+{
+    (void) ctx;
+
+    ipradio_snapshot_t snap;
+    ipradio_get(&snap);
+    if (ipradio_menu_visible()) {
+        ipradio_menu_update(&snap);
+    } else {
+        apply_snapshot(&snap);
+    }
+}
+
 static void on_menu_item(ipradio_menu_item_t item, void *ctx)
 {
     (void) ctx;
@@ -354,6 +369,10 @@ static void on_menu_item(ipradio_menu_item_t item, void *ctx)
 
     case IPRADIO_MENU_WIFI:
         ipradio_wifi_ui_open(on_wifi_closed, NULL);
+        break;
+
+    case IPRADIO_MENU_FIND_NET:
+        ipradio_search_ui_open(on_search_closed, NULL);
         break;
 
     /* Остальные подчинённые экраны ещё не построены. Пока — запись
@@ -396,6 +415,7 @@ static void drain_modal_queue(void)
         bool tune = ipradio_tune_visible();
         bool kb   = ipradio_keyboard_visible();
         bool wifi = ipradio_wifi_ui_visible();
+        bool srch = ipradio_search_ui_visible();
 
         switch (cmd.kind) {
         case MODAL_OPEN_MENU:
@@ -407,6 +427,7 @@ static void drain_modal_queue(void)
          * спрашивается первой. */
         case MODAL_MOVE:
             if (kb)        ipradio_keyboard_move(cmd.delta);
+            else if (srch) ipradio_search_ui_move(cmd.delta);
             else if (wifi) ipradio_wifi_ui_move(cmd.delta);
             else if (tune) ipradio_tune_move(cmd.delta);
             else if (menu) ipradio_menu_move(cmd.delta);
@@ -415,6 +436,7 @@ static void drain_modal_queue(void)
 
         case MODAL_SELECT:
             if (kb)        ipradio_keyboard_select();
+            else if (srch) ipradio_search_ui_select();
             else if (wifi) ipradio_wifi_ui_select();
             else if (tune) ipradio_tune_select();
             else if (menu) ipradio_menu_select();
@@ -423,6 +445,7 @@ static void drain_modal_queue(void)
 
         case MODAL_BACK:
             if (kb)        ipradio_keyboard_back();
+            else if (srch) ipradio_search_ui_back();
             else if (wifi) ipradio_wifi_ui_back();
             else if (tune) ipradio_tune_back();
             else if (menu) ipradio_menu_back();
@@ -448,9 +471,9 @@ static void on_dialog_action(ipradio_dialog_action_t action, void *ctx)
         break;
 
     case IPRADIO_DIALOG_ACT_PICK_STATION:
-        /* Экран выбора станции ещё не построен. Пока — запись
-         * в журнал: молчаливая кнопка хуже отсутствующей. */
-        ESP_LOGW(TAG, "экран выбора станции ещё не построен");
+        /* «Станция не отвечает» — предлагаем поискать другую.
+         * Это и есть «сразу предложены другие» из §5.2, случай 3. */
+        ipradio_search_ui_open(on_search_closed, NULL);
         break;
 
     case IPRADIO_DIALOG_ACT_DISMISS:
@@ -641,7 +664,8 @@ static void service_idle(void)
      * прятать вопрос за часами нельзя. */
     if (ipradio_dialog_current() != IPRADIO_DIALOG_NONE ||
         ipradio_menu_visible() || ipradio_tune_visible() ||
-        ipradio_keyboard_visible() || ipradio_wifi_ui_visible()) {
+        ipradio_keyboard_visible() || ipradio_wifi_ui_visible() ||
+        ipradio_search_ui_visible()) {
         should = false;
     }
 
@@ -707,6 +731,9 @@ static void ui_task(void *arg)
              * из задачи поиска. */
             if (ipradio_tune_visible()) {
                 ipradio_tune_poll();
+            }
+            if (ipradio_search_ui_visible()) {
+                ipradio_search_ui_poll();
             }
 
             bsp_display_unlock();
@@ -823,6 +850,12 @@ esp_err_t ipradio_ui_init(void)
     }
 
     derr = ipradio_wifi_ui_init(root);
+    if (derr != ESP_OK) {
+        bsp_display_unlock();
+        return derr;
+    }
+
+    derr = ipradio_search_ui_init(root);
     if (derr != ESP_OK) {
         bsp_display_unlock();
         return derr;
