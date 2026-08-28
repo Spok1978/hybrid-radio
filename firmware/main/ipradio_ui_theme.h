@@ -15,6 +15,8 @@
 
 #include "lvgl.h"
 
+#include "ipradio_state.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -34,6 +36,13 @@ extern "C" {
 #define COL_CYAN        lv_color_hex(0x3ec5d8)   /* интернет          */
 #define COL_RED         lv_color_hex(0xf05b52)   /* тревога, mute     */
 #define COL_GREEN       lv_color_hex(0x5fc98a)   /* подтверждение     */
+
+/** Название диапазона для экрана.
+ *
+ *  Пока диапазон один, поэтому всегда «FM». Отдельная функция нужна
+ *  затем, чтобы при возврате УКВ (IPRADIO_ENABLE_OIRT) не искать
+ *  по всем экранам, где это название пишется. */
+const char *ipradio_band_label(ipradio_band_t band);
 
 /** Подпись с заданным шрифтом и цветом. Самая частая операция
  *  во всех экранах, поэтому в общем месте. */

@@ -291,12 +291,14 @@ static void apply_freq_delta(int32_t steps)
         return;
     }
 
-    uint32_t step = (s_state.band == IPRADIO_BAND_OIRT)
-                    ? TUNER_STEP_OIRT_KHZ : TUNER_STEP_CCIR_KHZ;
-    uint32_t lo   = (s_state.band == IPRADIO_BAND_OIRT)
-                    ? TUNER_OIRT_MIN_KHZ : TUNER_CCIR_MIN_KHZ;
-    uint32_t hi   = (s_state.band == IPRADIO_BAND_OIRT)
-                    ? TUNER_OIRT_MAX_KHZ : TUNER_CCIR_MAX_KHZ;
+#if IPRADIO_ENABLE_OIRT
+    bool oirt = (s_state.band == IPRADIO_BAND_OIRT);
+#else
+    const bool oirt = false;
+#endif
+    uint32_t step = oirt ? TUNER_STEP_OIRT_KHZ : TUNER_STEP_CCIR_KHZ;
+    uint32_t lo   = oirt ? TUNER_OIRT_MIN_KHZ  : TUNER_CCIR_MIN_KHZ;
+    uint32_t hi   = oirt ? TUNER_OIRT_MAX_KHZ  : TUNER_CCIR_MAX_KHZ;
 
     int64_t f = (int64_t) s_state.freq_khz + (int64_t) steps * (int64_t) step;
 
@@ -316,6 +318,7 @@ static void apply_freq_delta(int32_t steps)
 
 static void apply_band_toggle(void)
 {
+#if IPRADIO_ENABLE_OIRT
     if (s_state.mode != IPRADIO_MODE_FM) {
         return;
     }
@@ -331,6 +334,10 @@ static void apply_band_toggle(void)
     s_state.active_preset = -1;
     s_state.rds_name[0]   = '\0';
     s_state.rds_valid     = false;
+#else
+    /* Диапазон один, переключать нечего. Событие оставлено, чтобы
+     * при возврате УКВ не пришлось трогать ни ввод, ни интерфейс. */
+#endif
 }
 
 /* ------------------------------------------------------------------ *
@@ -499,7 +506,14 @@ esp_err_t ipradio_state_init(void)
     ipradio_storage_get(&store);
 
     s_state.volume        = store.settings.volume;
+#if IPRADIO_ENABLE_OIRT
     s_state.band          = store.settings.last_band;
+#else
+    /* Диапазон один. Читать его из файла нельзя: там может лежать
+     * УКВ от сборки, где он был включён, и тогда приёмник встал бы
+     * на частоту, которой в FM не существует. */
+    s_state.band          = IPRADIO_BAND_CCIR;
+#endif
     s_state.freq_khz      = store.settings.last_freq_khz;
     s_state.active_preset = store.settings.last_preset;
     s_state.muted         = false;

@@ -5,6 +5,16 @@
 
 #include "ipradio_ui_theme.h"
 
+const char *ipradio_band_label(ipradio_band_t band)
+{
+#if IPRADIO_ENABLE_OIRT
+    return (band == IPRADIO_BAND_OIRT) ? "УКВ" : "FM";
+#else
+    (void) band;
+    return "FM";
+#endif
+}
+
 lv_obj_t *ipradio_ui_label(lv_obj_t *parent, const lv_font_t *font,
                            lv_color_t color, const char *text)
 {

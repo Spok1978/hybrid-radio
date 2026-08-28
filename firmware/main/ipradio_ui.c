@@ -520,14 +520,14 @@ static void apply_snapshot(const ipradio_snapshot_t *s)
                      (unsigned) ((s->freq_khz % 1000) / 10));
             lv_label_set_text(s_subtitle, buf);
             lv_label_set_text(s_detail,
-                (s->band == IPRADIO_BAND_OIRT) ? "УКВ" : "FM");
+                ipradio_band_label(s->band));
         } else {
             snprintf(buf, sizeof(buf), "%u.%02u МГц",
                      (unsigned) (s->freq_khz / 1000),
                      (unsigned) ((s->freq_khz % 1000) / 10));
             lv_label_set_text(s_title, buf);
             lv_label_set_text(s_subtitle,
-                (s->band == IPRADIO_BAND_OIRT) ? "УКВ" : "FM");
+                ipradio_band_label(s->band));
             lv_label_set_text(s_detail, "RDS не передаётся");
         }
     } else {

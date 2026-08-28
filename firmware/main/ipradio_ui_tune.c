@@ -278,7 +278,7 @@ void ipradio_tune_update(const ipradio_snapshot_t *s)
     lv_label_set_text(s_freq, buf);
 
     lv_label_set_text(s_band_label,
-                      (s->band == IPRADIO_BAND_OIRT) ? "УКВ" : "FM");
+                      ipradio_band_label(s->band));
 
     lv_label_set_text(s_rds, (s->rds_valid && s->rds_name[0])
                              ? s->rds_name : "");

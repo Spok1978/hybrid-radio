@@ -171,7 +171,7 @@ void ipradio_idle_update(const ipradio_snapshot_t *s)
             snprintf(buf, sizeof(buf), "%u.%02u МГц   •   %s",
                      (unsigned) (s->freq_khz / 1000),
                      (unsigned) ((s->freq_khz % 1000) / 10),
-                     (s->band == IPRADIO_BAND_OIRT) ? "УКВ" : "FM");
+                     ipradio_band_label(s->band));
         }
         lv_label_set_text(s_now_playing, buf);
     } else {
