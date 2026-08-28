@@ -47,6 +47,9 @@
 #include "ipradio_ui.h"
 #include "ipradio_netradio.h"
 #include "ipradio_bridge.h"
+#include "ipradio_storage.h"
+
+#include "bsp/display.h"
 
 static const char *TAG = "ip-radio";
 
@@ -175,7 +178,23 @@ void app_main(void)
     ipradio_ui_init();
 
     ipradio_net_init();
-    ipradio_net_start_sntp("MSK-3");
+
+    {
+        /* Яркость и часовой пояс лежали в файле настроек и никем
+         * не применялись: прибор всегда включался с яркостью по
+         * умолчанию и московским временем, что бы человек ни выставил.
+         *
+         * Яркость применяем ПОСЛЕ подъёма интерфейса: до него ШИМ
+         * подсветки ещё не настроен, и запись ушла бы в никуда. */
+        ipradio_store_t st;
+        ipradio_storage_get(&st);
+
+        if (st.settings.brightness > 0) {
+            bsp_display_brightness_set(st.settings.brightness);
+        }
+
+        ipradio_net_start_sntp(st.settings.tz[0] ? st.settings.tz : "MSK-3");
+    }
 
     /* Конвейер интернет-радио. Поднимается один раз и остаётся
      * поднятым: возврат из эфира не должен стоить лишних секунд. */

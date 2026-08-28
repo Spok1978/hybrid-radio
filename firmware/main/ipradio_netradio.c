@@ -35,6 +35,7 @@
 #include "http_stream.h"
 #include "i2s_stream.h"
 #include "esp_decoder.h"
+#include "ringbuf.h"
 
 #include "board_pins.h"
 #include "ipradio_netradio.h"
@@ -62,15 +63,67 @@ static int   s_retries;
 /* ADF сообщает о смене формата и об ошибках через шину событий.
  * Отдельная задача слушает её и переводит в события автомата —
  * так остальная прошивка ничего не знает про устройство ADF. */
+/* Насколько наполнен буфер потока, в процентах.
+ *
+ * Смотрим кольцо НА ВЫХОДЕ HTTP-элемента: именно оно скрывает дрожание
+ * сети, и именно его опустошение слышно как заикание. Кольцо после
+ * декодера меряет другое - успевает ли декодер, а он всегда успевает.
+ *
+ * Показатель нужен не сам по себе. Когда поток заикается, человек
+ * должен видеть разницу между «сеть не тянет» (буфер пуст) и «что-то
+ * не так с прибором» (буфер полон, а звука нет). */
+static void report_buffer_fill(void)
+{
+    static uint8_t last = 255;
+
+    if (!s_http || !s_active) {
+        return;
+    }
+
+    ringbuf_handle_t rb = audio_element_get_output_ringbuf(s_http);
+    if (!rb) {
+        return;
+    }
+
+    int size = rb_get_size(rb);
+    if (size <= 0) {
+        return;
+    }
+
+    int filled = rb_bytes_filled(rb);
+    if (filled < 0) {
+        filled = 0;
+    }
+
+    uint8_t pct = (uint8_t) ((int64_t) filled * 100 / size);
+
+    /* Событие шлём только на заметное изменение: иначе автомат
+     * будил бы всех подписчиков по два раза в секунду ради цифры,
+     * которая колеблется на единицу. */
+    if (last != 255 && pct > last - 5 && pct < last + 5) {
+        return;
+    }
+    last = pct;
+
+    ipradio_post_simple(IPRADIO_EV_BUFFER_FILL, pct);
+}
+
 static void events_task(void *arg)
 {
     (void) arg;
     audio_event_iface_msg_t msg;
 
     for (;;) {
-        if (audio_event_iface_listen(s_events, &msg, portMAX_DELAY) != ESP_OK) {
+        /* Ждём событие не бесконечно: заполнение буфера надо
+         * показывать и тогда, когда ничего не происходит, - а именно
+         * тогда человек на него и смотрит. */
+        if (audio_event_iface_listen(s_events, &msg,
+                                     pdMS_TO_TICKS(500)) != ESP_OK) {
+            report_buffer_fill();
             continue;
         }
+
+        report_buffer_fill();
 
         /* Декодер сообщил параметры потока — подстраиваем вывод.
          * Частота дискретизации у станций разная, и менять её надо

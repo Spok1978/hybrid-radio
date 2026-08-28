@@ -40,6 +40,7 @@
 #include "ipradio_ui_wifi.h"
 #include "ipradio_ui_search.h"
 #include "ipradio_ui_stations.h"
+#include "ipradio_ui_diag.h"
 #include "ipradio_input.h"
 
 static const char *TAG = "ui";
@@ -273,6 +274,7 @@ static bool modal_filter(const ipradio_event_t *ev, void *ctx)
     bool wifi   = ipradio_wifi_ui_visible();
     bool srch   = ipradio_search_ui_visible();
     bool stns   = ipradio_stations_ui_visible();
+    bool diag   = ipradio_diag_ui_visible();
 
     /* Долгое нажатие энкодера 1 открывает меню — но только с экрана
      * воспроизведения. Из диалога в меню не проваливаемся: прибор
@@ -284,13 +286,15 @@ static bool modal_filter(const ipradio_event_t *ev, void *ctx)
              * что и запись пресета на главном экране, так что учить
              * отдельно нечего. */
             modal_push(MODAL_LONG, 0);
-        } else if (!dialog && !menu && !tune && !kb && !wifi && !srch) {
+        } else if (!dialog && !menu && !tune && !kb && !wifi && !srch &&
+                   !diag) {
             modal_push(MODAL_OPEN_MENU, 0);
         }
         return true;   /* поверх модального экрана — просто гасим */
     }
 
-    if (!dialog && !menu && !tune && !kb && !wifi && !srch && !stns) {
+    if (!dialog && !menu && !tune && !kb && !wifi && !srch && !stns &&
+        !diag) {
         return false;  /* обычный экран, ничего не перехватываем */
     }
 
@@ -308,7 +312,7 @@ static bool modal_filter(const ipradio_event_t *ev, void *ctx)
      * человеку может понадобиться именно в тот момент, когда прибор
      * что-то от него хочет. */
     case IPRADIO_EV_MUTE_TOGGLE:
-        if (menu || tune || kb || wifi || srch || stns) {
+        if (menu || tune || kb || wifi || srch || stns || diag) {
             modal_push(MODAL_BACK, 0);
             return true;
         }
@@ -388,6 +392,10 @@ static void on_menu_item(ipradio_menu_item_t item, void *ctx)
         ipradio_stations_ui_open(on_search_closed, NULL);
         break;
 
+    case IPRADIO_MENU_DIAGNOSTICS:
+        ipradio_diag_ui_open(on_search_closed, NULL);
+        break;
+
     /* Остальные подчинённые экраны ещё не построены. Пока — запись
      * в журнал: молчаливый пункт меню хуже отсутствующего, человек
      * решит, что прибор завис. */
@@ -430,6 +438,7 @@ static void drain_modal_queue(void)
         bool wifi = ipradio_wifi_ui_visible();
         bool srch = ipradio_search_ui_visible();
         bool stns = ipradio_stations_ui_visible();
+        bool diag = ipradio_diag_ui_visible();
 
         switch (cmd.kind) {
         case MODAL_OPEN_MENU:
@@ -468,6 +477,7 @@ static void drain_modal_queue(void)
 
         case MODAL_BACK:
             if (kb)        ipradio_keyboard_back();
+            else if (diag) ipradio_diag_ui_back();
             else if (stns) ipradio_stations_ui_back();
             else if (srch) ipradio_search_ui_back();
             else if (wifi) ipradio_wifi_ui_back();
@@ -639,6 +649,7 @@ static void apply_snapshot(const ipradio_snapshot_t *s)
     ipradio_menu_update(s);
     ipradio_tune_update(s);
     ipradio_wifi_ui_update(s);
+    ipradio_diag_ui_update(s);
 
     /* Ячейки пресетов: активная подсвечивается цветом своего типа. */
     for (int i = 0; i < PRESET_CELLS; i++) {
@@ -689,7 +700,8 @@ static void service_idle(void)
     if (ipradio_dialog_current() != IPRADIO_DIALOG_NONE ||
         ipradio_menu_visible() || ipradio_tune_visible() ||
         ipradio_keyboard_visible() || ipradio_wifi_ui_visible() ||
-        ipradio_search_ui_visible() || ipradio_stations_ui_visible()) {
+        ipradio_search_ui_visible() || ipradio_stations_ui_visible() ||
+        ipradio_diag_ui_visible()) {
         should = false;
     }
 
@@ -886,6 +898,12 @@ esp_err_t ipradio_ui_init(void)
     }
 
     derr = ipradio_stations_ui_init(root);
+    if (derr != ESP_OK) {
+        bsp_display_unlock();
+        return derr;
+    }
+
+    derr = ipradio_diag_ui_init(root);
     if (derr != ESP_OK) {
         bsp_display_unlock();
         return derr;
