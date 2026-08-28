@@ -703,6 +703,12 @@ static void ui_task(void *arg)
                 ipradio_wifi_ui_update(&s);
             }
 
+            /* То же и для прохода по диапазону: найденное приезжает
+             * из задачи поиска. */
+            if (ipradio_tune_visible()) {
+                ipradio_tune_poll();
+            }
+
             bsp_display_unlock();
         }
 

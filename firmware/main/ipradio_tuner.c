@@ -130,6 +130,12 @@ static char    s_ps_sent[PS_LEN + 1];
 static uint8_t s_ps_confirmed;      /* битовая маска подтверждённых мест */
 
 static void rds_reset(void);   /* зовётся из перестройки, а живёт ниже */
+
+/* Идёт ли проход по диапазону. Задача опроса состояния при этом
+ * не трогает флаг завершения поиска: иначе две задачи снимали бы
+ * одну и ту же команду, и проход спотыкался бы через раз. */
+static volatile bool s_scanning;
+static volatile bool s_scan_abort;
 static uint8_t        s_signal;
 
 /* ------------------------------------------------------------------ *
@@ -333,6 +339,153 @@ bool ipradio_tuner_present(void)
  * ------------------------------------------------------------------ */
 
 /* ------------------------------------------------------------------ *
+ *  Проход по диапазону
+ * ------------------------------------------------------------------ */
+
+/* Сколько ждать одного шага поиска. Чип проходит диапазон не мгновенно:
+ * на каждой частоте он оценивает уровень и качество. Три секунды -
+ * с большим запасом; если не уложился, значит что-то не так с чипом,
+ * и продолжать проход бессмысленно. */
+#define SEEK_STEP_TIMEOUT_MS  3000
+#define SEEK_POLL_MS            50
+
+/* Предел числа шагов. На 87,5-108 МГц с шагом 100 кГц каналов 206,
+ * и столько станций не бывает даже теоретически. Предел нужен
+ * не для этого: он защищает от чипа, который по какой-то причине
+ * перестал двигаться вперёд и отвечает одной и той же частотой. */
+#define SEEK_MAX_STEPS         250
+
+static ipradio_tuner_scan_cb_t s_scan_cb;
+static void                   *s_scan_ctx;
+
+/* Дождаться завершения одного шага поиска.
+ * Возвращает регистр 0AH или ноль, если не дождались. */
+static uint16_t seek_wait(void)
+{
+    for (int i = 0; i < SEEK_STEP_TIMEOUT_MS / SEEK_POLL_MS; i++) {
+        vTaskDelay(pdMS_TO_TICKS(SEEK_POLL_MS));
+
+        if (s_scan_abort) {
+            return 0;
+        }
+
+        uint16_t r0a = 0;
+        if (read_reg(REG_0AH, &r0a) == ESP_OK && (r0a & R0A_STC)) {
+            return r0a;
+        }
+    }
+    return 0;
+}
+
+static void scan_task(void *arg)
+{
+    (void) arg;
+
+    const uint32_t hi = band_max(s_band);
+    uint32_t last = 0;
+    int found = 0;
+
+    ESP_LOGI(TAG, "проход по диапазону начат");
+
+    /* Становимся на нижнюю границу: искать надо весь диапазон,
+     * а не от того места, где человек оставил приёмник. */
+    ipradio_tuner_set_freq(band_min(s_band));
+    vTaskDelay(pdMS_TO_TICKS(100));
+
+    for (int step = 0; step < SEEK_MAX_STEPS && !s_scan_abort; step++) {
+
+        /* SKMODE=1: дойдя до края, остановиться, а не перескочить
+         * на другой конец. Без него проход не кончился бы никогда. */
+        s_r02 |= R02_SEEK | R02_SKMODE | R02_SEEKUP;
+        if (write_regs() != ESP_OK) {
+            break;
+        }
+
+        uint16_t r0a = seek_wait();
+
+        /* Команду снимаем в любом случае, даже не дождавшись: иначе
+         * чип уйдёт искать снова, как только мы отвернёмся. */
+        s_r02 &= ~R02_SEEK;
+        write_regs();
+
+        if (r0a == 0) {
+            ESP_LOGW(TAG, "шаг поиска не завершился, проход прерван");
+            break;
+        }
+
+        if (r0a & R0A_SF) {
+            /* Край диапазона: станций дальше нет. Это нормальное
+             * завершение, а не ошибка. */
+            break;
+        }
+
+        uint32_t f = band_base(s_band) +
+                     (uint32_t) (r0a & 0x03FF) * band_step(s_band);
+
+        /* Чип не сдвинулся вперёд - дальше идти некуда. Проверка
+         * не теоретическая: на краю диапазона SEEK может возвращать
+         * одну и ту же частоту, не выставляя SF. */
+        if (f <= last) {
+            break;
+        }
+
+        last = f;
+        s_freq_khz = f;
+        rds_reset();
+        found++;
+
+        if (s_scan_cb) {
+            s_scan_cb(f, false, s_scan_ctx);
+        }
+
+        if (f >= hi) {
+            break;
+        }
+    }
+
+    ESP_LOGI(TAG, "проход закончен, найдено станций: %d", found);
+
+    s_scanning = false;
+    if (s_scan_cb) {
+        s_scan_cb(0, true, s_scan_ctx);
+    }
+
+    vTaskDelete(NULL);
+}
+
+esp_err_t ipradio_tuner_scan_start(ipradio_tuner_scan_cb_t cb, void *ctx)
+{
+    if (!s_present) {
+        return ESP_ERR_INVALID_STATE;
+    }
+    if (s_scanning) {
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    s_scan_cb    = cb;
+    s_scan_ctx   = ctx;
+    s_scan_abort = false;
+    s_scanning   = true;
+
+    BaseType_t ok = xTaskCreate(scan_task, "tuner_scan", 4096, NULL, 4, NULL);
+    if (ok != pdPASS) {
+        s_scanning = false;
+        return ESP_ERR_NO_MEM;
+    }
+    return ESP_OK;
+}
+
+bool ipradio_tuner_scanning(void)
+{
+    return s_scanning;
+}
+
+void ipradio_tuner_scan_abort(void)
+{
+    s_scan_abort = true;
+}
+
+/* ------------------------------------------------------------------ *
  *  RDS: имя станции
  * ------------------------------------------------------------------ */
 
@@ -444,7 +597,10 @@ static void tuner_task(void *arg)
 
         /* Завершение автопоиска. Флаг STC держится до следующей команды,
          * поэтому реагируем на его появление, а не на уровень. */
-        bool stc = (r0a & R0A_STC) != 0;
+        /* Пока идёт проход по диапазону, флаг завершения принадлежит
+         * задаче поиска. Снимать команду отсюда значило бы обрывать
+         * ей каждый второй шаг. */
+        bool stc = (r0a & R0A_STC) != 0 && !s_scanning;
         if (stc && !seeking) {
             seeking = true;
             if (r0a & R0A_SF) {

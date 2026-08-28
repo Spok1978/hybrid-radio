@@ -54,6 +54,11 @@ bool ipradio_tune_visible(void);
 /** Перерисовать по снимку: положение указателя, частота, диапазон. */
 void ipradio_tune_update(const ipradio_snapshot_t *snap);
 
+/** Забрать то, что нашёл проход по диапазону. Зовётся из задачи
+ *  интерфейса: результаты приезжают из задачи поиска и событий
+ *  автомата не порождают. */
+void ipradio_tune_poll(void);
+
 /** Отметить найденную станцию. Зовётся по ходу автопоиска. */
 void ipradio_tune_add_mark(uint32_t freq_khz);
 

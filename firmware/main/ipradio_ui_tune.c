@@ -7,11 +7,17 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/semphr.h"
+
 #include "esp_log.h"
+
 
 #include "ipradio_fonts.h"
 #include "ipradio_tuner.h"
 #include "ipradio_ui_theme.h"
+#include "ipradio_storage.h"
 #include "ipradio_ui_tune.h"
 
 static const char *TAG = "ui.tune";
@@ -46,6 +52,15 @@ static bool           s_visible;
 static ipradio_band_t s_band = IPRADIO_BAND_CCIR;
 static void         (*s_on_close)(void *ctx);
 static void          *s_ctx;
+
+/* Найденное за проход. Складывает задача поиска, забирает задача
+ * интерфейса: рисовать можно только там, где крутится LVGL. */
+static SemaphoreHandle_t s_scan_lock;
+static uint32_t          s_scan_new[IPRADIO_TUNE_MAX_MARKS];
+static int               s_scan_new_count;
+static volatile bool     s_scan_done;
+static volatile int      s_scan_saved;   /* сколько записано в пресеты */
+static volatile int      s_scan_total;
 
 /* ------------------------------------------------------------------ *
  *  Пересчёт частоты в положение на шкале
@@ -125,6 +140,155 @@ void ipradio_tune_clear_marks(void)
 }
 
 /* ------------------------------------------------------------------ *
+ *  Проход по диапазону
+ * ------------------------------------------------------------------ */
+
+/* Разложить найденное по ПУСТЫМ ячейкам банка.
+ *
+ * Отступление от §5.3.1, и намеренное. Спецификация говорит «с
+ * сохранением найденного в банк пресетов», но ячеек восемь, а станций
+ * в городе бывает и двадцать. Заполнять банк подряд значило бы стереть
+ * то, что человек отбирал руками, - и без спроса.
+ *
+ * Поэтому занимаем только свободные места. На новом приборе это ровно
+ * то, чего ждёт спецификация: банк пуст, автопоиск его наполняет.
+ * На настроенном - ничего не ломает.
+ *
+ * Работает в задаче поиска, а не интерфейса: запись на карту занимает
+ * заметное время, и делать её в задаче отрисовки нельзя. */
+static void save_found(const uint32_t *freqs, int n)
+{
+    ipradio_store_t store;
+    ipradio_storage_get(&store);
+
+    int saved = 0;
+
+    for (int i = 0; i < n; i++) {
+        /* Уже записанная станция повторно не заводится: проход могли
+         * запустить дважды. */
+        bool known = false;
+        for (int c = 0; c < IPRADIO_PRESET_MAX; c++) {
+            if (store.presets[c].used &&
+                store.presets[c].type == IPRADIO_MODE_FM &&
+                store.presets[c].freq_khz == freqs[i]) {
+                known = true;
+                break;
+            }
+        }
+        if (known) {
+            continue;
+        }
+
+        int cell = -1;
+        for (int c = 0; c < IPRADIO_PRESET_MAX; c++) {
+            if (!store.presets[c].used) {
+                cell = c;
+                break;
+            }
+        }
+        if (cell < 0) {
+            break;             /* свободных ячеек не осталось */
+        }
+
+        memset(&store.presets[cell], 0, sizeof(store.presets[cell]));
+        store.presets[cell].used     = true;
+        store.presets[cell].type     = IPRADIO_MODE_FM;
+        store.presets[cell].band     = s_band;
+        store.presets[cell].freq_khz = freqs[i];
+        /* Имя пустое: RDS за доли секунды прохода прочитать нельзя.
+         * Подписать станции - следующий шаг по §5.3.1, и делается
+         * он клавиатурой из списка станций. */
+        saved++;
+    }
+
+    if (saved > 0 && ipradio_storage_save(&store) != ESP_OK) {
+        ESP_LOGW(TAG, "найденное записать не удалось");
+        saved = 0;
+    }
+
+    s_scan_saved = saved;
+}
+
+/* Зовётся ИЗ ЗАДАЧИ ПОИСКА. Виджеты не трогаем. */
+static void on_scan_result(uint32_t freq_khz, bool done, void *ctx)
+{
+    (void) ctx;
+
+    if (!done) {
+        xSemaphoreTake(s_scan_lock, portMAX_DELAY);
+        if (s_scan_new_count < IPRADIO_TUNE_MAX_MARKS) {
+            s_scan_new[s_scan_new_count++] = freq_khz;
+        }
+        xSemaphoreGive(s_scan_lock);
+        return;
+    }
+
+    /* Проход закончен. Пока мы ещё в своей задаче - записываем
+     * найденное на карту, и только потом сообщаем интерфейсу. */
+    uint32_t list[IPRADIO_TUNE_MAX_MARKS];
+    int n;
+
+    xSemaphoreTake(s_scan_lock, portMAX_DELAY);
+    n = s_scan_new_count;
+    memcpy(list, s_scan_new, sizeof(list[0]) * n);
+    xSemaphoreGive(s_scan_lock);
+
+    s_scan_total = n;
+    if (n > 0) {
+        save_found(list, n);
+    } else {
+        s_scan_saved = 0;
+    }
+
+    s_scan_done = true;
+}
+
+/* Забрать накопленное. Зовётся из задачи интерфейса. */
+static void collect_scan(void)
+{
+    if (!s_visible) {
+        return;
+    }
+
+    /* Засечки переносим по мере поступления: человек видит, как поиск
+     * идёт, а не только его итог. */
+    xSemaphoreTake(s_scan_lock, portMAX_DELAY);
+    int n = s_scan_new_count;
+    uint32_t list[IPRADIO_TUNE_MAX_MARKS];
+    memcpy(list, s_scan_new, sizeof(list[0]) * n);
+    xSemaphoreGive(s_scan_lock);
+
+    for (int i = 0; i < n; i++) {
+        ipradio_tune_add_mark(list[i]);   /* повторы отсеет сам */
+    }
+
+    if (!s_scan_done) {
+        return;
+    }
+    s_scan_done = false;
+
+    char buf[128];
+    if (s_scan_total == 0) {
+        snprintf(buf, sizeof(buf),
+                 "Станций не найдено. Проверьте антенну.");
+    } else if (s_scan_saved == 0) {
+        snprintf(buf, sizeof(buf),
+                 "Найдено станций: %d. Свободных ячеек нет \u2014 "
+                 "записывать некуда.", s_scan_total);
+    } else {
+        snprintf(buf, sizeof(buf),
+                 "Найдено станций: %d, записано в пресеты: %d",
+                 s_scan_total, s_scan_saved);
+    }
+    lv_label_set_text(s_status, buf);
+}
+
+void ipradio_tune_poll(void)
+{
+    collect_scan();
+}
+
+/* ------------------------------------------------------------------ *
  *  Сборка
  * ------------------------------------------------------------------ */
 
@@ -164,6 +328,11 @@ static void build_ticks(lv_obj_t *parent, ipradio_band_t b)
 
 esp_err_t ipradio_tune_init(lv_obj_t *parent)
 {
+    s_scan_lock = xSemaphoreCreateMutex();
+    if (!s_scan_lock) {
+        return ESP_ERR_NO_MEM;
+    }
+
     s_screen = lv_obj_create(parent);
     lv_obj_set_size(s_screen, LV_PCT(100), LV_PCT(100));
     lv_obj_set_style_bg_color(s_screen, COL_BG, 0);
@@ -381,16 +550,36 @@ void ipradio_tune_select(void)
         return;
     }
 
-    /* Автопоиск. Засечки от прежнего прохода убираем: показывать
-     * вперемешку старые и новые нельзя — непонятно, что из этого
-     * найдено сейчас. */
-    ipradio_tune_clear_marks();
-    lv_label_set_text(s_status, "Идёт автопоиск по диапазону…");
+    /* Повторное нажатие во время прохода прерывает его: другого
+     * способа остановиться у человека нет, а проход может длиться
+     * полминуты. */
+    if (ipradio_tuner_scanning()) {
+        ipradio_tuner_scan_abort();
+        lv_label_set_text(s_status, "Поиск прерван");
+        return;
+    }
 
-    /* Сам проход по диапазону — дело модуля тюнера: он умеет
-     * аппаратный SEEK и знает, когда чип дошёл до края. Экран лишь
-     * отмечает найденное, получая ipradio_tune_add_mark(). */
-    ESP_LOGI(TAG, "запрошен автопоиск");
+    /* Засечки от прежнего прохода убираем: показывать вперемешку
+     * старые и новые нельзя — непонятно, что из этого найдено сейчас. */
+    ipradio_tune_clear_marks();
+
+    xSemaphoreTake(s_scan_lock, portMAX_DELAY);
+    s_scan_new_count = 0;
+    xSemaphoreGive(s_scan_lock);
+    s_scan_done  = false;
+    s_scan_total = 0;
+    s_scan_saved = 0;
+
+    /* Сам проход — дело модуля тюнера: он умеет аппаратный SEEK
+     * и знает, когда чип дошёл до края. Экран только отмечает
+     * найденное и раскладывает его по свободным ячейкам. */
+    if (ipradio_tuner_scan_start(on_scan_result, NULL) != ESP_OK) {
+        lv_label_set_text(s_status, "Тюнер не отвечает");
+        return;
+    }
+
+    lv_label_set_text(s_status,
+                      "Идёт поиск… нажмите ещё раз, чтобы прервать");
 }
 
 void ipradio_tune_back(void)
