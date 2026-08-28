@@ -11,6 +11,7 @@
 
 #include "esp_log.h"
 #include "esp_sleep.h"
+#include "esp_timer.h"
 
 #include "bsp/display.h"
 
@@ -32,6 +33,20 @@ static ipradio_band_t  s_applied_band  = (ipradio_band_t) -1;
 static uint32_t        s_applied_freq;
 static int8_t          s_applied_preset = -2;
 static bool            s_powering_off;
+
+/* Правило 4 из §5.2: если последняя станция была интернетная, а сеть
+ * за пятнадцать секунд не поднялась - играем последнюю эфирную
+ * и говорим об этом.
+ *
+ * Радио, молчащее после включения, выглядит неисправным. Поэтому
+ * решение принимается САМО, но однократно: самовольно переключаться
+ * обратно, когда сеть появится, нельзя - решение уже показано
+ * человеку, и менять его за него мы не вправе. */
+#define NET_WAIT_AT_BOOT_MS  15000
+
+static int64_t s_boot_us;
+static bool    s_boot_decided;
+static bool    s_wanted_net_at_boot;
 
 /* ------------------------------------------------------------------ *
  *  Эфир
@@ -188,8 +203,68 @@ static void on_state(const ipradio_snapshot_t *s, void *ctx)
     s_applied_preset = s->active_preset;
 }
 
+/* Разовая проверка при старте, зовётся по секундному тику.
+ * Возвращает true, когда решение принято и звать больше не надо. */
+bool ipradio_bridge_boot_check(void)
+{
+    if (s_boot_decided) {
+        return true;
+    }
+
+    /* Последняя станция была эфирной - решать нечего, эфир уже играет. */
+    if (!s_wanted_net_at_boot) {
+        s_boot_decided = true;
+        return true;
+    }
+
+    ipradio_snapshot_t s;
+    ipradio_get(&s);
+
+    if (s.net == IPRADIO_NET_CONNECTED) {
+        /* Сеть успела. Возвращаем человека туда, где он выключился:
+         * это не самоуправство, а восстановление его же выбора. */
+        s_boot_decided = true;
+        ESP_LOGI(TAG, "сеть поднялась, возвращаем интернет-станцию");
+
+        ipradio_store_t store;
+        ipradio_storage_get(&store);
+        if (store.settings.last_preset >= 1) {
+            ipradio_post_simple(IPRADIO_EV_PRESET_PRESSED,
+                                store.settings.last_preset);
+        }
+        return true;
+    }
+
+    if ((esp_timer_get_time() - s_boot_us) < NET_WAIT_AT_BOOT_MS * 1000LL) {
+        return false;                /* ещё ждём */
+    }
+
+    /* Не дождались. Эфир уже играет - автомат стартует в эфирном
+     * режиме именно на этот случай. Остаётся сказать об этом. */
+    s_boot_decided = true;
+    ESP_LOGW(TAG, "сеть за %d с не поднялась, играет эфир",
+             NET_WAIT_AT_BOOT_MS / 1000);
+
+    ipradio_event_t ev = {
+        .type = IPRADIO_EV_ICY_UPDATE,
+        .text = "интернет недоступен, играет эфир",
+    };
+    ipradio_post(&ev);
+    return true;
+}
+
 esp_err_t ipradio_bridge_init(void)
 {
+    s_boot_us = esp_timer_get_time();
+
+    /* Чего человек хотел, когда выключался. Читаем ДО подписки:
+     * дальше состояние начнёт меняться. */
+    {
+        ipradio_store_t store;
+        ipradio_storage_get(&store);
+        s_wanted_net_at_boot = (store.settings.last_mode == IPRADIO_MODE_NET);
+    }
+
     esp_err_t err = ipradio_subscribe(on_state, NULL);
     if (err != ESP_OK) {
         return err;

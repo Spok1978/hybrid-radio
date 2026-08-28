@@ -29,6 +29,7 @@
 #include "bsp/esp-bsp.h"
 
 #include "ipradio_state.h"
+#include "ipradio_storage.h"
 #include "ipradio_ui.h"
 #include "ipradio_fonts.h"
 #include "ipradio_ui_theme.h"
@@ -103,6 +104,13 @@ static lv_obj_t *s_detail;       /* мелкая строка снизу        
 static lv_obj_t *s_mute_badge;
 static lv_obj_t *s_presets[PRESET_CELLS];
 static lv_obj_t *s_preset_names[PRESET_CELLS];
+static lv_obj_t *s_preset_kind[PRESET_CELLS];
+
+/* Копия банка для отрисовки полосы пресетов. Перечитываем только
+ * когда номер поколения изменился: файл занимает пару килобайт,
+ * а полоса перерисовывается на каждое событие автомата. */
+static ipradio_store_t s_bank;
+static uint32_t        s_bank_gen = UINT32_MAX;
 
 /* ------------------------------------------------------------------ *
  *  Сборка экрана
@@ -213,8 +221,17 @@ static void build_presets(lv_obj_t *root)
                                  COL_TEXT_FAINT, num);
         lv_obj_align(n, LV_ALIGN_TOP_LEFT, 0, 0);
 
+        /* Тип ячейки - в правом верхнем углу, рядом с номером.
+         * Он должен читаться ДО нажатия: ячейки разного типа
+         * переключают режим, и человек вправе знать это заранее. */
+        s_preset_kind[i] = make_label(cell, ipradio_font_14,
+                                      COL_TEXT_FAINT, "");
+        lv_obj_align(s_preset_kind[i], LV_ALIGN_TOP_RIGHT, 0, 0);
+
         s_preset_names[i] = make_label(cell, ipradio_font_16,
-                                       COL_TEXT_DIM, "-");
+                                       COL_TEXT_DIM, "");
+        lv_obj_set_width(s_preset_names[i], LV_PCT(100));
+        lv_label_set_long_mode(s_preset_names[i], LV_LABEL_LONG_DOT);
         lv_obj_align(s_preset_names[i], LV_ALIGN_BOTTOM_LEFT, 0, 0);
 
         s_presets[i] = cell;
@@ -643,6 +660,87 @@ static void update_dialogs(const ipradio_snapshot_t *s)
     }
 }
 
+/* ------------------------------------------------------------------ *
+ *  Полоса пресетов
+ * ------------------------------------------------------------------ */
+
+/* Требование §5.2, правило 2: интернет-ячейки ГАСНУТ ЗАРАНЕЕ, когда
+ * сети нет, и получают об этом пометку. Недоступность должна быть
+ * видна ДО нажатия, а не после: нажатие не должно отвечать тишиной.
+ *
+ * Это и есть причина, по которой полоса читает банк, а не показывает
+ * одни номера. Номер на кнопке человек видит и так - он написан
+ * на самой кнопке. Экран нужен, чтобы сказать, ЧТО за ней и работает
+ * ли она сейчас. */
+static void render_presets(const ipradio_snapshot_t *s)
+{
+    uint32_t gen = ipradio_storage_generation();
+    if (gen != s_bank_gen) {
+        ipradio_storage_get(&s_bank);
+        s_bank_gen = gen;
+    }
+
+    bool net_ok = (s->net == IPRADIO_NET_CONNECTED);
+
+    for (int i = 0; i < PRESET_CELLS; i++) {
+        const ipradio_preset_t *p = &s_bank.presets[i];
+        bool active = (s->active_preset == i + 1);
+        bool is_net = p->used && (p->type == IPRADIO_MODE_NET);
+
+        /* Недоступна = интернетная ячейка при отсутствии сети. */
+        bool unavailable = is_net && !net_ok;
+
+        lv_color_t cell_accent = is_net ? COL_CYAN : COL_AMBER;
+
+        if (!p->used) {
+            lv_label_set_text(s_preset_names[i], "");
+            lv_label_set_text(s_preset_kind[i], "");
+        } else {
+            /* Безымянная эфирная станция - обычное дело после
+             * автопоиска. Показываем частоту: она хотя бы говорит,
+             * куда попадёшь. */
+            if (p->name[0]) {
+                lv_label_set_text(s_preset_names[i], p->name);
+            } else if (p->type == IPRADIO_MODE_FM) {
+                char f[16];
+                snprintf(f, sizeof(f), "%u.%02u",
+                         (unsigned) (p->freq_khz / 1000),
+                         (unsigned) ((p->freq_khz % 1000) / 10));
+                lv_label_set_text(s_preset_names[i], f);
+            } else {
+                lv_label_set_text(s_preset_names[i], "без названия");
+            }
+
+            /* Перечёркнутый значок сети нарисовать нечем: в шрифте
+             * его нет, а тащить ради одного знака набор пиктограмм
+             * незачем. Пишем словом - оно и понятнее. */
+            if (unavailable) {
+                lv_label_set_text(s_preset_kind[i], "нет сети");
+            } else {
+                lv_label_set_text(s_preset_kind[i], is_net ? "сеть" : "эфир");
+            }
+        }
+
+        /* Гашение недоступной ячейки: приглушаем и текст, и рамку.
+         * Одного цвета текста мало - ячейка должна выглядеть
+         * выключенной целиком. */
+        lv_obj_set_style_opa(s_presets[i],
+                             unavailable ? LV_OPA_40 : LV_OPA_COVER, 0);
+
+        lv_obj_set_style_text_color(s_preset_kind[i],
+            unavailable ? COL_RED : COL_TEXT_FAINT, 0);
+        lv_obj_set_style_text_color(s_preset_names[i],
+            active ? COL_TEXT : COL_TEXT_DIM, 0);
+
+        lv_obj_set_style_border_color(s_presets[i],
+            active ? cell_accent : COL_BORDER, 0);
+        lv_obj_set_style_border_width(s_presets[i], active ? 2 : 1, 0);
+        lv_obj_set_style_bg_color(s_presets[i],
+            active ? (is_net ? lv_color_hex(0x0f2529) : lv_color_hex(0x2a2110))
+                   : COL_SURFACE, 0);
+    }
+}
+
 static void apply_snapshot(const ipradio_snapshot_t *s)
 {
     bool fm = (s->mode == IPRADIO_MODE_FM);
@@ -731,16 +829,7 @@ static void apply_snapshot(const ipradio_snapshot_t *s)
     ipradio_wifi_ui_update(s);
     ipradio_diag_ui_update(s);
 
-    /* Ячейки пресетов: активная подсвечивается цветом своего типа. */
-    for (int i = 0; i < PRESET_CELLS; i++) {
-        bool active = (s->active_preset == i + 1);
-        lv_obj_set_style_border_color(s_presets[i],
-            active ? accent : COL_BORDER, 0);
-        lv_obj_set_style_border_width(s_presets[i], active ? 2 : 1, 0);
-        lv_obj_set_style_bg_color(s_presets[i],
-            active ? (fm ? lv_color_hex(0x2a2110) : lv_color_hex(0x0f2529))
-                   : COL_SURFACE, 0);
-    }
+    render_presets(s);
 }
 
 /* ------------------------------------------------------------------ *

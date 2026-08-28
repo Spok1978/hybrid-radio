@@ -210,8 +210,16 @@ void app_main(void)
 
     /* Раз в секунду будим автомат: по этому событию интерфейс
      * перерисовывает часы и отсчитывает вход в ждущий режим. */
+    bool boot_done = false;
+
     while (1) {
         vTaskDelay(pdMS_TO_TICKS(1000));
         ipradio_post_simple(IPRADIO_EV_TICK, 0);
+
+        /* Решение о том, ждать ли сеть после включения (§5.2,
+         * правило 4). Принимается один раз, дальше не мешаем. */
+        if (!boot_done) {
+            boot_done = ipradio_bridge_boot_check();
+        }
     }
 }

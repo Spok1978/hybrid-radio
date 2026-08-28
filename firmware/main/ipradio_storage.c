@@ -475,3 +475,8 @@ esp_err_t ipradio_storage_save_settings(const ipradio_settings_t *s)
     st.settings = *s;
     return ipradio_storage_save(&st);
 }
+
+uint32_t ipradio_storage_generation(void)
+{
+    return s_generation;
+}
