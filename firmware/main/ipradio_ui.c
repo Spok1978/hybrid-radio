@@ -44,6 +44,7 @@
 #include "ipradio_ui_diag.h"
 #include "ipradio_ui_brightness.h"
 #include "ipradio_ui_clock.h"
+#include "ipradio_watchdog.h"
 #include "ipradio_input.h"
 
 static const char *TAG = "ui";
@@ -896,7 +897,19 @@ static void ui_task(void *arg)
 {
     (void) arg;
 
+    /* Лимит 5 с, а не 2, как было предложено изначально. Шаг
+     * цикла и правда 50 мс, но внутри drain_modal_queue лежит
+     * запись на карту: удаление станции, сохранение найденной,
+     * сохранение настроек часов. Запись на FAT со сбросом на
+     * носитель занимает сотни миллисекунд, а на изношенной карте
+     * бывает и дольше.
+     *
+     * Пять секунд всё ещё ловят настоящее зависание, но не выдают
+     * за него медленную карту. */
+    int wdt = ipradio_watchdog_register("ui", 5000, 0);
+
     for (;;) {
+        ipradio_watchdog_feed(wdt);
         bool have_snap = false;
         ipradio_snapshot_t snap;
 

@@ -19,6 +19,7 @@
 #include "board_pins.h"
 #include "ipradio_state.h"
 #include "ipradio_storage.h"
+#include "ipradio_watchdog.h"
 #include "ipradio_tuner.h"
 
 static const char *TAG = "state";
@@ -457,10 +458,15 @@ static void state_task(void *arg)
 
     ESP_LOGI(TAG, "автомат запущен");
 
+    int wdt = ipradio_watchdog_register("state", 3000,
+                                        IPRADIO_WDT_F_BLOCKED_OK);
+
     for (;;) {
         if (xQueueReceive(s_queue, &e, portMAX_DELAY) != pdTRUE) {
             continue;
         }
+
+        ipradio_watchdog_feed(wdt);
 
         /* Фильтр — до захвата замка и до применения события.
          * Он может забрать событие себе: пока висит диалог, энкодер 1

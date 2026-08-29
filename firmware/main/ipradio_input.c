@@ -24,6 +24,7 @@
 
 #include "board_pins.h"
 #include "ipradio_input.h"
+#include "ipradio_watchdog.h"
 #include "ipradio_state.h"
 
 static const char *TAG = "input";
@@ -290,7 +291,10 @@ static void input_task(void *arg)
     ESP_LOGI(TAG, "опрос запущен: %d кнопок, %d энкодера, период %d мс",
              (int) BUTTON_COUNT, (int) ENCODER_COUNT, POLL_PERIOD_MS);
 
+    int wdt = ipradio_watchdog_register("input", 1000, 0);
+
     for (;;) {
+        ipradio_watchdog_feed(wdt);
         int64_t now = esp_timer_get_time();
 
         for (size_t i = 0; i < BUTTON_COUNT; i++) {

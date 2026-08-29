@@ -40,13 +40,13 @@
 #include "board_pins.h"
 #include "ipradio_state.h"
 #include "ipradio_input.h"
-#include "ipradio_storage.h"
 #include "ipradio_tuner.h"
 #include "ipradio_audio.h"
 #include "ipradio_net.h"
 #include "ipradio_ui.h"
 #include "ipradio_netradio.h"
 #include "ipradio_bridge.h"
+#include "ipradio_watchdog.h"
 #include "ipradio_storage.h"
 
 #include "bsp/display.h"
@@ -147,6 +147,8 @@ void app_main(void)
 {
     ESP_LOGI(TAG, "=== IP-Radio, проверочная сборка ===");
 
+    ESP_ERROR_CHECK(ipradio_watchdog_init());
+
     log_chip();
     scan_i2c();
 
@@ -171,12 +173,12 @@ void app_main(void)
      * Штатный усилитель платы при этом удерживается выключенным. */
     ESP_ERROR_CHECK(ipradio_audio_init());
 
-    /* Сеть поднимается ПОСЛЕДНЕЙ и не блокирует: эфир не должен ждать
-     * сеть (§3.2). Тюнер к этому моменту уже играет. */
     /* Интерфейс. Панель и тач поднимает BSP платы; здесь только
      * экраны. Подписку на автомат модуль делает сам. */
     ipradio_ui_init();
 
+    /* Сеть поднимается ПОСЛЕДНЕЙ и не блокирует: эфир не должен ждать
+     * сеть (§3.2). Тюнер к этому моменту уже играет. */
     ipradio_net_init();
 
     {

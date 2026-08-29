@@ -41,6 +41,7 @@
 #include "board_pins.h"
 #include "ipradio_netradio.h"
 #include "ipradio_state.h"
+#include "ipradio_watchdog.h"
 
 static const char *TAG = "netradio";
 
@@ -115,7 +116,19 @@ static void events_task(void *arg)
     (void) arg;
     audio_event_iface_msg_t msg;
 
+    /* Лимит 10 с, а не 3, как было предложено изначально.
+     * Причина в пути повтора ниже: там законная пауза 2 с плюс
+     * audio_pipeline_wait_for_stop(), который ждёт остановки всех
+     * элементов. Элемент HTTP в этот момент может сидеть в чтении
+     * сокета на умершей сети, и остановка занимает секунды.
+     *
+     * С лимитом 3 с сторож перезагружал бы прибор ровно в той
+     * ситуации, ради которой повтор и написан: при дрожащей сети.
+     * Это хуже, чем отсутствие сторожа. */
+    int wdt = ipradio_watchdog_register("netradio", 10000, 0);
+
     for (;;) {
+        ipradio_watchdog_feed(wdt);
         /* Ждём событие не бесконечно: заполнение буфера надо
          * показывать и тогда, когда ничего не происходит, - а именно
          * тогда человек на него и смотрит. */
@@ -179,6 +192,11 @@ static void events_task(void *arg)
                                     IPRADIO_PLAY_BUFFERING);
 
                 vTaskDelay(pdMS_TO_TICKS(RETRY_DELAY_MS));
+
+                /* Пауза кончилась - отмечаемся, чтобы остаток
+                 * повтора считался от этого момента, а не от начала
+                 * витка. */
+                ipradio_watchdog_feed(wdt);
 
                 audio_pipeline_stop(s_pipeline);
                 audio_pipeline_wait_for_stop(s_pipeline);
