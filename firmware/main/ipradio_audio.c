@@ -60,8 +60,7 @@ esp_err_t ipradio_audio_apply(const ipradio_snapshot_t *snap)
         return ESP_ERR_INVALID_ARG;
     }
 
-    bool fm  = (snap->mode == IPRADIO_MODE_FM);
-    bool net = !fm;
+    bool fm = (snap->mode == IPRADIO_MODE_FM);
 
     /* Эфир. Приглушение — отдельным битом, а не громкостью в ноль.
      * Когда эфир неактивен, дополнительно уводим выход в Hi-Z:
@@ -86,7 +85,6 @@ esp_err_t ipradio_audio_apply(const ipradio_snapshot_t *snap)
                                 : snap->play == IPRADIO_PLAY_PLAYING);
     ipradio_audio_amp_enable(anything_audible);
 
-    (void) net;
     return ESP_OK;
 }
 

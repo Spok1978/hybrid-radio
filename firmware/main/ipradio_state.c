@@ -207,6 +207,23 @@ static void apply_preset_hold(int32_t cell)
     ipradio_store_t store;
     ipradio_storage_get(&store);
 
+    /* Адрес потока копируем В ЛОКАЛЬНЫЕ буферы до очистки ячейки.
+     * Источник и приёмник лежат в одной структуре store, и прямое
+     * копирование между ними - перекрытие: компилятор справедливо
+     * на это ругается. Плюс писать могут поверх той самой ячейки,
+     * что сейчас играет. */
+    char src_url[IPRADIO_URL_MAX]  = { 0 };
+    char src_uuid[IPRADIO_UUID_MAX] = { 0 };
+
+    const int8_t src = s_state.active_preset;
+    if (src >= 1 && src <= IPRADIO_PRESET_MAX) {
+        const ipradio_preset_t *from = &store.presets[src - 1];
+        if (from->used && from->type == IPRADIO_MODE_NET) {
+            memcpy(src_url,  from->url,         sizeof(src_url));
+            memcpy(src_uuid, from->stationuuid, sizeof(src_uuid));
+        }
+    }
+
     ipradio_preset_t *p = &store.presets[cell - 1];
     memset(p, 0, sizeof(*p));
     p->used = true;
@@ -223,10 +240,23 @@ static void apply_preset_hold(int32_t cell)
         }
     } else {
         snprintf(p->name, sizeof(p->name), "%s", s_state.station_name);
-        /* Адрес потока автомат не хранит — он живёт в ячейке, откуда
-         * станция и была взята. Перенести его сюда сможет тот, кто
-         * умеет искать станции; пока запись интернетной ячейки
-         * сохраняет только имя. */
+
+        /* Адрес берём из ячейки, которая играет сейчас.
+         *
+         * Раньше сохранялось только имя, и получалась ячейка без
+         * адреса: при нажатии человек видел «станция не отвечает»,
+         * хотя станция жива, а перенести было нечего. Сообщение
+         * вводило в заблуждение.
+         *
+         * Источник адреса - активная ячейка: играть в интернет-режиме
+         * мы можем только из неё. */
+        memcpy(p->url,         src_url,  sizeof(p->url));
+        memcpy(p->stationuuid, src_uuid, sizeof(p->stationuuid));
+
+        if (p->url[0] == '\0') {
+            ESP_LOGW(TAG, "ячейка %d записана без адреса потока",
+                     (int) cell);
+        }
     }
 
     s_state.active_preset = (int8_t) cell;

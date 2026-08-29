@@ -33,7 +33,7 @@ static const struct {
     [IPRADIO_MENU_TUNE_FM]      = { "Настройка эфира",
                                     "шкала, автопоиск, запись в пресеты" },
     [IPRADIO_MENU_FIND_NET]     = { "Поиск интернет-станций",
-                                    "по названию, жанру и стране" },
+                                    "по названию станции" },
     [IPRADIO_MENU_WIFI]         = { "Wi-Fi",
                                     "сети и пароли" },
     [IPRADIO_MENU_CLOCK]        = { "Часы",

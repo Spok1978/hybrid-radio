@@ -21,6 +21,9 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include "freertos/FreeRTOS.h"
+#include "freertos/semphr.h"
+
 #include "esp_log.h"
 #include "esp_vfs_fat.h"
 #include "sdmmc_cmd.h"
@@ -50,6 +53,25 @@ static sdmmc_card_t   *s_card;
 static bool            s_ready;
 static ipradio_store_t s_store;
 static uint32_t        s_generation;   /* растёт при каждой записи */
+
+/* Замок на всё содержимое модуля.
+ *
+ * Писателей три задачи сразу: автомат (запись пресета, настройки при
+ * выключении), интерфейс (переименование, удаление, сохранение
+ * найденной станции, яркость, часы) и задача автопоиска. Раньше замка
+ * не было вовсе, а временный файл при записи один на всех: два
+ * одновременных сохранения перемешивали его содержимое, и под ударом
+ * оказывались ОБЕ копии. Двойное хранение с контрольной суммой тут
+ * не спасает - оно защищает от обрыва питания, а не от двух писателей.
+ *
+ * ЧТО ЭТОТ ЗАМОК НЕ ЛЕЧИТ: потерю обновления. Все зовущие делают
+ * «прочитать всё - изменить одно поле - записать всё», и если двое
+ * сделают это подряд, второй затрёт правку первого. Файл при этом
+ * останется целым. Лечится это только сведением записи в одну задачу
+ * либо API вида «измени вот это поле», и делать так стоит, когда
+ * появится повод: сейчас одновременные правки - редкость, а порча
+ * файла была бы потерей всех настроек. */
+static SemaphoreHandle_t s_lock;
 static bool            s_next_is_b;    /* куда писать в следующий раз */
 
 /* ------------------------------------------------------------------ *
@@ -372,6 +394,11 @@ static esp_err_t mount_card(void)
 
 esp_err_t ipradio_storage_init(void)
 {
+    s_lock = xSemaphoreCreateMutex();
+    if (!s_lock) {
+        return ESP_ERR_NO_MEM;
+    }
+
     fill_defaults(&s_store);
 
     esp_err_t err = mount_card();
@@ -424,9 +451,14 @@ esp_err_t ipradio_storage_init(void)
 
 void ipradio_storage_get(ipradio_store_t *out)
 {
-    if (out) {
-        *out = s_store;
+    if (!out) {
+        return;
     }
+    /* Копия под замком: без него читатель мог застать структуру
+     * посреди записи другой задачей. */
+    xSemaphoreTake(s_lock, portMAX_DELAY);
+    *out = s_store;
+    xSemaphoreGive(s_lock);
 }
 
 bool ipradio_storage_ready(void)
@@ -443,11 +475,16 @@ esp_err_t ipradio_storage_save(const ipradio_store_t *in)
         return ESP_ERR_NOT_FOUND;
     }
 
+    /* Вся запись - под замком, включая временный файл: он один
+     * на всех, и два одновременных сохранения перемешали бы его. */
+    xSemaphoreTake(s_lock, portMAX_DELAY);
+
     s_store = *in;
     s_generation++;
 
     char *payload = build_payload(&s_store, s_generation);
     if (!payload) {
+        xSemaphoreGive(s_lock);
         return ESP_ERR_NO_MEM;
     }
 
@@ -463,6 +500,8 @@ esp_err_t ipradio_storage_save(const ipradio_store_t *in)
         ESP_LOGI(TAG, "сохранено в %s, поколение %" PRIu32,
                  s_next_is_b ? "A" : "B", s_generation);
     }
+
+    xSemaphoreGive(s_lock);
     return err;
 }
 
@@ -471,12 +510,18 @@ esp_err_t ipradio_storage_save_settings(const ipradio_settings_t *s)
     if (!s) {
         return ESP_ERR_INVALID_ARG;
     }
+    xSemaphoreTake(s_lock, portMAX_DELAY);
     ipradio_store_t st = s_store;
+    xSemaphoreGive(s_lock);
+
     st.settings = *s;
     return ipradio_storage_save(&st);
 }
 
 uint32_t ipradio_storage_generation(void)
 {
+    /* Читается интерфейсом на каждую перерисовку полосы пресетов.
+     * Одно выровненное 32-разрядное слово - замок тут дороже пользы,
+     * а увидеть значение на одну проверку позже безобидно. */
     return s_generation;
 }

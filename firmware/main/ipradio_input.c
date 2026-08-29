@@ -163,16 +163,25 @@ static const int8_t s_gray_table[16] = {
  *  Общее
  * ------------------------------------------------------------------ */
 
-static volatile int64_t s_last_activity_us;
+/* Метка последней активности - в МИЛЛИСЕКУНДАХ и 32 разряда.
+ *
+ * Раньше хранились микросекунды в int64. На 32-разрядном кристалле
+ * это два отдельных чтения, и читатель из другой задачи мог застать
+ * половину старого значения и половину нового - отсюда редкий ложный
+ * уход в ждущий режим или пропуск его.
+ *
+ * Тридцати двух разрядов миллисекунд хватает на 49 суток; разность
+ * беззнаковых считается верно и через переполнение. */
+static volatile uint32_t s_last_activity_ms;
 
 static void mark_activity(void)
 {
-    s_last_activity_us = esp_timer_get_time();
+    s_last_activity_ms = (uint32_t) (esp_timer_get_time() / 1000);
 }
 
 uint32_t ipradio_input_idle_ms(void)
 {
-    int64_t dt = esp_timer_get_time() - s_last_activity_us;
+    uint32_t dt = (uint32_t) (esp_timer_get_time() / 1000) - s_last_activity_ms;
     return (uint32_t) (dt / 1000);
 }
 

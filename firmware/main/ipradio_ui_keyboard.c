@@ -281,8 +281,16 @@ static bool press_key(const char *key)
     }
 
     if (strcmp(key, KEY_SPACE) == 0) {
-        lv_textarea_add_text(s_field, " ");
-        return true;
+        /* Пробел раньше шёл мимо проверки длины, которая есть у букв.
+         * Переполнения не было - finish() копирует с ограничением, -
+         * но строку можно было незаметно удлинить пробелами и получить
+         * обрезанный результат при сохранении. */
+        const char *cur = lv_textarea_get_text(s_field);
+        if (cur && strlen(cur) + 1 < IPRADIO_KB_TEXT_MAX) {
+            lv_textarea_add_text(s_field, " ");
+            return true;
+        }
+        return false;
     }
 
     /* Обычная буква. Длину проверяем сами: lv_textarea умеет

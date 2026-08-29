@@ -32,6 +32,10 @@ static ipradio_mode_t  s_applied_mode  = (ipradio_mode_t) -1;
 static ipradio_band_t  s_applied_band  = (ipradio_band_t) -1;
 static uint32_t        s_applied_freq;
 static int8_t          s_applied_preset = -2;
+
+/* Ячейка, которую конвейер уже объявил не отвечающей. Пока в ней
+ * стоим, повторных запусков не делаем. */
+static int8_t          s_dead_preset = -2;
 static bool            s_powering_off;
 
 /* Правило 4 из §5.2: если последняя станция была интернетная, а сеть
@@ -122,6 +126,23 @@ static void apply_stream(const ipradio_snapshot_t *s)
         return;
     }
 
+    /* Станция уже признана не отвечающей - НЕ дёргаем её снова.
+     *
+     * Без этой проверки получался вечный цикл: конвейер после трёх
+     * неудачных попыток выставляет ERROR и гасит себя, а сюда мы
+     * попадаем на каждом событии автомата, включая секундный тик.
+     * Поток неактивен, ячейка та же - условие выше не срабатывает,
+     * и всё начиналось заново. Прибор молотил бы в сеть без конца,
+     * показывая при этом «станция не отвечает».
+     *
+     * Запрет снимается сменой ячейки или режима: и то и другое
+     * меняет s_applied_preset или проводит нас через ветку выше. */
+    if (s->play == IPRADIO_PLAY_ERROR &&
+        s->active_preset == s_dead_preset) {
+        return;
+    }
+    s_dead_preset = -2;
+
     char url[IPRADIO_URL_MAX];
     char name[IPRADIO_NAME_MAX];
 
@@ -131,11 +152,18 @@ static void apply_stream(const ipradio_snapshot_t *s)
          * ещё нет. Молчать об этом нельзя — иначе выглядит как
          * поломка звука. */
         ESP_LOGW(TAG, "у ячейки %d нет адреса потока", s->active_preset);
+        s_dead_preset = s->active_preset;
         ipradio_post_simple(IPRADIO_EV_PLAY_STATE, IPRADIO_PLAY_ERROR);
         return;
     }
 
-    ipradio_netradio_play(url, name);
+    /* Запомним, на чём стоим: если конвейер сообщит об отказе,
+     * запрет ляжет именно на эту ячейку. */
+    s_dead_preset = s->active_preset;
+    if (ipradio_netradio_play(url, name) != ESP_OK) {
+        return;
+    }
+    s_dead_preset = -2;   /* пошло - запрета нет */
 }
 
 /* ------------------------------------------------------------------ *

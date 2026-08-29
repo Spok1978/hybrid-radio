@@ -626,8 +626,17 @@ static void tuner_task(void *arg)
 
         if (read_fails > 0 || !s_present) {
             if (!s_present) {
-                ESP_LOGI(TAG, "тюнер снова отвечает");
+                ESP_LOGI(TAG, "тюнер снова отвечает, программируем заново");
                 s_present = true;
+
+                /* Просто поднять признак мало. Если чип пропадал
+                 * по питанию, он вернулся с заводскими регистрами:
+                 * диапазон, громкость, пороги - не наши. А теневые
+                 * копии в прошивке утверждают обратное, и рассинхрон
+                 * остался бы навсегда. Пишем всё заново. */
+                write_regs();
+                ipradio_tuner_set_band(s_band);
+                ipradio_tuner_set_freq(s_freq_khz);
             }
             read_fails = 0;
         }

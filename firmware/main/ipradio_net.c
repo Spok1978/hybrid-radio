@@ -30,6 +30,7 @@
 #include "esp_event.h"
 #include "esp_http_client.h"
 #include "esp_log.h"
+#include "esp_timer.h"
 #include "esp_netif.h"
 #include "esp_netif_sntp.h"
 #include "esp_random.h"
@@ -45,8 +46,23 @@ static const char *TAG = "net";
 /* Требование сервиса: внятный User-Agent с именем и версией. */
 #define USER_AGENT        "ipradio/0.1"
 
-#define MIRROR_HOST       "all.api.radio-browser.info"
-#define MIRROR_MAX        8
+/* Зеркала каталога — ПОИМЕННО.
+ *
+ * Раньше брали A-записи all.api.radio-browser.info, соединялись
+ * по адресу и вручную ставили Host: all.api... Так не работает:
+ * это имя живёт только в DNS как указатель на зеркала, и ни одно
+ * зеркало не обслуживает его как виртуальный хост — соединение
+ * сбрасывается. То есть поиск станций не работал никогда.
+ *
+ * Ходим по именам самих зеркал. Тогда Host подставляет клиент,
+ * и вручную его трогать не надо. */
+static const char *const MIRRORS[] = {
+    "de1.api.radio-browser.info",
+    "de2.api.radio-browser.info",
+    "nl1.api.radio-browser.info",
+    "at1.api.radio-browser.info",
+};
+#define MIRROR_MAX        (sizeof(MIRRORS) / sizeof(MIRRORS[0]))
 #define HTTP_TIMEOUT_MS   8000
 #define RESPONSE_MAX      (48 * 1024)
 
@@ -82,6 +98,19 @@ ipradio_net_state_t ipradio_net_state(void)
  *  Wi-Fi
  * ------------------------------------------------------------------ */
 
+static char *fetch_ex(const char *path, bool post);
+static char *fetch(const char *path);
+static char *fetch_post(const char *path);
+
+static esp_timer_handle_t s_reconnect_timer;
+static bool               s_auth_failed;
+
+static void reconnect_cb(void *arg)
+{
+    (void) arg;
+    esp_wifi_connect();
+}
+
 static void wifi_handler(void *arg, esp_event_base_t base,
                          int32_t id, void *data)
 {
@@ -98,8 +127,29 @@ static void wifi_handler(void *arg, esp_event_base_t base,
          * не выжигать эфир при выключенной точке доступа. */
         set_state(IPRADIO_NET_DISCONNECTED);
         xEventGroupClearBits(s_wifi_events, WIFI_CONNECTED_BIT);
-        vTaskDelay(pdMS_TO_TICKS(RECONNECT_DELAY_MS));
-        esp_wifi_connect();
+
+        /* Пауза делается ТАЙМЕРОМ, а не сном прямо здесь.
+         *
+         * Обработчик исполняется в задаче системного цикла событий.
+         * Уснув в нём на пять секунд, мы останавливаем весь цикл:
+         * получение адреса, события SNTP и всех прочих подписчиков.
+         * Раньше так и было. */
+        const wifi_event_sta_disconnected_t *d = data;
+        if (d && (d->reason == WIFI_REASON_AUTH_FAIL ||
+                  d->reason == WIFI_REASON_NO_AP_FOUND ||
+                  d->reason == WIFI_REASON_HANDSHAKE_TIMEOUT)) {
+            /* Пароль не подошёл или сети нет. Повторять бессмысленно
+             * до смены учётных данных, а молчать нельзя: человек так
+             * и не узнает, почему не подключается. */
+            ESP_LOGE(TAG, "не подключиться, причина %d — нужен ввод заново",
+                     (int) d->reason);
+            s_auth_failed = true;
+            set_state(IPRADIO_NET_NOT_CONFIGURED);
+            return;
+        }
+
+        esp_timer_start_once(s_reconnect_timer,
+                             (uint64_t) RECONNECT_DELAY_MS * 1000);
 
     } else if (base == IP_EVENT && id == IP_EVENT_STA_GOT_IP) {
         ip_event_got_ip_t *ev = (ip_event_got_ip_t *) data;
@@ -111,6 +161,12 @@ static void wifi_handler(void *arg, esp_event_base_t base,
 
 esp_err_t ipradio_net_init(void)
 {
+    const esp_timer_create_args_t rc = {
+        .callback = reconnect_cb,
+        .name     = "wifi_reconnect",
+    };
+    ESP_ERROR_CHECK(esp_timer_create(&rc, &s_reconnect_timer));
+
     s_wifi_events = xEventGroupCreate();
     if (!s_wifi_events) {
         return ESP_ERR_NO_MEM;
@@ -169,6 +225,9 @@ esp_err_t ipradio_net_connect(const char *ssid, const char *pass)
         }
         ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wc));
         s_have_credentials = true;
+        /* Новые учётные данные - новая попытка: прошлый отказ
+         * авторизации больше не запрещает подключаться. */
+        s_auth_failed = false;
     }
 
     if (!s_have_credentials) {
@@ -333,37 +392,13 @@ esp_err_t ipradio_net_start_sntp(const char *tz)
  *  Выбор зеркала каталога
  * ------------------------------------------------------------------ */
 
-/* Документация сервиса просит брать список зеркал из DNS и выбирать
- * случайное. Резолвер отдаёт несколько A-записей; берём одну наугад. */
+/* Выбрать зеркало. Случайно, как просит документация сервиса:
+ * нагрузка должна расходиться по зеркалам сама. */
 static bool pick_mirror(void)
 {
-    struct addrinfo hints = {
-        .ai_family   = AF_INET,
-        .ai_socktype = SOCK_STREAM,
-    };
-    struct addrinfo *res = NULL;
-
-    if (getaddrinfo(MIRROR_HOST, "80", &hints, &res) != 0 || !res) {
-        ESP_LOGW(TAG, "зеркала каталога не разрешились");
-        return false;
-    }
-
-    char addrs[MIRROR_MAX][INET_ADDRSTRLEN];
-    int n = 0;
-    for (struct addrinfo *it = res; it && n < MIRROR_MAX; it = it->ai_next) {
-        struct sockaddr_in *sa = (struct sockaddr_in *) it->ai_addr;
-        inet_ntop(AF_INET, &sa->sin_addr, addrs[n], INET_ADDRSTRLEN);
-        n++;
-    }
-    freeaddrinfo(res);
-
-    if (n == 0) {
-        return false;
-    }
-
-    int idx = (int) (esp_random() % (uint32_t) n);
-    snprintf(s_mirror, sizeof(s_mirror), "%s", addrs[idx]);
-    ESP_LOGI(TAG, "зеркало каталога: %s (из %d)", s_mirror, n);
+    const char *m = MIRRORS[esp_random() % MIRROR_MAX];
+    snprintf(s_mirror, sizeof(s_mirror), "%s", m);
+    ESP_LOGI(TAG, "зеркало каталога: %s", s_mirror);
     return true;
 }
 
@@ -385,6 +420,11 @@ static esp_err_t http_collect(esp_http_client_event_t *evt)
         return ESP_OK;
     }
     if (r->len + evt->data_len >= r->cap) {
+        /* Ответ не влез. Раньше это происходило молча: буфер
+         * обрезался, разбор JSON падал, и человек видел «ничего
+         * не нашлось» вместо объяснения. */
+        ESP_LOGW(TAG, "ответ каталога больше %d КБ, обрезан",
+                 RESPONSE_MAX / 1024);
         return ESP_OK;      /* ответ длиннее, чем мы готовы принять */
     }
     memcpy(r->buf + r->len, evt->data, evt->data_len);
@@ -393,7 +433,7 @@ static esp_err_t http_collect(esp_http_client_event_t *evt)
     return ESP_OK;
 }
 
-static char *fetch(const char *path)
+static char *fetch_ex(const char *path, bool post)
 {
     if (s_state != IPRADIO_NET_CONNECTED) {
         return NULL;
@@ -419,9 +459,6 @@ static char *fetch(const char *path)
         .event_handler = http_collect,
         .user_data     = &r,
         .timeout_ms    = HTTP_TIMEOUT_MS,
-        /* Хост подставляем вручную: обращаемся по адресу зеркала,
-         * а виртуальный хост у сервиса именованный. */
-        .host          = NULL,
     };
 
     esp_http_client_handle_t cli = esp_http_client_init(&cfg);
@@ -430,8 +467,13 @@ static char *fetch(const char *path)
         return NULL;
     }
 
+    /* Host не ставим: адрес именованный, клиент подставит сам.
+     * Ручная подстановка здесь была причиной того, что каталог
+     * не отвечал вовсе. */
     esp_http_client_set_header(cli, "User-Agent", USER_AGENT);
-    esp_http_client_set_header(cli, "Host", MIRROR_HOST);
+    if (post) {
+        esp_http_client_set_method(cli, HTTP_METHOD_POST);
+    }
 
     esp_err_t err = esp_http_client_perform(cli);
     int status = esp_http_client_get_status_code(cli);
@@ -547,6 +589,46 @@ int ipradio_net_search(const char *query,
     return n;
 }
 
+/* Отметка клика уходит СВОЕЙ задачей и никого не ждёт.
+ *
+ * Раньше её звали прямо из задачи интерфейса, а внутри запрос
+ * с таймаутом 8 секунд. Лимит молчания у задачи интерфейса - 5:
+ * медленное зеркало давало гарантированную перезагрузку по сторожу
+ * ровно в тот момент, когда человек сохраняет станцию. Плюс экран
+ * замирал на время запроса.
+ *
+ * Результат никому не нужен: это счётчик рейтинга на стороне
+ * сервиса, вежливость, а не обязанность. */
+static void click_task(void *arg)
+{
+    char *uuid = arg;
+    char path[128];
+
+    /* Документация просит POST; GET отвечает 200, но засчитывается
+     * ли клик - неизвестно. Ставим метод явно. */
+    snprintf(path, sizeof(path), "/json/url/%s", uuid);
+    free(uuid);
+
+    char *body = fetch_post(path);
+    free(body);
+
+    vTaskDelete(NULL);
+}
+
+void ipradio_net_report_click_async(const char *uuid)
+{
+    if (!uuid || !uuid[0]) {
+        return;
+    }
+    char *copy = strdup(uuid);
+    if (!copy) {
+        return;
+    }
+    if (xTaskCreate(click_task, "click", 6144, copy, 3, NULL) != pdPASS) {
+        free(copy);
+    }
+}
+
 void ipradio_net_report_click(const char *uuid)
 {
     if (!uuid || !uuid[0]) {
@@ -559,4 +641,14 @@ void ipradio_net_report_click(const char *uuid)
      * Неудача здесь ни на что не влияет. */
     char *body = fetch(path);
     free(body);
+}
+
+static char *fetch(const char *path)
+{
+    return fetch_ex(path, false);
+}
+
+static char *fetch_post(const char *path)
+{
+    return fetch_ex(path, true);
 }

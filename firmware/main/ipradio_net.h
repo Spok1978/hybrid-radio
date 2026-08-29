@@ -87,6 +87,13 @@ int ipradio_net_search(const char *query,
  *  строится рейтинг: вежливость, а не обязанность (§4). */
 void ipradio_net_report_click(const char *uuid);
 
+/** То же, но своей задачей и не дожидаясь ответа.
+ *
+ *  Звать ИМЕННО ЭТО из задачи интерфейса: запрос идёт с таймаутом
+ *  восемь секунд, а у задачи интерфейса лимит молчания у сторожа -
+ *  пять. Прямой вызов давал перезагрузку на медленном зеркале. */
+void ipradio_net_report_click_async(const char *uuid);
+
 #ifdef __cplusplus
 }
 #endif

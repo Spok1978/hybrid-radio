@@ -26,6 +26,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
+#include "esp_crt_bundle.h"
 #include "esp_log.h"
 
 #include "audio_element.h"
@@ -235,6 +236,12 @@ esp_err_t ipradio_netradio_init(void)
      * из PSRAM, её у платы 32 МБ. */
     http_stream_cfg_t http_cfg = HTTP_STREAM_CFG_DEFAULT();
     http_cfg.type = AUDIO_STREAM_READER;
+
+    /* Набор корневых сертификатов: без него ни одна станция на https
+     * не заиграет, а каталог отдаёт их изрядную долю. Такие станции
+     * записывались бы в ячейку и молча уходили в «не отвечает».
+     * Цена - около 70 КБ образа, место есть. */
+    http_cfg.crt_bundle_attach = esp_crt_bundle_attach;
     http_cfg.out_rb_size = 64 * 1024;
     s_http = http_stream_init(&http_cfg);
 

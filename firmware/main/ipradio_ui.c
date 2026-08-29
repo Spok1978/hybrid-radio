@@ -28,6 +28,7 @@
 #include "lvgl.h"
 #include "bsp/esp-bsp.h"
 
+#include "board_pins.h"
 #include "ipradio_state.h"
 #include "ipradio_storage.h"
 #include "ipradio_ui.h"
@@ -51,7 +52,9 @@ static const char *TAG = "ui";
 
 static void apply_snapshot(const ipradio_snapshot_t *s);
 
-#define PRESET_CELLS    8
+/* Столько же, сколько физических кнопок: ячейку, которую нечем
+ * нажать, показывать нельзя (board_pins.h). */
+#define PRESET_CELLS    IPRADIO_PRESET_BUTTONS
 
 static SemaphoreHandle_t  s_lock;      /* защищает снимок и очередь ниже */
 static ipradio_snapshot_t s_pending;

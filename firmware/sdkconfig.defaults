@@ -145,3 +145,20 @@ CONFIG_LV_TINY_TTF_CACHE_KERNING_CNT=256
 # CONFIG_LV_FONT_MONTSERRAT_22 is not set
 # CONFIG_LV_FONT_MONTSERRAT_28 is not set
 # CONFIG_LV_FONT_MONTSERRAT_48 is not set
+
+# --------------------------------------------------------------------
+# Профиль ревизии кристалла — ЗДЕСЬ, а не только в отдельных файлах
+# --------------------------------------------------------------------
+# Рядом лежат sdkconfig.defaults.rev1_3 и rev3_x, и выше написано, что
+# один из них надо подключить через SDKCONFIG_DEFAULTS. На деле это
+# легко пропустить: «просто idf.py build» давал образ без явной
+# минимальной ревизии и скорости PSRAM, и на кристалле rev1.x он мог
+# не стартовать.
+#
+# Поэтому консервативный профиль задан прямо здесь: он работает
+# на любой ревизии. Для rev3.x есть смысл подключить rev3_x и поднять
+# PSRAM до 250 МГц, но это осознанный шаг, а не условие запуска.
+CONFIG_ESP32P4_SELECTS_REV_LESS_V3=y
+CONFIG_ESP32P4_REV_MIN_100=y
+CONFIG_SPIRAM_SPEED_200M=y
+CONFIG_SPIRAM_SPEED=200
