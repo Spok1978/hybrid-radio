@@ -314,8 +314,8 @@ esp_err_t ipradio_wifi_ui_init(lv_obj_t *parent)
 
     lv_obj_t *hints = ipradio_ui_label(s_screen, ipradio_font_14,
         COL_TEXT_FAINT,
-        "Энкодер 1 — выбор   •   нажатие — подключиться   •   "
-        "нажатие энкодера 2 — назад");
+        "Регулятор 1 — выбор   •   нажатие — подключиться   •   "
+        "нажатие регулятора 2 — назад");
     lv_obj_align(hints, LV_ALIGN_BOTTOM_MID, 0, -28);
 
     lv_obj_add_flag(s_screen, LV_OBJ_FLAG_HIDDEN);

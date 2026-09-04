@@ -26,6 +26,10 @@ const lv_font_t *ipradio_font_20;
 const lv_font_t *ipradio_font_22;
 const lv_font_t *ipradio_font_28;
 const lv_font_t *ipradio_font_48b;
+const lv_font_t *ipradio_font_28b;
+const lv_font_t *ipradio_font_40;
+const lv_font_t *ipradio_font_56;
+const lv_font_t *ipradio_font_96b;
 
 esp_err_t ipradio_fonts_init(void)
 {
@@ -47,6 +51,10 @@ esp_err_t ipradio_fonts_init(void)
         { &ipradio_font_22,  dejavu_ru_ttf_start,      reg_size,  22 },
         { &ipradio_font_28,  dejavu_ru_ttf_start,      reg_size,  28 },
         { &ipradio_font_48b, dejavu_ru_bold_ttf_start, bold_size, 48 },
+        { &ipradio_font_28b, dejavu_ru_bold_ttf_start, bold_size, 28 },
+        { &ipradio_font_40,  dejavu_ru_ttf_start,      reg_size,  40 },
+        { &ipradio_font_56,  dejavu_ru_ttf_start,      reg_size,  56 },
+        { &ipradio_font_96b, dejavu_ru_bold_ttf_start, bold_size, 96 },
     };
 
     for (size_t i = 0; i < sizeof(wanted) / sizeof(wanted[0]); i++) {
@@ -76,7 +84,7 @@ esp_err_t ipradio_fonts_init(void)
         *wanted[i].dst = f;
     }
 
-    ESP_LOGI(TAG, "шрифты готовы: %u + %u байт в образе, шесть кеглей",
+    ESP_LOGI(TAG, "шрифты готовы: %u + %u байт в образе, десять кеглей",
              (unsigned) reg_size, (unsigned) bold_size);
     return ESP_OK;
 }

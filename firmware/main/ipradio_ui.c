@@ -46,6 +46,7 @@
 #include "ipradio_ui_diag.h"
 #include "ipradio_ui_brightness.h"
 #include "ipradio_ui_clock.h"
+#include "ipradio_ui_netbadge.h"
 #include "ipradio_watchdog.h"
 #include "ipradio_input.h"
 
@@ -106,7 +107,7 @@ static bool s_station_dead_shown;
  * Фильтр событий работает в задаче автомата, а трогать виджеты можно
  * только из задачи LVGL (правило 1 в шапке файла). Поэтому фильтр
  * не рисует, а складывает команду сюда, и её разбирает ui_task.
- * Кольцо короткое: быстрее, чем человек крутит энкодер, команды
+ * Кольцо короткое: быстрее, чем человек крутит регулятор, команды
  * не приходят, а переполнение означало бы, что интерфейс завис —
  * и лишние повороты тогда всё равно не нужны. */
 #define MODAL_QUEUE_LEN 8
@@ -160,28 +161,35 @@ static void build_status_bar(lv_obj_t *root)
 {
     lv_obj_t *bar = lv_obj_create(root);
     lv_obj_remove_style_all(bar);
-    lv_obj_set_size(bar, LV_PCT(100), 48);
+    lv_obj_set_size(bar, LV_PCT(100), 96);
     lv_obj_align(bar, LV_ALIGN_TOP_MID, 0, 0);
     lv_obj_set_style_pad_hor(bar, 32, 0);
 
     /* Время — МЕЛКИМ шрифтом в ЛЕВОМ верхнем углу. Явное требование
      * ТЗ: оно не должно перекрывать название станции. */
-    s_clock = make_label(bar, ipradio_font_20, COL_TEXT_DIM, "--:--");
+    s_clock = make_label(bar, ipradio_font_40, COL_TEXT_DIM, "--:--");
     lv_obj_align(s_clock, LV_ALIGN_LEFT_MID, 0, 0);
 
-    /* Справа: громкость и бейдж режима. */
-    s_vol_text = make_label(bar, ipradio_font_16, COL_TEXT_DIM, "0");
-    lv_obj_align(s_vol_text, LV_ALIGN_RIGHT_MID, -150, 0);
+    /* Громкость. Раньше стояло голое число, и оно закономерно
+     * вызвало вопрос «а что это такое». Подпись мелким шрифтом
+     * рядом: само значение читают издалека, слово - только один раз,
+     * чтобы понять. */
+    s_vol_text = make_label(bar, ipradio_font_40, COL_TEXT_DIM, "0");
+    lv_obj_align(s_vol_text, LV_ALIGN_RIGHT_MID, -190, -8);
+
+    lv_obj_t *vol_cap = make_label(bar, ipradio_font_14,
+                                   COL_TEXT_FAINT, "громкость");
+    lv_obj_align(vol_cap, LV_ALIGN_RIGHT_MID, -180, 22);
 
     s_mode_badge = lv_obj_create(bar);
     lv_obj_remove_style_all(s_mode_badge);
-    lv_obj_set_size(s_mode_badge, 130, 34);
+    lv_obj_set_size(s_mode_badge, 190, 56);
     lv_obj_align(s_mode_badge, LV_ALIGN_RIGHT_MID, 0, 0);
-    lv_obj_set_style_radius(s_mode_badge, 17, 0);
+    lv_obj_set_style_radius(s_mode_badge, 28, 0);
     lv_obj_set_style_bg_opa(s_mode_badge, LV_OPA_COVER, 0);
     lv_obj_set_style_border_width(s_mode_badge, 1, 0);
 
-    s_mode_text = make_label(s_mode_badge, ipradio_font_14,
+    s_mode_text = make_label(s_mode_badge, ipradio_font_28b,
                              COL_AMBER, "ЭФИР");
     lv_obj_center(s_mode_text);
 }
@@ -190,17 +198,17 @@ static void build_center(lv_obj_t *root)
 {
     /* Крупное название — требование по читаемости с расстояния,
      * а не оформление. Ради него взят самый большой доступный шрифт. */
-    s_title = make_label(root, ipradio_font_48b, COL_TEXT, "");
+    s_title = make_label(root, ipradio_font_96b, COL_TEXT, "");
     lv_obj_set_width(s_title, LV_PCT(90));
     lv_obj_set_style_text_align(s_title, LV_TEXT_ALIGN_CENTER, 0);
     lv_label_set_long_mode(s_title, LV_LABEL_LONG_DOT);
-    lv_obj_align(s_title, LV_ALIGN_CENTER, 0, -60);
+    lv_obj_align(s_title, LV_ALIGN_CENTER, 0, -80);
 
-    s_subtitle = make_label(root, ipradio_font_28, COL_AMBER, "");
-    lv_obj_align(s_subtitle, LV_ALIGN_CENTER, 0, 10);
+    s_subtitle = make_label(root, ipradio_font_56, COL_AMBER, "");
+    lv_obj_align(s_subtitle, LV_ALIGN_CENTER, 0, 20);
 
-    s_detail = make_label(root, ipradio_font_16, COL_TEXT_FAINT, "");
-    lv_obj_align(s_detail, LV_ALIGN_CENTER, 0, 56);
+    s_detail = make_label(root, ipradio_font_28, COL_TEXT_FAINT, "");
+    lv_obj_align(s_detail, LV_ALIGN_CENTER, 0, 90);
 
     /* Плашка приглушения. Значка в углу мало: человек решит, что прибор
      * сломался, а не что он сам выключил звук. */
@@ -286,7 +294,7 @@ static void build_hints(lv_obj_t *root)
     lv_obj_set_style_border_width(line, 1, 0);
 
     lv_obj_t *t = make_label(line, ipradio_font_14, COL_TEXT_FAINT,
-        "Энкодер 1 — станции   •   Энкодер 2 — громкость   •   нажатие — звук");
+        "Регулятор 1 — станции   •   Регулятор 2 — громкость   •   нажатие — звук");
     lv_obj_center(t);
 }
 
@@ -309,7 +317,7 @@ static void build_hints(lv_obj_t *root)
  * ПОРЯДОК СТРОК — ПОРЯДОК НАЛОЖЕНИЯ, сверху вниз. Клавиатура первая,
  * потому что открывается поверх всего, включая выбор сети и поиск
  * станций; диалог последний, потому что лежит под всеми. Кто открыт
- * и лежит выше — тот и получает поворот энкодера.
+ * и лежит выше — тот и получает поворот регулятора.
  *
  * Добавить экран теперь значит добавить строку. Раньше это значило
  * найти и поправить семь мест, и одно из них забыть. */
@@ -415,7 +423,7 @@ static bool modal_filter(const ipradio_event_t *ev, void *ctx)
 
     const modal_screen_t *top = modal_top();
 
-    /* Долгое нажатие энкодера 1. С экрана воспроизведения открывает
+    /* Долгое нажатие регулятора 1. С экрана воспроизведения открывает
      * меню; на экране, где у строки два действия, - второе из них;
      * на прочих модальных просто гасится, чтобы из диалога нельзя
      * было провалиться в меню: прибор задал вопрос и ждёт ответа. */
@@ -441,7 +449,7 @@ static bool modal_filter(const ipradio_event_t *ev, void *ctx)
         modal_push(MODAL_SELECT, 0);
         return true;
 
-    /* Нажатие энкодера 2. На экранах настройки это «назад» (§5.3),
+    /* Нажатие регулятора 2. На экранах настройки это «назад» (§5.3),
      * в диалоге - по-прежнему mute: диалог закрывается своими
      * кнопками, а звук человеку может понадобиться именно в тот
      * момент, когда прибор что-то от него хочет. Отсюда и NULL
@@ -863,6 +871,7 @@ static void apply_snapshot(const ipradio_snapshot_t *s)
     ipradio_tune_update(s);
     ipradio_wifi_ui_update(s);
     ipradio_diag_ui_update(s);
+    ipradio_netbadge_update(s);
 
     render_presets(s);
 }
@@ -958,7 +967,14 @@ static void ui_task(void *arg)
         /* Замок берём один раз на всю пачку работы, а не на каждый
          * вызов: чередоваться с задачей отрисовки посреди перерисовки
          * экрана значит показать человеку полуобновлённую картинку. */
-        if (ui_lock(100)) {
+        /* Полсекунды, а не сто миллисекунд. Задача LVGL при первой
+         * отрисовке крупных кеглей занята надолго: Tiny TTF растит
+         * глифы во время работы, и знак в 96 точек стоит заметно
+         * дороже мелкого. Со ста миллисекундами журнал засыпало
+         * отказами захвата, а обновление экрана пропускалось.
+         * Лимит молчания у сторожа для этой задачи 5 секунд,
+         * так что полсекунды берём спокойно. */
+        if (ui_lock(500)) {
             if (have_snap) {
                 apply_snapshot(&snap);
             }
@@ -995,7 +1011,7 @@ static void ui_task(void *arg)
 
         /* 50 мс - шаг обновления часов и отсчёта бездействия. Чаще
          * незачем: минута на часах меняется раз в минуту, а реакция
-         * на энкодер идёт через кольцо команд и от этого шага
+         * на регулятор идёт через кольцо команд и от этого шага
          * не зависит. */
         vTaskDelay(pdMS_TO_TICKS(50));
     }
@@ -1134,6 +1150,14 @@ esp_err_t ipradio_ui_init(void)
     }
 
     derr = ipradio_clock_ui_init(root);
+    if (derr != ESP_OK) {
+        ui_unlock();
+        return derr;
+    }
+
+    /* Значок сети - последним: он ложится на ВЕРХНИЙ СЛОЙ и должен
+     * оказаться поверх всех уже построенных экранов. */
+    derr = ipradio_netbadge_init();
     if (derr != ESP_OK) {
         ui_unlock();
         return derr;

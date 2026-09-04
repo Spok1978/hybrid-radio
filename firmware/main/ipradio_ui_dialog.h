@@ -64,7 +64,7 @@ void ipradio_dialog_hide(void);
 ipradio_dialog_kind_t ipradio_dialog_current(void);
 
 /* Управление с органов: диалог обязан быть проходим без касания
- * (требование R4.1). Энкодер 1 переставляет выделение, его кнопка
+ * (требование R4.1). Регулятор 1 переставляет выделение, его кнопка
  * подтверждает. */
 void ipradio_dialog_move(int delta);
 void ipradio_dialog_select(void);

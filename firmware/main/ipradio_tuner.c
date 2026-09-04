@@ -243,7 +243,7 @@ esp_err_t ipradio_tuner_set_freq(uint32_t khz)
     uint32_t step = band_step(s_band);
     uint32_t chan = (khz - base) / step;
 
-    /* Округляем к ближайшему узлу сетки: пользователь крутит энкодер,
+    /* Округляем к ближайшему узлу сетки: пользователь крутит регулятор,
      * а не вводит частоту с точностью до килогерца. */
     s_freq_khz = base + chan * step;
     rds_reset();

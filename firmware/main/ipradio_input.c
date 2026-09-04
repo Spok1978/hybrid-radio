@@ -1,15 +1,15 @@
 /*
- * ipradio_input.c — опрос энкодеров и кнопок.
+ * ipradio_input.c — опрос регуляторов и кнопок.
  *
  * Почему опрос, а не прерывания на каждую линию. Кнопок много, и все
  * они медленные: человек не нажимает чаще нескольких раз в секунду.
  * Опрос раз в 5 мс даёт антидребезг бесплатно — состояние считается
  * установившимся, когда оно совпало DEBOUNCE_SAMPLES раз подряд.
- * Энкодеры опрашиваются в том же цикле: EC11 с двадцатью импульсами
+ * Регуляторы опрашиваются в том же цикле: EC11 с двадцатью импульсами
  * на оборот при быстром вращении даёт от силы двести переходов
  * в секунду, а мы читаем двести раз в секунду каждый канал.
  *
- * Декодер энкодера — таблица переходов по коду Грея. Она отбрасывает
+ * Декодер регулятора — таблица переходов по коду Грея. Она отбрасывает
  * дребезг контактов сама: недопустимый переход просто не даёт шага.
  */
 
@@ -72,7 +72,7 @@ typedef struct {
 static button_t s_buttons[] = {
     {
         .pin  = PIN_ENC1_BTN,
-        .name = "энкодер 1",
+        .name = "регулятор 1",
         /* Коротко — ОК и играть, длинно — вход в меню. Разведено
          * специально: в черновике ТЗ обе роли висели на одном нажатии. */
         .act  = { .short_ev  = IPRADIO_EV_SELECT,
@@ -81,7 +81,7 @@ static button_t s_buttons[] = {
     },
     {
         .pin  = PIN_ENC2_BTN,
-        .name = "энкодер 2",
+        .name = "регулятор 2",
         /* Mute вкл/выкл, одинаково в обоих режимах. */
         .act  = { .short_ev  = IPRADIO_EV_MUTE_TOGGLE,
                   .double_ev = -1,
@@ -123,7 +123,7 @@ static button_t s_buttons[] = {
 #define BUTTON_COUNT (sizeof(s_buttons) / sizeof(s_buttons[0]))
 
 /* ------------------------------------------------------------------ *
- *  Энкодеры
+ *  Регуляторы
  * ------------------------------------------------------------------ */
 
 typedef struct {
@@ -138,9 +138,9 @@ typedef struct {
 
 static encoder_t s_encoders[] = {
     { .pin_a = PIN_ENC1_A, .pin_b = PIN_ENC1_B,
-      .name = "энкодер 1", .event = IPRADIO_EV_TUNE_DELTA },
+      .name = "регулятор 1", .event = IPRADIO_EV_TUNE_DELTA },
     { .pin_a = PIN_ENC2_A, .pin_b = PIN_ENC2_B,
-      .name = "энкодер 2", .event = IPRADIO_EV_VOLUME_DELTA },
+      .name = "регулятор 2", .event = IPRADIO_EV_VOLUME_DELTA },
 };
 
 #define ENCODER_COUNT (sizeof(s_encoders) / sizeof(s_encoders[0]))
@@ -297,7 +297,7 @@ static void input_task(void *arg)
     (void) arg;
     TickType_t last_wake = xTaskGetTickCount();
 
-    ESP_LOGI(TAG, "опрос запущен: %d кнопок, %d энкодера, период %d мс",
+    ESP_LOGI(TAG, "опрос запущен: %d кнопок, %d регулятора, период %d мс",
              (int) BUTTON_COUNT, (int) ENCODER_COUNT, POLL_PERIOD_MS);
 
     int wdt = ipradio_watchdog_register("input", 1000, 0);
