@@ -66,7 +66,11 @@ esp_err_t ipradio_idle_init(lv_obj_t *parent)
     lv_obj_set_style_text_align(s_now_playing, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_align(s_now_playing, LV_ALIGN_BOTTOM_MID, 0, -74);
 
-    s_hint = ipradio_ui_label(s_screen, ipradio_font_14, COL_TEXT_FAINT,
+    /* Здесь подсказка НАМЕРЕННО приглушена, в отличие от прочих
+     * экранов: ждущий режим должен быть тихим, а не звать нажимать.
+     * Кегль всё же поднят - мелкий шрифт на этой панели не читается
+     * даже когда его и не должны читать в упор. */
+    s_hint = ipradio_ui_label(s_screen, ipradio_font_20, COL_TEXT_FAINT,
                               "Любое действие вернёт экран");
     lv_obj_align(s_hint, LV_ALIGN_BOTTOM_MID, 0, -30);
 

@@ -325,7 +325,7 @@ esp_err_t ipradio_clock_ui_init(lv_obj_t *parent)
     lv_obj_set_style_bg_opa(s_row[ROW_NOW], LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(s_row[ROW_NOW], 0, 0);
 
-    s_hint = ipradio_ui_label(s_screen, ipradio_font_14, COL_TEXT_FAINT, "");
+    s_hint = ipradio_ui_label(s_screen, ipradio_font_20, COL_TEXT, "");
     lv_obj_align(s_hint, LV_ALIGN_BOTTOM_MID, 0, -28);
 
     lv_obj_add_flag(s_screen, LV_OBJ_FLAG_HIDDEN);

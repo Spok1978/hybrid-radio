@@ -403,8 +403,8 @@ esp_err_t ipradio_tune_init(lv_obj_t *parent)
     s_status = ipradio_ui_label(s_screen, ipradio_font_16, COL_TEXT_DIM, "");
     lv_obj_align(s_status, LV_ALIGN_BOTTOM_MID, 0, -76);
 
-    lv_obj_t *hints = ipradio_ui_label(s_screen, ipradio_font_14,
-        COL_TEXT_FAINT,
+    lv_obj_t *hints = ipradio_ui_label(s_screen, ipradio_font_20,
+        COL_TEXT,
         "Регулятор 1 — перестройка   •   нажатие — автопоиск   •   "
         "нажатие регулятора 2 — назад");
     lv_obj_align(hints, LV_ALIGN_BOTTOM_MID, 0, -28);

@@ -98,8 +98,8 @@ esp_err_t ipradio_brightness_ui_init(lv_obj_t *parent)
     lv_obj_clear_flag(s_fill, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_align(s_fill, LV_ALIGN_LEFT_MID, 2, 0);
 
-    lv_obj_t *hints = ipradio_ui_label(s_screen, ipradio_font_14,
-        COL_TEXT_FAINT,
+    lv_obj_t *hints = ipradio_ui_label(s_screen, ipradio_font_20,
+        COL_TEXT,
         "Регулятор 1 — яркость   •   нажатие — принять   •   "
         "нажатие регулятора 2 — вернуть прежнюю");
     lv_obj_align(hints, LV_ALIGN_BOTTOM_MID, 0, -28);

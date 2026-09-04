@@ -384,7 +384,7 @@ esp_err_t ipradio_keyboard_init(lv_obj_t *parent)
 
     lv_obj_add_event_cb(s_matrix, on_matrix_click, LV_EVENT_VALUE_CHANGED, NULL);
 
-    s_hints = ipradio_ui_label(s_screen, ipradio_font_14, COL_TEXT_FAINT,
+    s_hints = ipradio_ui_label(s_screen, ipradio_font_20, COL_TEXT,
         "Регулятор 1 — выбор   •   нажатие — ввод   •   "
         "двойное — сохранить   •   регулятор 2 — отмена");
     lv_obj_align(s_hints, LV_ALIGN_BOTTOM_MID, 0, -24);

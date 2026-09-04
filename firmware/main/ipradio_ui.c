@@ -175,11 +175,11 @@ static void build_status_bar(lv_obj_t *root)
      * рядом: само значение читают издалека, слово - только один раз,
      * чтобы понять. */
     s_vol_text = make_label(bar, ipradio_font_40, COL_TEXT_DIM, "0");
-    lv_obj_align(s_vol_text, LV_ALIGN_RIGHT_MID, -190, -8);
+    lv_obj_align(s_vol_text, LV_ALIGN_RIGHT_MID, -250, -8);
 
     lv_obj_t *vol_cap = make_label(bar, ipradio_font_14,
                                    COL_TEXT_FAINT, "громкость");
-    lv_obj_align(vol_cap, LV_ALIGN_RIGHT_MID, -180, 22);
+    lv_obj_align(vol_cap, LV_ALIGN_RIGHT_MID, -240, 22);
 
     s_mode_badge = lv_obj_create(bar);
     lv_obj_remove_style_all(s_mode_badge);
@@ -293,7 +293,7 @@ static void build_hints(lv_obj_t *root)
     lv_obj_set_style_border_color(line, lv_color_hex(0x1c1f23), 0);
     lv_obj_set_style_border_width(line, 1, 0);
 
-    lv_obj_t *t = make_label(line, ipradio_font_14, COL_TEXT_FAINT,
+    lv_obj_t *t = make_label(line, ipradio_font_20, COL_TEXT,
         "Регулятор 1 — станции   •   Регулятор 2 — громкость   •   нажатие — звук");
     lv_obj_center(t);
 }

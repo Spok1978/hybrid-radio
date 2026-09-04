@@ -336,8 +336,8 @@ esp_err_t ipradio_search_ui_init(lv_obj_t *parent)
         lv_obj_add_flag(s_row[i], LV_OBJ_FLAG_HIDDEN);
     }
 
-    lv_obj_t *hints = ipradio_ui_label(s_screen, ipradio_font_14,
-        COL_TEXT_FAINT,
+    lv_obj_t *hints = ipradio_ui_label(s_screen, ipradio_font_20,
+        COL_TEXT,
         "Регулятор 1 — выбор   •   нажатие — сохранить и включить   •   "
         "нажатие регулятора 2 — назад");
     lv_obj_align(hints, LV_ALIGN_BOTTOM_MID, 0, -28);
