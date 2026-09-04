@@ -135,6 +135,7 @@ static lv_obj_t *s_mode_badge;
 static lv_obj_t *s_mode_text;
 static lv_obj_t *s_vol_text;
 static lv_obj_t *s_title;        /* крупное название или частота  */
+static lv_obj_t *s_band_cap;     /* «FM диапазон» над частотой      */
 static lv_obj_t *s_subtitle;     /* частота, метаданные, состояние */
 static lv_obj_t *s_detail;       /* мелкая строка снизу            */
 static lv_obj_t *s_mute_badge;
@@ -198,24 +199,36 @@ static void build_center(lv_obj_t *root)
 {
     /* Крупное название — требование по читаемости с расстояния,
      * а не оформление. Ради него взят самый большой доступный шрифт. */
+    /* Подпись диапазона стоит НАД частотой, а не под ней.
+     *
+     * Так попросил заказчик, посмотрев на прибор вживую, и это верно
+     * по смыслу: «FM диапазон» — заголовок, а частота под ним — то,
+     * что человек читает. Раньше было наоборот, и крупное число
+     * висело без объяснения, что это вообще за число.
+     *
+     * Кегли при этом не менялись: подпись взяла тот же 56, что был
+     * у голого «FM», частота осталась на 96. */
+    s_band_cap = make_label(root, ipradio_font_56, COL_AMBER, "");
+    lv_obj_align(s_band_cap, LV_ALIGN_CENTER, 0, -140);
+
     s_title = make_label(root, ipradio_font_96b, COL_TEXT, "");
     lv_obj_set_width(s_title, LV_PCT(90));
     lv_obj_set_style_text_align(s_title, LV_TEXT_ALIGN_CENTER, 0);
     lv_label_set_long_mode(s_title, LV_LABEL_LONG_DOT);
-    lv_obj_align(s_title, LV_ALIGN_CENTER, 0, -80);
+    lv_obj_align(s_title, LV_ALIGN_CENTER, 0, -40);
 
     s_subtitle = make_label(root, ipradio_font_56, COL_AMBER, "");
-    lv_obj_align(s_subtitle, LV_ALIGN_CENTER, 0, 20);
+    lv_obj_align(s_subtitle, LV_ALIGN_CENTER, 0, 50);
 
     s_detail = make_label(root, ipradio_font_28, COL_TEXT_FAINT, "");
-    lv_obj_align(s_detail, LV_ALIGN_CENTER, 0, 90);
+    lv_obj_align(s_detail, LV_ALIGN_CENTER, 0, 120);
 
     /* Плашка приглушения. Значка в углу мало: человек решит, что прибор
      * сломался, а не что он сам выключил звук. */
     s_mute_badge = lv_obj_create(root);
     lv_obj_remove_style_all(s_mute_badge);
     lv_obj_set_size(s_mute_badge, 300, 56);
-    lv_obj_align(s_mute_badge, LV_ALIGN_CENTER, 0, 110);
+    lv_obj_align(s_mute_badge, LV_ALIGN_CENTER, 0, 175);
     lv_obj_set_style_radius(s_mute_badge, 28, 0);
     lv_obj_set_style_bg_color(s_mute_badge, lv_color_hex(0x2a1210), 0);
     lv_obj_set_style_bg_opa(s_mute_badge, LV_OPA_COVER, 0);
@@ -822,24 +835,32 @@ static void apply_snapshot(const ipradio_snapshot_t *s)
         /* Есть RDS — крупно название, частота под ним.
          * Нет RDS — крупно сама частота: пустоты на экране быть
          * не должно, а частота человеку понятна. */
+        /* Диапазон — всегда сверху и всегда одинаково: он не
+         * зависит от того, передаёт станция RDS или нет. */
+        snprintf(buf, sizeof(buf), "%s диапазон",
+                 ipradio_band_label(s->band));
+        lv_label_set_text(s_band_cap, buf);
+        lv_obj_clear_flag(s_band_cap, LV_OBJ_FLAG_HIDDEN);
+
+        snprintf(buf, sizeof(buf), "%u.%02u МГц",
+                 (unsigned) (s->freq_khz / 1000),
+                 (unsigned) ((s->freq_khz % 1000) / 10));
+
         if (s->rds_valid && s->rds_name[0]) {
+            /* Станция назвалась — её имя и есть главное,
+             * а частота уходит строкой ниже. */
             lv_label_set_text(s_title, s->rds_name);
-            snprintf(buf, sizeof(buf), "%u.%02u МГц",
-                     (unsigned) (s->freq_khz / 1000),
-                     (unsigned) ((s->freq_khz % 1000) / 10));
             lv_label_set_text(s_subtitle, buf);
-            lv_label_set_text(s_detail,
-                ipradio_band_label(s->band));
+            lv_label_set_text(s_detail, "");
         } else {
-            snprintf(buf, sizeof(buf), "%u.%02u МГц",
-                     (unsigned) (s->freq_khz / 1000),
-                     (unsigned) ((s->freq_khz % 1000) / 10));
             lv_label_set_text(s_title, buf);
-            lv_label_set_text(s_subtitle,
-                ipradio_band_label(s->band));
+            lv_label_set_text(s_subtitle, "");
             lv_label_set_text(s_detail, "RDS не передаётся");
         }
     } else {
+        /* В интернет-режиме диапазона нет — подпись убираем. */
+        lv_obj_add_flag(s_band_cap, LV_OBJ_FLAG_HIDDEN);
+
         lv_label_set_text(s_title,
             s->station_name[0] ? s->station_name : "-");
 
