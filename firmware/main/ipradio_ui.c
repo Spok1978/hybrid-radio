@@ -27,6 +27,7 @@
 #include "esp_log.h"
 #include "lvgl.h"
 #include "bsp/esp-bsp.h"
+#include "esp_lv_adapter.h"
 
 #include "board_pins.h"
 #include "ipradio_state.h"
@@ -49,6 +50,36 @@
 #include "ipradio_input.h"
 
 static const char *TAG = "ui";
+
+/* ------------------------------------------------------------------ *
+ *  Замок LVGL
+ * ------------------------------------------------------------------ */
+
+/* НЕ ЗОВЁМ bsp_display_lock(): у неё в BSP платы перепутан знак.
+ *
+ * Объявлена она как bool, а возвращает esp_err_t от адаптера LVGL,
+ * где ESP_OK - это НОЛЬ. То есть при удачном захвате она отдаёт
+ * ложь, а при отказе - истину.
+ *
+ * Обошлось это дорого. Проверка «if (!bsp_display_lock(1000))»
+ * срабатывала именно тогда, когда замок был ВЗЯТ, подъём интерфейса
+ * выходил по ошибке и НЕ ОТПУСКАЛ его. Задача LVGL после этого
+ * вставала на замке навсегда, и панель показывала пустой белый экран
+ * при полностью загрузившейся прошивке. Найдено на живой плате
+ * 2026-08-30, по журналу: «не удалось взять замок LVGL» через 22 мс
+ * после старта задачи LVGL - то есть ожидание секунды не начиналось.
+ *
+ * Зовём адаптер напрямую и сверяем с ESP_OK. */
+static inline bool ui_lock(int32_t timeout_ms)
+{
+    return esp_lv_adapter_lock(timeout_ms) == ESP_OK;
+}
+
+static inline void ui_unlock(void)
+{
+    esp_lv_adapter_unlock();
+}
+
 
 static void apply_snapshot(const ipradio_snapshot_t *s);
 
@@ -927,7 +958,7 @@ static void ui_task(void *arg)
         /* Замок берём один раз на всю пачку работы, а не на каждый
          * вызов: чередоваться с задачей отрисовки посреди перерисовки
          * экрана значит показать человеку полуобновлённую картинку. */
-        if (bsp_display_lock(100)) {
+        if (ui_lock(100)) {
             if (have_snap) {
                 apply_snapshot(&snap);
             }
@@ -959,7 +990,7 @@ static void ui_task(void *arg)
                 ipradio_clock_ui_poll();
             }
 
-            bsp_display_unlock();
+            ui_unlock();
         }
 
         /* 50 мс - шаг обновления часов и отсчёта бездействия. Чаще
@@ -1016,7 +1047,7 @@ esp_err_t ipradio_ui_init(void)
     bsp_display_backlight_on();
 
     /* Дальше всё трогает виджеты, а значит идёт под замком. */
-    if (!bsp_display_lock(1000)) {
+    if (!ui_lock(1000)) {
         ESP_LOGE(TAG, "не удалось взять замок LVGL");
         return ESP_ERR_TIMEOUT;
     }
@@ -1024,7 +1055,7 @@ esp_err_t ipradio_ui_init(void)
     /* Шрифты - раньше всего: первый же make_label к ним обратится. */
     esp_err_t err = ipradio_fonts_init();
     if (err != ESP_OK) {
-        bsp_display_unlock();
+        ui_unlock();
         return err;
     }
 
@@ -1044,67 +1075,67 @@ esp_err_t ipradio_ui_init(void)
      * не так, - худший момент из возможных. */
     esp_err_t derr = ipradio_dialog_init(root);
     if (derr != ESP_OK) {
-        bsp_display_unlock();
+        ui_unlock();
         return derr;
     }
 
     derr = ipradio_idle_init(root);
     if (derr != ESP_OK) {
-        bsp_display_unlock();
+        ui_unlock();
         return derr;
     }
 
     derr = ipradio_menu_init(root);
     if (derr != ESP_OK) {
-        bsp_display_unlock();
+        ui_unlock();
         return derr;
     }
 
     derr = ipradio_tune_init(root);
     if (derr != ESP_OK) {
-        bsp_display_unlock();
+        ui_unlock();
         return derr;
     }
 
     derr = ipradio_keyboard_init(root);
     if (derr != ESP_OK) {
-        bsp_display_unlock();
+        ui_unlock();
         return derr;
     }
 
     derr = ipradio_wifi_ui_init(root);
     if (derr != ESP_OK) {
-        bsp_display_unlock();
+        ui_unlock();
         return derr;
     }
 
     derr = ipradio_search_ui_init(root);
     if (derr != ESP_OK) {
-        bsp_display_unlock();
+        ui_unlock();
         return derr;
     }
 
     derr = ipradio_stations_ui_init(root);
     if (derr != ESP_OK) {
-        bsp_display_unlock();
+        ui_unlock();
         return derr;
     }
 
     derr = ipradio_diag_ui_init(root);
     if (derr != ESP_OK) {
-        bsp_display_unlock();
+        ui_unlock();
         return derr;
     }
 
     derr = ipradio_brightness_ui_init(root);
     if (derr != ESP_OK) {
-        bsp_display_unlock();
+        ui_unlock();
         return derr;
     }
 
     derr = ipradio_clock_ui_init(root);
     if (derr != ESP_OK) {
-        bsp_display_unlock();
+        ui_unlock();
         return derr;
     }
 
@@ -1118,7 +1149,7 @@ esp_err_t ipradio_ui_init(void)
     ipradio_get(&snap);
     apply_snapshot(&snap);
 
-    bsp_display_unlock();
+    ui_unlock();
 
     ipradio_subscribe(on_state, NULL);
 

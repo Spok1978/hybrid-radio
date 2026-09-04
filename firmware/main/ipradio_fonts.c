@@ -50,9 +50,22 @@ esp_err_t ipradio_fonts_init(void)
     };
 
     for (size_t i = 0; i < sizeof(wanted) / sizeof(wanted[0]); i++) {
-        lv_font_t *f = lv_tiny_ttf_create_data(wanted[i].data,
-                                               wanted[i].size,
-                                               wanted[i].px);
+        /* КЕРНИНГ ВЫКЛЮЧЕН, и это не про красоту.
+         *
+         * На живой плате 2026-08-30 подъём интерфейса вставал намертво
+         * при построении клавиатуры: сторож ловил голодание, а адрес
+         * из дампа разрешался в ttf_get_glyph_pair_kerning_width.
+         * Наш урезанный шрифт сохранил таблицы GPOS, а разбор их
+         * в stb_truetype, на котором стоит Tiny TTF, минимальный -
+         * и уходит в долгий обход.
+         *
+         * Кернинг в этом интерфейсе не нужен вовсе: подписи короткие,
+         * кегли крупные, разницы не видно. Кэш глифов оставляем
+         * штатный. */
+        lv_font_t *f = lv_tiny_ttf_create_data_ex(
+                           wanted[i].data, wanted[i].size, wanted[i].px,
+                           LV_FONT_KERNING_NONE,
+                           CONFIG_LV_TINY_TTF_CACHE_GLYPH_CNT);
         if (!f) {
             /* Без шрифта интерфейс построить нельзя: LVGL уронит
              * первое же обращение к тексту. Лучше сказать об этом
