@@ -90,18 +90,17 @@ static bool preset_url(int8_t cell, char *url, size_t url_len,
         return false;
     }
 
-    ipradio_store_t store;
-    ipradio_storage_get(&store);
-
-    const ipradio_preset_t *p = &store.presets[cell - 1];
-    if (!p->used || p->type != IPRADIO_MODE_NET || !p->url[0]) {
+    /* Одна ячейка вместо всего банка: этот код исполняется в задаче
+     * автомата, а её стек полной копии не выдерживает - на этом
+     * прибор и падал. */
+    ipradio_preset_t p;
+    if (!ipradio_storage_get_preset((int) cell, &p) ||
+        p.type != IPRADIO_MODE_NET || !p.url[0]) {
         return false;
     }
 
-    strncpy(url, p->url, url_len - 1);
-    url[url_len - 1] = '\0';
-    strncpy(name, p->name, name_len - 1);
-    name[name_len - 1] = '\0';
+    snprintf(url, url_len, "%s", p.url);
+    snprintf(name, name_len, "%s", p.name);
     return true;
 }
 
@@ -288,9 +287,9 @@ esp_err_t ipradio_bridge_init(void)
     /* Чего человек хотел, когда выключался. Читаем ДО подписки:
      * дальше состояние начнёт меняться. */
     {
-        ipradio_store_t store;
-        ipradio_storage_get(&store);
-        s_wanted_net_at_boot = (store.settings.last_mode == IPRADIO_MODE_NET);
+        ipradio_settings_t set;
+        ipradio_storage_get_settings(&set);
+        s_wanted_net_at_boot = (set.last_mode == IPRADIO_MODE_NET);
     }
 
     esp_err_t err = ipradio_subscribe(on_state, NULL);

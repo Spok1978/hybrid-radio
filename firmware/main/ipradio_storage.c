@@ -518,6 +518,38 @@ esp_err_t ipradio_storage_save_settings(const ipradio_settings_t *s)
     return ipradio_storage_save(&st);
 }
 
+bool ipradio_storage_get_preset(int cell, ipradio_preset_t *out)
+{
+    if (!out || cell < 1 || cell > IPRADIO_PRESET_MAX) {
+        return false;
+    }
+    xSemaphoreTake(s_lock, portMAX_DELAY);
+    *out = s_store.presets[cell - 1];
+    xSemaphoreGive(s_lock);
+    return out->used;
+}
+
+void ipradio_storage_get_settings(ipradio_settings_t *out)
+{
+    if (!out) {
+        return;
+    }
+    xSemaphoreTake(s_lock, portMAX_DELAY);
+    *out = s_store.settings;
+    xSemaphoreGive(s_lock);
+}
+
+void ipradio_storage_put_ram(const ipradio_store_t *in)
+{
+    if (!in) {
+        return;
+    }
+    xSemaphoreTake(s_lock, portMAX_DELAY);
+    s_store = *in;
+    s_generation++;      /* чтобы экраны перечитали банк */
+    xSemaphoreGive(s_lock);
+}
+
 uint32_t ipradio_storage_generation(void)
 {
     /* Читается интерфейсом на каждую перерисовку полосы пресетов.

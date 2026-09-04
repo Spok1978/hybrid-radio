@@ -218,9 +218,18 @@ static void build_center(lv_obj_t *root)
     lv_obj_align(s_title, LV_ALIGN_CENTER, 0, -40);
 
     s_subtitle = make_label(root, ipradio_font_56, COL_AMBER, "");
+    /* В интернет-режиме сюда попадает название трека из метаданных,
+     * а оно бывает длиной в строку. Без ограничения ширины текст
+     * уезжал бы за край экрана. */
+    lv_obj_set_width(s_subtitle, LV_PCT(92));
+    lv_obj_set_style_text_align(s_subtitle, LV_TEXT_ALIGN_CENTER, 0);
+    lv_label_set_long_mode(s_subtitle, LV_LABEL_LONG_DOT);
     lv_obj_align(s_subtitle, LV_ALIGN_CENTER, 0, 50);
 
     s_detail = make_label(root, ipradio_font_28, COL_TEXT_FAINT, "");
+    lv_obj_set_width(s_detail, LV_PCT(92));
+    lv_obj_set_style_text_align(s_detail, LV_TEXT_ALIGN_CENTER, 0);
+    lv_label_set_long_mode(s_detail, LV_LABEL_LONG_DOT);
     lv_obj_align(s_detail, LV_ALIGN_CENTER, 0, 120);
 
     /* Плашка приглушения. Значка в углу мало: человек решит, что прибор

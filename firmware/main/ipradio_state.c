@@ -25,7 +25,18 @@
 static const char *TAG = "state";
 
 #define EVENT_QUEUE_LEN     24
-#define STATE_TASK_STACK    4096
+/* Восемь килобайт, а не четыре.
+ *
+ * На плате 2026-08-30 задача упала с защитой стека при первом же
+ * нажатии пресета. Причина: структура банка около 2,5 КБ, и она
+ * ложилась на стек - сперва в обработчике события, потом ещё раз
+ * в подписчике, который зовётся из этой же задачи.
+ *
+ * Горячие пути переведены на выборочное чтение (одна ячейка вместо
+ * банка), но перебор станций и запись пресета целую копию всё же
+ * берут. Плюс подписчики: мост зовёт конвейер ADF, а тот - свои
+ * функции с немаленькими кадрами. */
+#define STATE_TASK_STACK    8192
 #define STATE_TASK_PRIO     6
 #define MAX_OBSERVERS       4
 
@@ -192,9 +203,12 @@ static void apply_preset_pressed(int32_t cell)
         return;
     }
 
-    ipradio_store_t store;
-    ipradio_storage_get(&store);
-    load_preset(&store.presets[cell - 1], (int8_t) cell);
+    /* Одна ячейка, а не весь банк: полная копия не влезает в стек
+     * этой задачи вместе с тем, что зовётся дальше. */
+    ipradio_preset_t p;
+    if (ipradio_storage_get_preset((int) cell, &p)) {
+        load_preset(&p, (int8_t) cell);
+    }
 }
 
 /* Долгое нажатие — записать в ячейку то, что играет сейчас (§6.2). */
@@ -380,15 +394,15 @@ static void apply_power(void)
     /* Сохраняем то, что должно пережить выключение, ПОКА питание есть.
      * Откладывать это на мост нельзя: он в этот момент уже глушит
      * железо, и порядок операций становится важен. */
-    ipradio_store_t store;
-    ipradio_storage_get(&store);
+    ipradio_settings_t set;
+    ipradio_storage_get_settings(&set);
 
-    store.settings.volume        = s_state.volume;
-    store.settings.last_mode     = s_state.mode;
-    store.settings.last_band     = s_state.band;
-    store.settings.last_freq_khz = s_state.freq_khz;
-    store.settings.last_preset   = s_state.active_preset;
-    ipradio_storage_save_settings(&store.settings);
+    set.volume        = s_state.volume;
+    set.last_mode     = s_state.mode;
+    set.last_band     = s_state.band;
+    set.last_freq_khz = s_state.freq_khz;
+    set.last_preset   = s_state.active_preset;
+    ipradio_storage_save_settings(&set);
 
     s_state.power_off = true;
     ESP_LOGI(TAG, "запрошено выключение, настройки сохранены");
