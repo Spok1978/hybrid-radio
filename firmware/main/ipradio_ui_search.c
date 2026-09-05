@@ -12,6 +12,7 @@
 #include "freertos/semphr.h"
 #include "freertos/idf_additions.h"
 
+#include "esp_attr.h"
 #include "esp_heap_caps.h"
 
 #include "esp_log.h"
@@ -36,7 +37,10 @@ static lv_obj_t *s_row[IPRADIO_SEARCH_MAX];
 static lv_obj_t *s_row_name[IPRADIO_SEARCH_MAX];
 static lv_obj_t *s_row_info[IPRADIO_SEARCH_MAX];
 
-static ipradio_station_t s_found[IPRADIO_SEARCH_MAX];
+/* Двадцать станций по 314 байт - самый крупный статический объект
+ * во всей прошивке. Внутренней памяти он не нужен: сюда пишет
+ * задача поиска, читает задача интерфейса, из прерывания никто. */
+EXT_RAM_BSS_ATTR static ipradio_station_t s_found[IPRADIO_SEARCH_MAX];
 static int  s_found_count;
 static int  s_focus;
 static bool s_visible;
@@ -46,7 +50,7 @@ static char s_query[64];
 
 /* Итог запроса из задачи поиска в задачу интерфейса. */
 static SemaphoreHandle_t s_lock;
-static ipradio_station_t s_pending[IPRADIO_SEARCH_MAX];
+EXT_RAM_BSS_ATTR static ipradio_station_t s_pending[IPRADIO_SEARCH_MAX];
 static int               s_pending_count = -1;
 
 static void (*s_on_close)(void *ctx);
@@ -230,7 +234,14 @@ void ipradio_search_ui_poll(void)
  * Поэтому просто говорим, в чём дело, и оставляем решение за ним. */
 static void save_and_play(int idx)
 {
-    ipradio_store_t store;
+    /* Хранилище целиком тут нужно по делу: перебираем все ячейки,
+     * ищем свободную и заодно проверяем, не сохранена ли станция
+     * уже. Но на СТЕКЕ его держать нельзя - 2548 байт, а функция
+     * вызывается из обработчика касания, то есть в задаче lvgl.
+     * Ровно на этом панель перезагружалась при выходе с экрана
+     * часов. Кладём в PSRAM: экран поиска один, а обработчики
+     * событий LVGL идут по очереди, так что делить его не с кем. */
+    static EXT_RAM_BSS_ATTR ipradio_store_t store;
     ipradio_storage_get(&store);
 
     /* Та же станция могла быть сохранена раньше — тогда просто

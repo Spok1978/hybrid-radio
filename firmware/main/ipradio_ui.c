@@ -25,6 +25,7 @@
 #include "freertos/semphr.h"
 
 #include "esp_heap_caps.h"
+#include "esp_attr.h"
 #include "esp_log.h"
 
 #include "freertos/idf_additions.h"
@@ -137,6 +138,7 @@ static lv_obj_t *s_clock;
 static lv_obj_t *s_mode_badge;
 static lv_obj_t *s_mode_text;
 static lv_obj_t *s_vol_text;
+static lv_obj_t *s_vol_slider;
 static lv_obj_t *s_title;        /* крупное название или частота  */
 static lv_obj_t *s_band_cap;     /* «FM диапазон» над частотой      */
 static lv_obj_t *s_subtitle;     /* частота, метаданные, состояние */
@@ -149,7 +151,9 @@ static lv_obj_t *s_preset_kind[PRESET_CELLS];
 /* Копия банка для отрисовки полосы пресетов. Перечитываем только
  * когда номер поколения изменился: файл занимает пару килобайт,
  * а полоса перерисовывается на каждое событие автомата. */
-static ipradio_store_t s_bank;
+/* Копия хранилища для отрисовки ячеек - ещё 2548 байт. Читается
+ * только задачей интерфейса. */
+EXT_RAM_BSS_ATTR static ipradio_store_t s_bank;
 static uint32_t        s_bank_gen = UINT32_MAX;
 
 /* ------------------------------------------------------------------ *
@@ -166,6 +170,110 @@ static void on_mode_click(lv_event_t *e)
     (void) e;
     ESP_LOGI(TAG, "нажата плашка режима");
     ipradio_post_simple(IPRADIO_EV_MODE_TOGGLE, 0);
+}
+
+/* Громкость ползунком на главном экране.
+ *
+ * Штатно её крутят регулятором 2, но обвязка ещё не подключена, а
+ * слушать надо уже сейчас. Ползунок работает в обоих режимах сразу -
+ * главный экран у эфира и у интернет-радио общий, и регулятор
+ * громкости в тракте тоже один.
+ *
+ * Событие шлём на каждое изменение, а не по отпусканию: человек ведёт
+ * палец и должен слышать, что получается, иначе выставить уровень
+ * на слух невозможно. */
+/* Ползунок виден не всегда.
+ *
+ * Постоянно висящий регулятор занимает правый край на всех экранах
+ * и лезет под руку при нажатии на ячейки станций. Поэтому он
+ * появляется по нажатию на число громкости и сам уходит, когда
+ * его перестают трогать. */
+static uint32_t s_vol_shown_at;
+
+#define VOL_VISIBLE_MS  5000
+
+static void vol_slider_show(void)
+{
+    if (!s_vol_slider) {
+        return;
+    }
+    lv_obj_clear_flag(s_vol_slider, LV_OBJ_FLAG_HIDDEN);
+    s_vol_shown_at = lv_tick_get();
+}
+
+static void vol_slider_hide(void)
+{
+    if (!s_vol_slider) {
+        return;
+    }
+    lv_obj_add_flag(s_vol_slider, LV_OBJ_FLAG_HIDDEN);
+    s_vol_shown_at = 0;
+}
+
+/* Звать из хода задачи интерфейса: сам себя ползунок спрятать
+ * не может, событий у него для этого нет. */
+static void vol_slider_tick(void)
+{
+    if (!s_vol_shown_at || !s_vol_slider) {
+        return;
+    }
+    /* Пока за него держатся, отсчёт не идёт. */
+    if (lv_obj_has_state(s_vol_slider, LV_STATE_PRESSED)) {
+        s_vol_shown_at = lv_tick_get();
+        return;
+    }
+    if (lv_tick_elaps(s_vol_shown_at) > VOL_VISIBLE_MS) {
+        vol_slider_hide();
+    }
+}
+
+static void on_vol_slider(lv_event_t *e)
+{
+    lv_obj_t *sl = lv_event_get_target(e);
+    ipradio_post_simple(IPRADIO_EV_VOLUME_SET, lv_slider_get_value(sl));
+    s_vol_shown_at = lv_tick_get();
+}
+
+/* Нажатие по числу громкости показывает ползунок, повторное - прячет. */
+static void on_vol_text_click(lv_event_t *e)
+{
+    (void) e;
+    if (s_vol_slider && lv_obj_has_flag(s_vol_slider, LV_OBJ_FLAG_HIDDEN)) {
+        vol_slider_show();
+    } else {
+        vol_slider_hide();
+    }
+}
+
+static void build_volume_slider(lv_obj_t *root)
+{
+    /* Вертикальный: у LVGL ползунок становится вертикальным сам,
+     * когда высота больше ширины. Ставим справа, под строкой
+     * состояния, чтобы не спорить с ячейками станций внизу. */
+    s_vol_slider = lv_slider_create(root);
+    lv_obj_set_size(s_vol_slider, 44, 300);
+    lv_obj_align(s_vol_slider, LV_ALIGN_RIGHT_MID, -28, -10);
+    lv_slider_set_range(s_vol_slider, 0, 100);
+
+    lv_obj_set_style_bg_color(s_vol_slider, COL_SURFACE, LV_PART_MAIN);
+    lv_obj_set_style_bg_opa(s_vol_slider, LV_OPA_COVER, LV_PART_MAIN);
+    lv_obj_set_style_border_color(s_vol_slider, COL_BORDER, LV_PART_MAIN);
+    lv_obj_set_style_border_width(s_vol_slider, 2, LV_PART_MAIN);
+    lv_obj_set_style_radius(s_vol_slider, 22, LV_PART_MAIN);
+
+    lv_obj_set_style_bg_color(s_vol_slider, COL_AMBER, LV_PART_INDICATOR);
+    lv_obj_set_style_bg_opa(s_vol_slider, LV_OPA_COVER, LV_PART_INDICATOR);
+    lv_obj_set_style_radius(s_vol_slider, 22, LV_PART_INDICATOR);
+
+    /* Ручку делаем крупной: попасть пальцем в тонкую полоску
+     * на ходу невозможно. */
+    lv_obj_set_style_bg_color(s_vol_slider, COL_TEXT, LV_PART_KNOB);
+    lv_obj_set_style_pad_all(s_vol_slider, 10, LV_PART_KNOB);
+
+    lv_obj_add_event_cb(s_vol_slider, on_vol_slider,
+                        LV_EVENT_VALUE_CHANGED, NULL);
+
+    lv_obj_add_flag(s_vol_slider, LV_OBJ_FLAG_HIDDEN);
 }
 
 static void build_status_bar(lv_obj_t *root)
@@ -188,9 +296,16 @@ static void build_status_bar(lv_obj_t *root)
     s_vol_text = make_label(bar, ipradio_font_40, COL_TEXT_DIM, "0");
     lv_obj_align(s_vol_text, LV_ALIGN_RIGHT_MID, -250, -8);
 
+    /* Само число - кнопка: по нажатию выезжает ползунок. Отдельной
+     * кнопки не заводим, число и так крупное и на виду. */
+    lv_obj_add_flag(s_vol_text, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_set_ext_click_area(s_vol_text, 30);
+    lv_obj_add_event_cb(s_vol_text, on_vol_text_click, LV_EVENT_CLICKED, NULL);
+
     lv_obj_t *vol_cap = make_label(bar, ipradio_font_14,
                                    COL_TEXT_FAINT, "громкость");
     lv_obj_align(vol_cap, LV_ALIGN_RIGHT_MID, -240, 22);
+
 
     s_mode_badge = lv_obj_create(bar);
     lv_obj_remove_style_all(s_mode_badge);
@@ -320,11 +435,27 @@ static void build_presets(lv_obj_t *root)
                                       COL_TEXT_FAINT, "");
         lv_obj_align(s_preset_kind[i], LV_ALIGN_TOP_RIGHT, 0, 0);
 
-        s_preset_names[i] = make_label(cell, ipradio_font_16,
-                                       COL_TEXT_DIM, "");
+        /* Название - главное, что читают в ячейке, поэтому оно
+         * крупное, белое и по центру.
+         *
+         * Было: 16-й кегль, приглушённый цвет, прижато к нижнему
+         * левому углу. Читалось плохо и висело в углу без причины.
+         *
+         * Длинные названия переносим на вторую строку, а не режем
+         * многоточием: «Радио Искатель» в одну строку не влезает,
+         * а «Радио Иска…» не говорит ничего. Перенос по словам -
+         * LV_LABEL_LONG_WRAP, ширину задаём явно, иначе метка
+         * растянется под текст и переносить будет нечего. */
+        s_preset_names[i] = make_label(cell, ipradio_font_22,
+                                       COL_TEXT, "");
         lv_obj_set_width(s_preset_names[i], LV_PCT(100));
-        lv_label_set_long_mode(s_preset_names[i], LV_LABEL_LONG_DOT);
-        lv_obj_align(s_preset_names[i], LV_ALIGN_BOTTOM_LEFT, 0, 0);
+        lv_label_set_long_mode(s_preset_names[i], LV_LABEL_LONG_WRAP);
+        lv_obj_set_style_text_align(s_preset_names[i],
+                                    LV_TEXT_ALIGN_CENTER, 0);
+        /* Сдвиг вниз на четыре точки: сверху в ячейке стоят номер
+         * и тип, и без него длинное название в две строки наезжало
+         * бы на них. */
+        lv_obj_align(s_preset_names[i], LV_ALIGN_CENTER, 0, 4);
 
         /* Ячейку можно нажать пальцем.
          *
@@ -897,8 +1028,11 @@ static void render_presets(const ipradio_snapshot_t *s)
 
         lv_obj_set_style_text_color(s_preset_kind[i],
             unavailable ? COL_RED : COL_TEXT_FAINT, 0);
-        lv_obj_set_style_text_color(s_preset_names[i],
-            active ? COL_TEXT : COL_TEXT_DIM, 0);
+        /* Название яркое во всех ячейках, а не только в текущей.
+         * Раньше неактивные приглушались до COL_TEXT_DIM и читались
+         * плохо, а нужды в этом нет: текущая ячейка и так отличается
+         * рамкой в цвет режима, её толщиной и подсветкой фона. */
+        lv_obj_set_style_text_color(s_preset_names[i], COL_TEXT, 0);
 
         lv_obj_set_style_border_color(s_presets[i],
             active ? cell_accent : COL_BORDER, 0);
@@ -934,6 +1068,15 @@ static void apply_snapshot(const ipradio_snapshot_t *s)
      * поэтому просто гасим цвет — сигналом служит плашка по центру. */
     snprintf(buf, sizeof(buf), "%u", (unsigned) s->volume);
     lv_label_set_text(s_vol_text, buf);
+
+    /* Ползунок ведём за состоянием - громкость меняется не только им,
+     * но и регулятором, и снятием mute. Пока его держат пальцем,
+     * не трогаем: иначе он будет прыгать под рукой. */
+    if (s_vol_slider &&
+        !lv_obj_has_state(s_vol_slider, LV_STATE_PRESSED) &&
+        lv_slider_get_value(s_vol_slider) != (int32_t) s->volume) {
+        lv_slider_set_value(s_vol_slider, s->volume, LV_ANIM_OFF);
+    }
     lv_obj_set_style_text_color(s_vol_text,
         s->muted ? COL_RED : COL_TEXT_DIM, 0);
 
@@ -1133,6 +1276,7 @@ static void ui_task(void *arg)
             drain_modal_queue();
             nav_update();
             service_idle();
+            vol_slider_tick();
 
             /* Экран выбора сети обновляем здесь, а не только по снимку
              * состояния: результат сканирования приезжает из своей
@@ -1210,6 +1354,23 @@ esp_err_t ipradio_ui_init(void)
         .touch_flags = { .swap_xy = 1, .mirror_x = 1, .mirror_y = 0 },
     };
 
+    /* Отрисовку прибиваем к ядру 0, а вывод звука уходит на ядро 1
+     * (ipradio_netradio.c, i2s_cfg.task_core).
+     *
+     * Причина: задача элемента i2s у ADF идёт с приоритетом 23 и по
+     * умолчанию привязана к ядру 0, а задача LVGL - с приоритетом 6
+     * и без привязки вовсе. Пока поток не играл, это было незаметно.
+     * Как только 2026-09-05 конвейер впервые заработал по-настоящему,
+     * отрисовка перестала получать процессор: журнал платы заполнился
+     * «Failed to acquire LVGL lock» раз в полсекунды без конца, экран
+     * замер. В журнале предыдущего запуска сторож называл виновника
+     * прямым текстом - «CPU 0: i2s» при голодающей задаче простоя.
+     *
+     * Разводить по ядрам надёжнее, чем занижать приоритет звука:
+     * приоритет у i2s высокий не от жадности, а чтобы не рвался
+     * звук при подкачке DMA. */
+    disp_cfg.lv_adapter_cfg.task_core_id  = 0;
+
     if (bsp_display_start_with_config(&disp_cfg) == NULL) {
         /* Панель не поднялась. Раньше этот случай ронял бы весь
          * прибор, потому что дальше шли вызовы LVGL по пустому
@@ -1242,6 +1403,7 @@ esp_err_t ipradio_ui_init(void)
     lv_obj_set_style_pad_all(root, 0, 0);
 
     build_status_bar(root);
+    build_volume_slider(root);
     build_center(root);
     build_presets(root);
     build_hints(root);

@@ -280,6 +280,23 @@ static void start_edit(void)
  *  Сборка
  * ------------------------------------------------------------------ */
 
+/* Нажатие по строке с экрана.
+ *
+ * Экран задумывался под регуляторы: выбор строки поворотом, вход
+ * нажатием. Регуляторов пока нет, а настроить часы надо - поэтому
+ * то же самое доступно пальцем. Нажатие делает две вещи разом:
+ * переводит выбор на строку и сразу входит в неё, иначе пришлось бы
+ * тыкать дважды. */
+static void on_row_click(lv_event_t *e)
+{
+    int row = (int) (intptr_t) lv_event_get_user_data(e);
+    if (row < 0 || row >= ROW_COUNT || row == ROW_NOW) {
+        return;
+    }
+    s_focus = row;
+    ipradio_clock_ui_select();
+}
+
 esp_err_t ipradio_clock_ui_init(lv_obj_t *parent)
 {
     s_screen = lv_obj_create(parent);
@@ -311,13 +328,19 @@ esp_err_t ipradio_clock_ui_init(lv_obj_t *parent)
                                     COL_SURFACE, COL_BORDER, 12);
         lv_obj_set_style_pad_hor(s_row[i], 22, 0);
 
-        lv_obj_t *name = ipradio_ui_label(s_row[i], ipradio_font_16,
+        lv_obj_t *name = ipradio_ui_label(s_row[i], ipradio_font_22,
                                           COL_TEXT_FAINT, LABELS[i]);
         lv_obj_align(name, LV_ALIGN_LEFT_MID, 0, 0);
 
-        s_value[i] = ipradio_ui_label(s_row[i], ipradio_font_22,
+        s_value[i] = ipradio_ui_label(s_row[i], ipradio_font_28,
                                       COL_TEXT, "");
         lv_obj_align(s_value[i], LV_ALIGN_RIGHT_MID, 0, 0);
+
+        if (i != ROW_NOW) {
+            lv_obj_add_flag(s_row[i], LV_OBJ_FLAG_CLICKABLE);
+            lv_obj_add_event_cb(s_row[i], on_row_click, LV_EVENT_CLICKED,
+                                (void *) (intptr_t) i);
+        }
     }
 
     /* Строка «Сейчас» ничего не делает — это не настройка, а показ.
@@ -325,7 +348,7 @@ esp_err_t ipradio_clock_ui_init(lv_obj_t *parent)
     lv_obj_set_style_bg_opa(s_row[ROW_NOW], LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(s_row[ROW_NOW], 0, 0);
 
-    s_hint = ipradio_ui_label(s_screen, ipradio_font_20, COL_TEXT, "");
+    s_hint = ipradio_ui_label(s_screen, ipradio_font_22, COL_TEXT, "");
     lv_obj_align(s_hint, LV_ALIGN_BOTTOM_MID, 0, -28);
 
     lv_obj_add_flag(s_screen, LV_OBJ_FLAG_HIDDEN);
@@ -350,9 +373,14 @@ void ipradio_clock_ui_open(void (*on_close)(void *ctx), void *ctx)
     s_editing  = false;
     s_focus    = ROW_SOURCE;   /* на первой настройке, а не на показе */
 
-    ipradio_store_t st;
-    ipradio_storage_get(&st);
-    s_set = st.settings;
+    /* Настройки берём отдельным вызовом, а не целым хранилищем.
+     *
+     * Раньше здесь стоял ipradio_store_t на стеке - 2548 байт. Из
+     * обработчика касания этот код исполняется в задаче lvgl, и её
+     * стека на такое не хватает: панель уходила в перезагрузку
+     * ровно на нажатии «назад», а часовой пояс не сохранялся.
+     * Та же грабля уже была с ячейками станций. */
+    ipradio_storage_get_settings(&s_set);
 
     /* Ищем сохранённый пояс в списке. Не нашли — Москва: это
      * и умолчание хранилища. */
@@ -384,10 +412,10 @@ void ipradio_clock_ui_close(void)
      * и писать карту на каждое нажатие незачем. */
     snprintf(s_set.tz, sizeof(s_set.tz), "%s", ZONES[s_zone].tz);
 
-    ipradio_store_t st;
-    ipradio_storage_get(&st);
-    st.settings = s_set;
-    if (ipradio_storage_save_settings(&st.settings) != ESP_OK) {
+    /* Читать хранилище целиком тут было незачем и вдвойне вредно:
+     * прочитанное всё равно затиралось нашим s_set, а 2548 байт
+     * на стеке задачи lvgl роняли панель. */
+    if (ipradio_storage_save_settings(&s_set) != ESP_OK) {
         ESP_LOGW(TAG, "настройки часов не сохранились");
     }
 

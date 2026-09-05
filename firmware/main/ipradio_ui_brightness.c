@@ -63,6 +63,39 @@ static void apply(int level)
  *  Сборка
  * ------------------------------------------------------------------ */
 
+/* Нажатие по полосе задаёт яркость сразу, а не шагами.
+ *
+ * Экран писался под регулятор 1, а его нет. Тыкать в «плюс» десять
+ * раз, чтобы дойти от края до края, - издевательство, поэтому полоса
+ * работает как обычный ползунок: куда ткнул, такая и яркость.
+ * Работает и на перетаскивание: LV_EVENT_PRESSING приходит, пока
+ * палец ведут по полосе. */
+static void on_bar_press(lv_event_t *e)
+{
+    lv_obj_t *bar = lv_event_get_target(e);
+
+    lv_point_t p;
+    lv_indev_get_point(lv_indev_active(), &p);
+
+    lv_area_t area;
+    lv_obj_get_coords(bar, &area);
+
+    int32_t w = area.x2 - area.x1;
+    if (w <= 0) {
+        return;
+    }
+
+    int32_t x = p.x - area.x1;
+    if (x < 0) {
+        x = 0;
+    }
+    if (x > w) {
+        x = w;
+    }
+
+    apply((int) (x * 100 / w));
+}
+
 esp_err_t ipradio_brightness_ui_init(lv_obj_t *parent)
 {
     s_screen = lv_obj_create(parent);
@@ -86,6 +119,12 @@ esp_err_t ipradio_brightness_ui_init(lv_obj_t *parent)
     lv_obj_align(s_bar, LV_ALIGN_CENTER, 0, 60);
     lv_obj_set_style_pad_all(s_bar, 0, 0);
 
+    /* Полоса не только показывает, но и принимает нажатия:
+     * без регуляторов это единственный способ поменять яркость. */
+    lv_obj_add_flag(s_bar, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_add_event_cb(s_bar, on_bar_press, LV_EVENT_PRESSED, NULL);
+    lv_obj_add_event_cb(s_bar, on_bar_press, LV_EVENT_PRESSING, NULL);
+
     /* Заполнение — отдельный прямоугольник внутри полосы, а не
      * lv_bar: нам от него нужна только ширина, а стиль должен
      * совпадать с остальными экранами. */
@@ -96,12 +135,13 @@ esp_err_t ipradio_brightness_ui_init(lv_obj_t *parent)
     lv_obj_set_style_border_width(s_fill, 0, 0);
     lv_obj_set_style_radius(s_fill, (BAR_H - 8) / 2, 0);
     lv_obj_clear_flag(s_fill, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_clear_flag(s_fill, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_align(s_fill, LV_ALIGN_LEFT_MID, 2, 0);
 
     lv_obj_t *hints = ipradio_ui_label(s_screen, ipradio_font_20,
         COL_TEXT,
-        "Регулятор 1 — яркость   •   нажатие — принять   •   "
-        "нажатие регулятора 2 — вернуть прежнюю");
+        "Ведите пальцем по полосе   •   Регулятор 1 — яркость   •   "
+        "нажатие — принять");
     lv_obj_align(hints, LV_ALIGN_BOTTOM_MID, 0, -28);
 
     lv_obj_add_flag(s_screen, LV_OBJ_FLAG_HIDDEN);
@@ -142,11 +182,13 @@ static void finish(bool keep)
     }
 
     if (keep) {
-        ipradio_store_t st;
-        ipradio_storage_get(&st);
-        st.settings.brightness = (uint8_t) s_level;
+        /* Не целое хранилище на стеке: 2548 байт в задаче lvgl -
+         * это перезагрузка. Берём только настройки. */
+        ipradio_settings_t set;
+        ipradio_storage_get_settings(&set);
+        set.brightness = (uint8_t) s_level;
 
-        if (ipradio_storage_save_settings(&st.settings) != ESP_OK) {
+        if (ipradio_storage_save_settings(&set) != ESP_OK) {
             /* Записать не вышло. Яркость всё равно оставляем такой,
              * какую человек выбрал: до выключения она будет верной,
              * а спорить с ним из-за карты незачем. */
