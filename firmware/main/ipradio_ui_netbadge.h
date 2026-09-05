@@ -32,6 +32,14 @@ esp_err_t ipradio_netbadge_init(void);
 /** Обновить по снимку состояния. */
 void ipradio_netbadge_update(const ipradio_snapshot_t *snap);
 
+/** Спрятать или показать.
+ *
+ *  Нужно там, где верх экрана занят своим: у клавиатуры вверху стоит
+ *  вопрос «что вводим», и значок ложился прямо на него. Требование
+ *  «значок на каждом экране» это не нарушает: на клавиатуре человек
+ *  занят вводом, а не состоянием сети. */
+void ipradio_netbadge_set_visible(bool on);
+
 #ifdef __cplusplus
 }
 #endif

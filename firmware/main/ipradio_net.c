@@ -539,8 +539,10 @@ int ipradio_net_search(const char *query,
              "&order=clickcount&reverse=true",
              esc, max_items);
 
+    ESP_LOGW(TAG, "ЗАМЕР: путь запроса %s", path);
     char *body = fetch(path);
     if (!body) {
+        ESP_LOGE(TAG, "ЗАМЕР: каталог не ответил");
         return 0;
     }
 

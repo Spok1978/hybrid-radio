@@ -32,6 +32,7 @@
 
 #include "esp_chip_info.h"
 #include "esp_log.h"
+#include "esp_heap_caps.h"
 #include "esp_psram.h"
 #include "esp_system.h"
 
@@ -241,9 +242,20 @@ void app_main(void)
      * перерисовывает часы и отсчитывает вход в ждущий режим. */
     bool boot_done = false;
 
+    unsigned beat = 0;
     while (1) {
         vTaskDelay(pdMS_TO_TICKS(1000));
         ipradio_post_simple(IPRADIO_EV_TICK, 0);
+
+        /* ВРЕМЕННО: пульс главной задачи. Нужен, чтобы отличить
+         * «встала вся система» от «встал только интерфейс».
+         * УБРАТЬ после разбора зависания. */
+        if (++beat % 3 == 0) {
+            ESP_LOGW(TAG, "ПУЛЬС main: %u с, внутренней памяти %u КБ, "
+                          "наибольший кусок %u КБ", beat,
+                     (unsigned) (heap_caps_get_free_size(MALLOC_CAP_INTERNAL) / 1024),
+                     (unsigned) (heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL) / 1024));
+        }
 
         /* Решение о том, ждать ли сеть после включения (§5.2,
          * правило 4). Принимается один раз, дальше не мешаем. */

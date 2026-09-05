@@ -10,6 +10,9 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
+#include "freertos/idf_additions.h"
+
+#include "esp_heap_caps.h"
 
 #include "esp_log.h"
 
@@ -113,7 +116,9 @@ static void search_task(void *arg)
     (void) arg;
 
     ipradio_station_t found[IPRADIO_SEARCH_MAX];
+    ESP_LOGW(TAG, "ЗАМЕР: ухожу в каталог за «%s»", s_query);
     int n = ipradio_net_search(s_query, found, IPRADIO_SEARCH_MAX);
+    ESP_LOGW(TAG, "ЗАМЕР: каталог вернул %d", n);
 
     xSemaphoreTake(s_lock, portMAX_DELAY);
     if (n > 0) {
@@ -122,12 +127,15 @@ static void search_task(void *arg)
     s_pending_count = (n < 0) ? 0 : n;
     xSemaphoreGive(s_lock);
 
-    vTaskDelete(NULL);
+    vTaskDeleteWithCaps(NULL);
 }
 
 static void on_query(const char *text, void *ctx)
 {
     (void) ctx;
+
+    ESP_LOGW(TAG, "ЗАМЕР: запрос от клавиатуры = «%s»",
+             text ? text : "(отказ)");
 
     if (!text || !text[0]) {
         /* Отказались от ввода. Экран поиска при этом закрываем:
@@ -151,8 +159,25 @@ static void on_query(const char *text, void *ctx)
     snprintf(buf, sizeof(buf), "Ищем «%s»…", s_query);
     lv_label_set_text(s_status, buf);
 
-    /* Стек с запасом: внутри HTTP-клиент, TLS и разбор JSON. */
-    xTaskCreate(search_task, "cat_search", 8192, NULL, 4, NULL);
+    /* Стек ЗАДАЧИ - В PSRAM, и это не роскошь.
+     *
+     * Обычный xTaskCreate берёт стек из внутренней памяти, а её
+     * на этой плате почти не осталось: LVGL с двенадцатью экранами
+     * делает тысячи мелких выделений, и все они по настройке
+     * SPIRAM_MALLOC_ALWAYSINTERNAL уходят внутрь. На плате
+     * 2026-09-05 создание этой задачи просто не удавалось - поиск
+     * молчал, а человек видел «ничего не нашлось».
+     *
+     * Задача разовая, живёт секунды, ничего не делает при
+     * запрещённом кэше - для внешнего стека случай подходящий.
+     * Удаляться она обязана парной функцией, иначе память стека
+     * не вернётся. */
+    if (xTaskCreateWithCaps(search_task, "cat_search", 12288, NULL, 4,
+                            NULL, MALLOC_CAP_SPIRAM) != pdPASS) {
+        ESP_LOGE(TAG, "задача поиска не создалась");
+        lv_label_set_text(s_status, "Не хватило памяти для поиска");
+        s_busy = false;
+    }
 }
 
 void ipradio_search_ui_poll(void)

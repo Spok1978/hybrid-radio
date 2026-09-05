@@ -194,7 +194,24 @@ static bool parse_document(const char *text, ipradio_store_t *st,
             if (!cJSON_IsObject(el)) {
                 continue;
             }
-            p->used     = true;
+            /* Занятость - по явному признаку.
+             *
+             * Для файлов, записанных до появления этого поля, есть
+             * запасной путь: ячейка считается занятой, если в ней
+             * лежит хоть что-то осмысленное. Иначе после обновления
+             * прошивки старый банк прочитался бы как полностью
+             * пустой, и человек потерял бы свои станции. */
+            const cJSON *u = cJSON_GetObjectItemCaseSensitive(el, "used");
+            if (u) {
+                p->used = cJSON_IsTrue(u);
+            } else {
+                p->used = cJSON_GetObjectItemCaseSensitive(el, "type") ||
+                          cJSON_GetObjectItemCaseSensitive(el, "name");
+            }
+            if (!p->used) {
+                continue;
+            }
+
             p->type     = (ipradio_mode_t) json_get_int(el, "type", 0);
             p->band     = (ipradio_band_t) json_get_int(el, "band", 1);
             p->freq_khz = (uint32_t) json_get_int(el, "freq_khz", 0);
@@ -258,6 +275,15 @@ static char *build_payload(const ipradio_store_t *st, uint32_t generation)
     for (int i = 0; i < IPRADIO_PRESET_MAX; i++) {
         const ipradio_preset_t *p = &st->presets[i];
         cJSON *el = cJSON_CreateObject();
+
+        /* Признак занятости пишем ЯВНО.
+         *
+         * Раньше пустая ячейка выходила пустым объектом {}, а при
+         * чтении пустой объект - тоже объект, и ячейка помечалась
+         * занятой. После первой же перезагрузки банк выглядел полным:
+         * на плате 2026-09-05 сохранить найденную станцию стало
+         * некуда, экран писал «все ячейки заняты». */
+        cJSON_AddBoolToObject(el, "used", p->used);
 
         if (p->used) {
             sanitize(p->name, clean, sizeof(clean));

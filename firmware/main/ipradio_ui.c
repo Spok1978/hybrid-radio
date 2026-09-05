@@ -230,7 +230,7 @@ static void build_center(lv_obj_t *root)
     lv_obj_set_width(s_detail, LV_PCT(92));
     lv_obj_set_style_text_align(s_detail, LV_TEXT_ALIGN_CENTER, 0);
     lv_label_set_long_mode(s_detail, LV_LABEL_LONG_DOT);
-    lv_obj_align(s_detail, LV_ALIGN_CENTER, 0, 120);
+    lv_obj_align(s_detail, LV_ALIGN_CENTER, 0, 60);
 
     /* Плашка приглушения. Значка в углу мало: человек решит, что прибор
      * сломался, а не что он сам выключил звук. */
@@ -262,7 +262,7 @@ static void build_presets(lv_obj_t *root)
     lv_obj_t *strip = lv_obj_create(root);
     lv_obj_remove_style_all(strip);
     lv_obj_set_size(strip, LV_PCT(100), 110);
-    lv_obj_align(strip, LV_ALIGN_BOTTOM_MID, 0, -46);
+    lv_obj_align(strip, LV_ALIGN_BOTTOM_MID, 0, -106);
     lv_obj_set_style_pad_hor(strip, 32, 0);
     lv_obj_set_style_pad_column(strip, 12, 0);
     lv_obj_set_grid_dsc_array(strip, cols, rows);
@@ -468,6 +468,37 @@ static void nav_build(void)
     s_nav_text = ipradio_ui_label(s_nav_btn, ipradio_font_20,
                                   COL_TEXT, "Меню");
     lv_obj_center(s_nav_text);
+}
+
+/* ВРЕМЕННО: печатать координаты касания.
+ *
+ * Кнопка внизу слева не отзывается ни на что, и надо понять, доходит
+ * ли касание вообще и в каких осях. Читаем устройство ввода напрямую,
+ * минуя разбор попаданий: если панель молчит - строк не будет вовсе,
+ * если оси перепутаны - числа не сойдутся с тем, куда ткнули.
+ *
+ * УБРАТЬ, как только выяснится. */
+static void probe_touch(void)
+{
+    static bool was_pressed;
+
+    lv_indev_t *in = lv_indev_get_next(NULL);
+    if (!in) {
+        static bool said;
+        if (!said) {
+            said = true;
+            ESP_LOGE(TAG, "ЗАМЕР: устройства ввода нет вовсе");
+        }
+        return;
+    }
+
+    bool now = (lv_indev_get_state(in) == LV_INDEV_STATE_PRESSED);
+    if (now && !was_pressed) {
+        lv_point_t p;
+        lv_indev_get_point(in, &p);
+        ESP_LOGW(TAG, "ЗАМЕР: касание x=%d y=%d", (int) p.x, (int) p.y);
+    }
+    was_pressed = now;
 }
 
 static void nav_update(void)
@@ -966,6 +997,9 @@ static void apply_snapshot(const ipradio_snapshot_t *s)
     ipradio_wifi_ui_update(s);
     ipradio_diag_ui_update(s);
     ipradio_netbadge_update(s);
+    /* На клавиатуре верх занят вопросом «что вводим» - значок
+     * ложился прямо на него. */
+    ipradio_netbadge_set_visible(!ipradio_keyboard_visible());
 
     render_presets(s);
 }
@@ -1074,6 +1108,7 @@ static void ui_task(void *arg)
             }
             drain_modal_queue();
             nav_update();
+            probe_touch();
             service_idle();
 
             /* Экран выбора сети обновляем здесь, а не только по снимку
@@ -1102,6 +1137,14 @@ static void ui_task(void *arg)
             }
 
             ui_unlock();
+        }
+
+        /* ВРЕМЕННО: пульс задачи интерфейса. УБРАТЬ после разбора. */
+        {
+            static unsigned n;
+            if (++n % 60 == 0) {
+                ESP_LOGW(TAG, "ПУЛЬС ui: %u", n / 20);
+            }
         }
 
         /* 50 мс - шаг обновления часов и отсчёта бездействия. Чаще
@@ -1141,7 +1184,15 @@ esp_err_t ipradio_ui_init(void)
         .lv_adapter_cfg  = ESP_LV_ADAPTER_DEFAULT_CONFIG(),
         .rotation        = ESP_LV_ADAPTER_ROTATE_90,
         .tear_avoid_mode = ESP_LV_ADAPTER_TEAR_AVOID_MODE_TRIPLE_PARTIAL,
-        .touch_flags = { .swap_xy = 0, .mirror_x = 0, .mirror_y = 0 },
+        /* Касание приходит в РОДНЫХ осях панели, 720x1280, а экран
+         * повёрнут на 90 градусов и работает как 1280x720. Само оно
+         * не поворачивается, и без этих флагов нажатия попадали мимо
+         * всего: ни одна кнопка не отзывалась.
+         *
+         * Соответствие снято замером на плате 2026-09-05 - четыре
+         * угла экрана дали X = 1279 - y, Y = x. Это и есть обмен
+         * осей плюс зеркало по горизонтали. */
+        .touch_flags = { .swap_xy = 1, .mirror_x = 1, .mirror_y = 0 },
     };
 
     if (bsp_display_start_with_config(&disp_cfg) == NULL) {

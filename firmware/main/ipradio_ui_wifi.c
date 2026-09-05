@@ -10,6 +10,9 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
+#include "freertos/idf_additions.h"
+
+#include "esp_heap_caps.h"
 
 #include "esp_log.h"
 
@@ -150,7 +153,7 @@ static void scan_task(void *arg)
     s_pending_count = (n < 0) ? 0 : n;
     xSemaphoreGive(s_lock);
 
-    vTaskDelete(NULL);
+    vTaskDeleteWithCaps(NULL);
 }
 
 static void start_scan(void)
@@ -169,7 +172,14 @@ static void start_scan(void)
     s_focus    = ROW_RESCAN;
     paint_focus();
 
-    xTaskCreate(scan_task, "wifi_scan", 4096, NULL, 4, NULL);
+    /* Стек в PSRAM по той же причине, что у поиска станций:
+     * внутренней памяти почти не осталось. */
+    if (xTaskCreateWithCaps(scan_task, "wifi_scan", 4096, NULL, 4,
+                            NULL, MALLOC_CAP_SPIRAM) != pdPASS) {
+        ESP_LOGE(TAG, "задача поиска сетей не создалась");
+        lv_label_set_text(s_status, "Не хватило памяти для поиска");
+        s_scanning = false;
+    }
 }
 
 /* Забрать результат, если он приехал. Зовётся из задачи интерфейса

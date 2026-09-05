@@ -15,6 +15,7 @@ static const char *TAG = "ui.net";
 #define DOT     18
 #define BADGE_H 56
 
+static lv_obj_t *s_box;
 static lv_obj_t *s_dot;
 static lv_obj_t *s_text;
 
@@ -27,6 +28,7 @@ esp_err_t ipradio_netbadge_init(void)
     lv_obj_t *top = lv_layer_top();
 
     lv_obj_t *box = lv_obj_create(top);
+    s_box = box;
     lv_obj_remove_style_all(box);
     lv_obj_set_size(box, LV_SIZE_CONTENT, BADGE_H);
 
@@ -56,6 +58,18 @@ esp_err_t ipradio_netbadge_init(void)
 
     ESP_LOGI(TAG, "значок сети поднят на верхнем слое");
     return ESP_OK;
+}
+
+void ipradio_netbadge_set_visible(bool on)
+{
+    if (!s_box) {
+        return;
+    }
+    if (on) {
+        lv_obj_clear_flag(s_box, LV_OBJ_FLAG_HIDDEN);
+    } else {
+        lv_obj_add_flag(s_box, LV_OBJ_FLAG_HIDDEN);
+    }
 }
 
 void ipradio_netbadge_update(const ipradio_snapshot_t *s)
