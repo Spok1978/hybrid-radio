@@ -520,12 +520,97 @@ static void json_str(const cJSON *o, const char *k, char *dst, size_t n)
     }
 }
 
+/* Один запрос к каталогу. Разбит отдельно, потому что при неудаче
+ * мы пробуем ещё раз с другой строкой. */
+static int search_once(const char *query,
+                       ipradio_station_t *out, int max_items);
+
+/* Убрать ведущее «радио» или «radio».
+ *
+ * Поиск в каталоге идёт ПО ПОДСТРОКЕ и в том же порядке, а не по
+ * словам. Человек пишет «радио silver rain», а станция называется
+ * «Silver Rain Radio» - такой подстроки в имени нет, и находится
+ * ноль. Слово «радио» люди приписывают почти всегда, и почти всегда
+ * оно стоит не там, где в имени станции.
+ *
+ * Возвращает true, если было что убирать. */
+static bool strip_radio_word(const char *src, char *dst, size_t n)
+{
+    static const char *const words[] = { "радио ", "radio ", "Радио ",
+                                         "Radio " };
+    for (size_t i = 0; i < sizeof(words) / sizeof(words[0]); i++) {
+        size_t len = strlen(words[i]);
+        if (strncmp(src, words[i], len) == 0 && src[len]) {
+            snprintf(dst, n, "%s", src + len);
+            return true;
+        }
+    }
+    return false;
+}
+
+/* Самое длинное слово запроса: последняя попытка, когда и без
+ * «радио» ничего нет. Длинное слово - самое отличительное. */
+static bool longest_word(const char *src, char *dst, size_t n)
+{
+    const char *best = NULL;
+    size_t best_len = 0;
+    const char *p = src;
+
+    while (*p) {
+        while (*p == ' ') p++;
+        const char *w = p;
+        while (*p && *p != ' ') p++;
+        size_t len = (size_t) (p - w);
+        if (len > best_len) {
+            best_len = len;
+            best = w;
+        }
+    }
+
+    if (!best || best_len == 0 || best_len == strlen(src)) {
+        return false;      /* одно слово - пробовать нечего */
+    }
+    if (best_len >= n) {
+        best_len = n - 1;
+    }
+    memcpy(dst, best, best_len);
+    dst[best_len] = 0;
+    return true;
+}
+
 int ipradio_net_search(const char *query,
                        ipradio_station_t *out, int max_items)
 {
     if (!query || !out || max_items <= 0) {
         return 0;
     }
+
+    int n = search_once(query, out, max_items);
+    if (n > 0) {
+        return n;
+    }
+
+    /* Не нашлось целиком - пробуем без слова «радио». */
+    char alt[64];
+    if (strip_radio_word(query, alt, sizeof(alt))) {
+        ESP_LOGI(TAG, "ничего; пробую «%s»", alt);
+        n = search_once(alt, out, max_items);
+        if (n > 0) {
+            return n;
+        }
+    }
+
+    /* И напоследок - по самому длинному слову. */
+    if (longest_word(query, alt, sizeof(alt))) {
+        ESP_LOGI(TAG, "ничего; пробую «%s»", alt);
+        n = search_once(alt, out, max_items);
+    }
+    return n;
+}
+
+static int search_once(const char *query,
+                       ipradio_station_t *out, int max_items)
+{
 
     char esc[128];
     url_escape(query, esc, sizeof(esc));

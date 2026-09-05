@@ -14,7 +14,10 @@
 #include "freertos/queue.h"
 #include "freertos/semphr.h"
 
+#include "esp_heap_caps.h"
 #include "esp_log.h"
+
+#include "freertos/idf_additions.h"
 
 #include "board_pins.h"
 #include "ipradio_state.h"
@@ -36,7 +39,11 @@ static const char *TAG = "state";
  * банка), но перебор станций и запись пресета целую копию всё же
  * берут. Плюс подписчики: мост зовёт конвейер ADF, а тот - свои
  * функции с немаленькими кадрами. */
-#define STATE_TASK_STACK    8192
+/* Шесть килобайт: восемь были взяты с запасом, а внутренней памяти
+ * на плате в обрез - её просят стеки задач конвейера ADF, которым
+ * PSRAM недоступна. Горячие пути читают банк по одной ячейке,
+ * так что запас можно ужать. */
+#define STATE_TASK_STACK    6144
 #define STATE_TASK_PRIO     6
 #define MAX_OBSERVERS       4
 
@@ -581,9 +588,20 @@ esp_err_t ipradio_state_init(void)
         s_state.freq_khz = 102500;
     }
 
-    BaseType_t ok = xTaskCreate(state_task, "ipradio_state",
-                                STATE_TASK_STACK, NULL,
-                                STATE_TASK_PRIO, NULL);
+/* Стек этой задачи - В PSRAM.
+     *
+     * Внутренней памяти на плате в обрез, и просят её те, кому
+     * без неё нельзя: буферы связи с сопроцессором Wi-Fi, рукопожатие
+     * TLS и стеки задач конвейера ADF (тот не умеет внешние стеки
+     * без патчей к ESP-IDF, которых мы не ставили).
+     *
+     * Наша задача таких ограничений не имеет: она не работает при
+     * запрещённом кэше и не вызывается из прерываний. Значит её стек
+     * и надо уступить. */
+    BaseType_t ok = xTaskCreateWithCaps(state_task, "ipradio_state",
+                                        STATE_TASK_STACK, NULL,
+                                        STATE_TASK_PRIO, NULL,
+                                        MALLOC_CAP_SPIRAM);
     return (ok == pdPASS) ? ESP_OK : ESP_ERR_NO_MEM;
 }
 

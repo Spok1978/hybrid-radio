@@ -24,7 +24,10 @@
 #include "freertos/task.h"
 #include "freertos/semphr.h"
 
+#include "esp_heap_caps.h"
 #include "esp_log.h"
+
+#include "freertos/idf_additions.h"
 #include "lvgl.h"
 #include "bsp/esp-bsp.h"
 #include "esp_lv_adapter.h"
@@ -158,6 +161,13 @@ static uint32_t        s_bank_gen = UINT32_MAX;
  * должны быть общими, иначе разъедутся. */
 #define make_label ipradio_ui_label
 
+static void on_mode_click(lv_event_t *e)
+{
+    (void) e;
+    ESP_LOGI(TAG, "нажата плашка режима");
+    ipradio_post_simple(IPRADIO_EV_MODE_TOGGLE, 0);
+}
+
 static void build_status_bar(lv_obj_t *root)
 {
     lv_obj_t *bar = lv_obj_create(root);
@@ -193,6 +203,16 @@ static void build_status_bar(lv_obj_t *root)
     s_mode_text = make_label(s_mode_badge, ipradio_font_28b,
                              COL_AMBER, "ЭФИР");
     lv_obj_center(s_mode_text);
+
+    /* Плашка режима переключает режим нажатием.
+     *
+     * Просьба заказчика, и она разумная: плашка и так называет
+     * текущий режим, а нажать на название - самое естественное,
+     * что приходит в голову. Физическая кнопка MODE при этом
+     * никуда не девается, событие шлём то же самое. */
+    lv_obj_add_flag(s_mode_badge, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_add_event_cb(s_mode_badge, on_mode_click, LV_EVENT_CLICKED,
+                        NULL);
 }
 
 static void build_center(lv_obj_t *root)
@@ -250,6 +270,13 @@ static void build_center(lv_obj_t *root)
     lv_obj_add_flag(s_mute_badge, LV_OBJ_FLAG_HIDDEN);
 }
 
+static void on_preset_click(lv_event_t *e)
+{
+    int cell = (int) (intptr_t) lv_event_get_user_data(e);
+    ESP_LOGI(TAG, "нажата ячейка %d", cell);
+    ipradio_post_simple(IPRADIO_EV_PRESET_PRESSED, cell);
+}
+
 static void build_presets(lv_obj_t *root)
 {
     static int32_t cols[PRESET_CELLS + 1];
@@ -298,6 +325,18 @@ static void build_presets(lv_obj_t *root)
         lv_obj_set_width(s_preset_names[i], LV_PCT(100));
         lv_label_set_long_mode(s_preset_names[i], LV_LABEL_LONG_DOT);
         lv_obj_align(s_preset_names[i], LV_ALIGN_BOTTOM_LEFT, 0, 0);
+
+        /* Ячейку можно нажать пальцем.
+         *
+         * Раньше нельзя было: предполагалось, что для этого есть
+         * физические кнопки. Их пока нет, и на плате 2026-09-05
+         * человек тыкал в ячейки, а прибор молчал.
+         *
+         * Шлём ТО ЖЕ событие, что и кнопка: дальше всё идёт общим
+         * путём, включая переключение режима по типу ячейки. */
+        lv_obj_add_flag(cell, LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_add_event_cb(cell, on_preset_click, LV_EVENT_CLICKED,
+                            (void *) (intptr_t) (i + 1));
 
         s_presets[i] = cell;
     }
@@ -468,37 +507,6 @@ static void nav_build(void)
     s_nav_text = ipradio_ui_label(s_nav_btn, ipradio_font_20,
                                   COL_TEXT, "Меню");
     lv_obj_center(s_nav_text);
-}
-
-/* ВРЕМЕННО: печатать координаты касания.
- *
- * Кнопка внизу слева не отзывается ни на что, и надо понять, доходит
- * ли касание вообще и в каких осях. Читаем устройство ввода напрямую,
- * минуя разбор попаданий: если панель молчит - строк не будет вовсе,
- * если оси перепутаны - числа не сойдутся с тем, куда ткнули.
- *
- * УБРАТЬ, как только выяснится. */
-static void probe_touch(void)
-{
-    static bool was_pressed;
-
-    lv_indev_t *in = lv_indev_get_next(NULL);
-    if (!in) {
-        static bool said;
-        if (!said) {
-            said = true;
-            ESP_LOGE(TAG, "ЗАМЕР: устройства ввода нет вовсе");
-        }
-        return;
-    }
-
-    bool now = (lv_indev_get_state(in) == LV_INDEV_STATE_PRESSED);
-    if (now && !was_pressed) {
-        lv_point_t p;
-        lv_indev_get_point(in, &p);
-        ESP_LOGW(TAG, "ЗАМЕР: касание x=%d y=%d", (int) p.x, (int) p.y);
-    }
-    was_pressed = now;
 }
 
 static void nav_update(void)
@@ -939,6 +947,11 @@ static void apply_snapshot(const ipradio_snapshot_t *s)
         /* Есть RDS — крупно название, частота под ним.
          * Нет RDS — крупно сама частота: пустоты на экране быть
          * не должно, а частота человеку понятна. */
+        /* Частота крупная, и мелкая строка стоит выше: над ней
+         * всего одна строка. Так одобрено заказчиком. */
+        lv_obj_set_style_text_font(s_title, ipradio_font_96b, 0);
+        lv_obj_align(s_detail, LV_ALIGN_CENTER, 0, 60);
+
         /* Диапазон — всегда сверху и всегда одинаково: он не
          * зависит от того, передаёт станция RDS или нет. */
         snprintf(buf, sizeof(buf), "%s диапазон",
@@ -964,6 +977,17 @@ static void apply_snapshot(const ipradio_snapshot_t *s)
     } else {
         /* В интернет-режиме диапазона нет — подпись убираем. */
         lv_obj_add_flag(s_band_cap, LV_OBJ_FLAG_HIDDEN);
+
+        /* Название станции - кеглем 64, а не 96.
+         *
+         * Частоту «102.50» видно и в 96, а названия станций длиннее
+         * и в такой кегль не влезают: на плате «Радио ENERGY» ушло
+         * в три строки и подмяло под себя всё, что ниже. */
+        lv_obj_set_style_text_font(s_title, ipradio_font_64b, 0);
+
+        /* И мелкая строка опускается: в этом режиме над ней две
+         * строки, а не одна. */
+        lv_obj_align(s_detail, LV_ALIGN_CENTER, 0, 120);
 
         lv_label_set_text(s_title,
             s->station_name[0] ? s->station_name : "-");
@@ -1108,7 +1132,6 @@ static void ui_task(void *arg)
             }
             drain_modal_queue();
             nav_update();
-            probe_touch();
             service_idle();
 
             /* Экран выбора сети обновляем здесь, а не только по снимку
@@ -1137,14 +1160,6 @@ static void ui_task(void *arg)
             }
 
             ui_unlock();
-        }
-
-        /* ВРЕМЕННО: пульс задачи интерфейса. УБРАТЬ после разбора. */
-        {
-            static unsigned n;
-            if (++n % 60 == 0) {
-                ESP_LOGW(TAG, "ПУЛЬС ui: %u", n / 20);
-            }
         }
 
         /* 50 мс - шаг обновления часов и отсчёта бездействия. Чаще
@@ -1325,7 +1340,18 @@ esp_err_t ipradio_ui_init(void)
 
     ipradio_subscribe(on_state, NULL);
 
-    xTaskCreate(ui_task, "ipradio_ui", 6144, NULL, 4, NULL);
+/* Стек этой задачи - В PSRAM.
+     *
+     * Внутренней памяти на плате в обрез, и просят её те, кому
+     * без неё нельзя: буферы связи с сопроцессором Wi-Fi, рукопожатие
+     * TLS и стеки задач конвейера ADF (тот не умеет внешние стеки
+     * без патчей к ESP-IDF, которых мы не ставили).
+     *
+     * Наша задача таких ограничений не имеет: она не работает при
+     * запрещённом кэше и не вызывается из прерываний. Значит её стек
+     * и надо уступить. */
+    xTaskCreateWithCaps(ui_task, "ipradio_ui", 6144, NULL, 4, NULL,
+                        MALLOC_CAP_SPIRAM);
 
     ESP_LOGI(TAG, "интерфейс поднят: 1280x720, поворот 90, подписи русские");
     return ESP_OK;

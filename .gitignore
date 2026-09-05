@@ -49,3 +49,6 @@ firmware/sdkconfig.old
 firmware/dependencies.lock
 firmware/managed_components/
 firmware/sdkconfig.lvgl
+
+# Журналы, снятые с платы по последовательному порту
+*.log

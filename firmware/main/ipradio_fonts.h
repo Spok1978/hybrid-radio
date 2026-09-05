@@ -58,6 +58,7 @@ extern const lv_font_t *ipradio_font_48b;  /* частота и название
 extern const lv_font_t *ipradio_font_28b;  /* подписи крупно     */
 extern const lv_font_t *ipradio_font_40;   /* часы, громкость    */
 extern const lv_font_t *ipradio_font_56;   /* диапазон, строка   */
+extern const lv_font_t *ipradio_font_64b;  /* название станции   */
 extern const lv_font_t *ipradio_font_96b;  /* частота во всю ширь */
 
 #ifdef __cplusplus

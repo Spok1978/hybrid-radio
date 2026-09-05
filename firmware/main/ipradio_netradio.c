@@ -27,7 +27,10 @@
 #include "freertos/task.h"
 
 #include "esp_crt_bundle.h"
+#include "esp_heap_caps.h"
 #include "esp_log.h"
+
+#include "freertos/idf_additions.h"
 
 #include "audio_element.h"
 #include "audio_pipeline.h"
@@ -243,6 +246,24 @@ esp_err_t ipradio_netradio_init(void)
      * Цена - около 70 КБ образа, место есть. */
     http_cfg.crt_bundle_attach = esp_crt_bundle_attach;
     http_cfg.out_rb_size = 64 * 1024;
+
+    /* Стек ЗАДАЧИ элемента - во внутренней памяти, а не в PSRAM.
+     *
+     * По умолчанию ADF просит внешнюю память под стеки своих задач,
+     * а создаёт их функцией xTaskCreateRestrictedPinnedToCore. Этой
+     * функции в обычном ESP-IDF нет - она появляется вместе с патчами
+     * из каталога idf_patches, которые мы намеренно не применяли
+     * (docs/27, §1.1: обошлись одной настройкой вместо правки IDF).
+     *
+     * Расплата обнаружилась только на плате 2026-09-05: элементы
+     * конвейера просто не запускались, «Error creating
+     * RestrictedPinnedToCore», и поток вечно висел на «Подключение…».
+     * Ни одного сообщения о нехватке памяти при этом не было -
+     * ошибка выглядела как молчание.
+     *
+     * Просим внутреннюю память: она обычная, создаётся обычным
+     * вызовом, патчи не нужны. */
+    http_cfg.stack_in_ext = false;
     s_http = http_stream_init(&http_cfg);
 
     /* Декодер: набор кодеков, выбор по типу потока.
@@ -255,6 +276,7 @@ esp_err_t ipradio_netradio_init(void)
     };
     esp_decoder_cfg_t dec_cfg = DEFAULT_ESP_DECODER_CONFIG();
     dec_cfg.out_rb_size = 32 * 1024;
+    dec_cfg.stack_in_ext = false;   /* см. пояснение выше */
     s_decoder = esp_decoder_init(&dec_cfg, decoders,
                                  sizeof(decoders) / sizeof(decoders[0]));
 
@@ -267,6 +289,7 @@ esp_err_t ipradio_netradio_init(void)
      * нечего - там сжатый поток. */
     alc_volume_setup_cfg_t alc_cfg = DEFAULT_ALC_VOLUME_SETUP_CONFIG();
     alc_cfg.channel = 2;
+    alc_cfg.stack_in_ext = false;   /* см. пояснение выше */
     s_alc = alc_volume_setup_init(&alc_cfg);
 
     /* Выход: I²S на наш PCM5102A. Порт нулевой - им владеет ТОЛЬКО
@@ -274,6 +297,7 @@ esp_err_t ipradio_netradio_init(void)
      * MCLK не используется - у ЦАП вывод тактирования на земле. */
     i2s_stream_cfg_t i2s_cfg = I2S_STREAM_CFG_DEFAULT();
     i2s_cfg.type = AUDIO_STREAM_WRITER;
+    i2s_cfg.stack_in_ext = false;   /* см. пояснение выше */
     i2s_cfg.std_cfg.gpio_cfg.mclk = I2S_GPIO_UNUSED;
     i2s_cfg.std_cfg.gpio_cfg.bclk = PIN_I2S_BCK;
     i2s_cfg.std_cfg.gpio_cfg.ws   = PIN_I2S_LRCK;
@@ -298,7 +322,9 @@ esp_err_t ipradio_netradio_init(void)
     s_events = audio_event_iface_init(&evt_cfg);
     audio_pipeline_set_listener(s_pipeline, s_events);
 
-    xTaskCreate(events_task, "netradio_evt", 4096, NULL, 5, NULL);
+    /* Стек в PSRAM: внутренняя нужна конвейеру и сети. */
+    xTaskCreateWithCaps(events_task, "netradio_evt", 4096, NULL, 5, NULL,
+                        MALLOC_CAP_SPIRAM);
 
     ESP_LOGI(TAG, "конвейер собран: http -> декодер -> I²S");
     return ESP_OK;
