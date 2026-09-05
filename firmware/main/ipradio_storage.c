@@ -25,6 +25,7 @@
 #include "freertos/semphr.h"
 
 #include "esp_log.h"
+#include "sd_pwr_ctrl_by_on_chip_ldo.h"
 #include "esp_vfs_fat.h"
 #include "sdmmc_cmd.h"
 #include "driver/sdmmc_host.h"
@@ -52,6 +53,7 @@ static const char *TAG = "storage";
 static sdmmc_card_t   *s_card;
 static bool            s_ready;
 static ipradio_store_t s_store;
+static sd_pwr_ctrl_handle_t s_pwr;
 static uint32_t        s_generation;   /* растёт при каждой записи */
 
 /* Замок на всё содержимое модуля.
@@ -368,7 +370,28 @@ done:
 static esp_err_t mount_card(void)
 {
     sdmmc_host_t host = SDMMC_HOST_DEFAULT();
-    host.slot = SDMMC_HOST_SLOT_0;
+    host.slot         = SDMMC_HOST_SLOT_0;
+    host.max_freq_khz = SDMMC_FREQ_HIGHSPEED;
+
+    /* ПИТАНИЕ СЛОТА. Без этого карта не отвечает вовсе.
+     *
+     * У ESP32-P4 линия питания карты запитана не напрямую, а через
+     * внутренний стабилизатор кристалла, и его надо включить руками.
+     * Пока он выключен, карта просто обесточена: контроллер шлёт ей
+     * команду инициализации и получает тайм-аут. Ровно это и было
+     * на плате 2026-09-05 - карта вставлена, а в журнале
+     * «send_op_cond returned 0x107».
+     *
+     * Канал 4 - тот, к которому слот подведён на этой плате; взято
+     * из BSP вендора, где то же самое делается перед монтированием. */
+    sd_pwr_ctrl_ldo_config_t ldo = { .ldo_chan_id = 4 };
+    esp_err_t perr = sd_pwr_ctrl_new_on_chip_ldo(&ldo, &s_pwr);
+    if (perr != ESP_OK) {
+        ESP_LOGE(TAG, "питание карты не включилось: %s",
+                 esp_err_to_name(perr));
+        return perr;
+    }
+    host.pwr_ctrl_handle = s_pwr;
 
     sdmmc_slot_config_t slot = SDMMC_SLOT_CONFIG_DEFAULT();
     slot.width = 4;

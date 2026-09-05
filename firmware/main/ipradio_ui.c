@@ -420,6 +420,70 @@ static bool modal_any(void)
     return modal_top() != NULL;
 }
 
+/* ------------------------------------------------------------------ *
+ *  Кнопка навигации касанием
+ * ------------------------------------------------------------------ */
+
+/* Одна кнопка в левом нижнем углу, живёт на верхнем слое и потому
+ * видна на любом экране. Меняет смысл по обстановке: на экране
+ * воспроизведения открывает меню, на любом другом - возвращает назад.
+ *
+ * Зачем это нужно. Требование R4.1 - любой сценарий проходим
+ * физическими органами, и оно выполнено: меню открывается долгим
+ * нажатием регулятора 1, выход - нажатием регулятора 2. Но пока
+ * регуляторы НЕ ПРИПАЯНЫ, до настройки Wi-Fi не добраться вовсе,
+ * и обратно из меню тоже не выйти. На столе это тупик.
+ *
+ * Касание при этом не подмена органов, а дополнение: панель
+ * сенсорная, и человеку естественно ткнуть в экран. Кнопка шлёт
+ * ТЕ ЖЕ события, что и органы, поэтому отдельного пути в коде
+ * не появляется. */
+static lv_obj_t *s_nav_btn;
+static lv_obj_t *s_nav_text;
+
+static void on_nav_click(lv_event_t *e)
+{
+    (void) e;
+
+    if (modal_any()) {
+        /* То же событие, что шлёт нажатие регулятора 2. Фильтр
+         * превратит его в «назад», потому что открыт модальный
+         * экран. */
+        ipradio_post_simple(IPRADIO_EV_MUTE_TOGGLE, 0);
+    } else {
+        ipradio_post_simple(IPRADIO_EV_MENU, 0);
+    }
+}
+
+static void nav_build(void)
+{
+    lv_obj_t *top = lv_layer_top();
+
+    s_nav_btn = ipradio_ui_panel(top, 190, 64,
+                                 COL_SURFACE, COL_BORDER, 32);
+    lv_obj_align(s_nav_btn, LV_ALIGN_BOTTOM_LEFT, 24, -20);
+    lv_obj_add_flag(s_nav_btn, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_add_event_cb(s_nav_btn, on_nav_click, LV_EVENT_CLICKED, NULL);
+
+    s_nav_text = ipradio_ui_label(s_nav_btn, ipradio_font_20,
+                                  COL_TEXT, "Меню");
+    lv_obj_center(s_nav_text);
+}
+
+static void nav_update(void)
+{
+    if (!s_nav_text) {
+        return;
+    }
+    static int shown = -1;
+    int want = modal_any() ? 1 : 0;
+    if (want == shown) {
+        return;
+    }
+    shown = want;
+    lv_label_set_text(s_nav_text, want ? "Назад" : "Меню");
+}
+
 /* Фильтр событий. Ставится один раз при подъёме интерфейса и висит
  * всегда: ставить и снимать его при каждом диалоге значило бы
  * заводить ещё одно состояние, которое можно рассинхронизировать.
@@ -1009,6 +1073,7 @@ static void ui_task(void *arg)
                 apply_snapshot(&snap);
             }
             drain_modal_queue();
+            nav_update();
             service_idle();
 
             /* Экран выбора сети обновляем здесь, а не только по снимку
@@ -1192,6 +1257,8 @@ esp_err_t ipradio_ui_init(void)
         ui_unlock();
         return derr;
     }
+
+    nav_build();
 
     /* Перехват органов управления. Ставится один раз и висит всегда:
      * фильтр сам разбирается, есть ли на экране что-то модальное. */
