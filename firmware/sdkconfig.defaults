@@ -262,3 +262,13 @@ CONFIG_MBEDTLS_DYNAMIC_FREE_CONFIG_DATA=y
 CONFIG_MBEDTLS_DYNAMIC_FREE_CA_CERT=y
 CONFIG_MBEDTLS_SSL_IN_CONTENT_LEN=8192
 CONFIG_MBEDTLS_SSL_OUT_CONTENT_LEN=2048
+
+# --- Крупные статические массивы - в PSRAM (2026-09-05) --------------------
+#
+# Два массива выдачи поиска по 6280 байт оказались самыми большими
+# статическими объектами во всей прошивке, а хранилище пресетов держит
+# ещё 7,6 КБ. Всё это лежало во внутренней памяти, которой при работе
+# оставалось 40 КБ. Ни к одному из них не обращаются из прерывания,
+# так что в PSRAM им ничто не мешает.
+CONFIG_SPIRAM_ALLOW_BSS_SEG_EXTERNAL_MEMORY=y
+

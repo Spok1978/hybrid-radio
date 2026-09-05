@@ -8,6 +8,8 @@ idf_component_register(
          "ipradio_audio.c"
          "ipradio_net.c"
          "ipradio_ui.c"
+         "ipradio_adf_stack.c"
+         "ipradio_board_codec.c"
          "ipradio_netradio.c"
          "ipradio_bridge.c"
          "ipradio_fonts.c"
@@ -37,4 +39,16 @@ idf_component_register(
              lvgl__lvgl
              waveshare__esp32_p4_wifi6_touch_lcd_5
              audio_pipeline audio_stream esp-adf-libs audio_sal
+             esp_codec_dev
+
+    # Без этого наш ipradio_adf_stack.c в образ не попадает.
+    #
+    # Единственное, что он определяет - xTaskCreateRestrictedPinnedToCore.
+    # В ADF эта функция объявлена слабой, и её заглушку компоновщик
+    # находит в libaudio_sal.a раньше, чем добирается до нашей: наш
+    # объектный файл из архива не выдёргивается вовсе, потому что
+    # больше на него никто не ссылается. WHOLE_ARCHIVE укладывает
+    # в образ все объектные файлы компонента, и тогда сильное
+    # определение побеждает слабое, как и положено.
+    WHOLE_ARCHIVE
 )

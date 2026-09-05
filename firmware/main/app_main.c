@@ -31,6 +31,8 @@
 #include "freertos/task.h"
 
 #include "esp_chip_info.h"
+#include <stdlib.h>
+
 #include "esp_log.h"
 #include "esp_heap_caps.h"
 #include "esp_psram.h"
@@ -45,6 +47,9 @@
 #include "ipradio_audio.h"
 #include "ipradio_net.h"
 #include "ipradio_ui.h"
+#include "bsp/esp-bsp.h"
+
+#include "ipradio_board_codec.h"
 #include "ipradio_netradio.h"
 #include "ipradio_bridge.h"
 #include "ipradio_watchdog.h"
@@ -111,21 +116,35 @@ static void log_chip(void)
 
 static void scan_i2c(void)
 {
-    i2c_master_bus_config_t bus_cfg = {
-        .i2c_port = -1,                     /* любой свободный порт */
-        .sda_io_num = PIN_I2C_SDA,
-        .scl_io_num = PIN_I2C_SCL,
-        .clk_source = I2C_CLK_SRC_DEFAULT,
-        .glitch_ignore_cnt = 7,
-        /* Подтяжки 2,2 кОм к 3,3 В уже стоят на плате (R49, R50),
-         * внутренние включать не нужно. */
-        .flags.enable_internal_pullup = false,
-    };
+    /* Шину НЕ создаём свою, а берём у BSP платы.
+     *
+     * Раньше здесь стоял i2c_new_master_bus с портом -1, то есть
+     * «любой свободный». Он занимал порт 0, а BSP для касания
+     * поднимал свою шину на порту 1 (CONFIG_BSP_I2C_NUM=1) - и обе
+     * висели на одних и тех же выводах 7 и 8. Два контроллера,
+     * дёргающие одни ноги, шину ломают. В журнале это выглядело так:
+     *
+     *     W i2c.common: GPIO 7 is not usable, maybe conflict with others
+     *     E i2c.master: clear bus failed
+     *     E i2c.master: reset hardware failed
+     *
+     * Записи кое-как проходили, а чтение возвращало нули: дамп
+     * регистров кодека ES8311 выдал 00, 00, 00 и оборвался на
+     * третьем регистре. Отсюда и отсутствие звука - кодек не был
+     * настроен на самом деле, хотя вызовы возвращали успех.
+     *
+     * Правильно - одна шина на всех: касание, тюнер RDA5807M,
+     * кодек ES8311 и расширитель выводов сидят на одних выводах,
+     * значит и контроллер у них должен быть один. */
+    esp_err_t err = bsp_i2c_init();
+    if (err != ESP_OK && err != ESP_ERR_INVALID_STATE) {
+        ESP_LOGE(TAG, "шина I2C платы не поднялась: %s", esp_err_to_name(err));
+        return;
+    }
 
-    i2c_master_bus_handle_t bus = NULL;
-    esp_err_t err = i2c_new_master_bus(&bus_cfg, &bus);
-    if (err != ESP_OK) {
-        ESP_LOGE(TAG, "шина I2C не поднялась: %s", esp_err_to_name(err));
+    i2c_master_bus_handle_t bus = bsp_i2c_get_handle();
+    if (!bus) {
+        ESP_LOGE(TAG, "BSP не отдал ручку шины I2C");
         return;
     }
 
@@ -220,6 +239,12 @@ void app_main(void)
 
     /* Конвейер интернет-радио. Поднимается один раз и остаётся
      * поднятым: возврат из эфира не должен стоить лишних секунд. */
+#if IPRADIO_USE_BOARD_CODEC
+    /* ВРЕМЕННО: до кодека платы, потому что конвейер сразу за ним
+     * поднимает I²S, а микросхеме надо успеть настроиться. */
+    ipradio_board_codec_init(s_i2c_bus);
+#endif
+
     ipradio_netradio_init();
 
     /* Мост — последним: он начнёт переносить состояние на железо

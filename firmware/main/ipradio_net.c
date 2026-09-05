@@ -608,6 +608,48 @@ int ipradio_net_search(const char *query,
     return n;
 }
 
+/* Выбрать адрес потока, по возможности без TLS.
+ *
+ * Каталог отдаёт два поля: url - как его подал владелец станции,
+ * url_resolved - тот же адрес после всех переходов. Обычно берут
+ * второй, он точнее.
+ *
+ * Но рукопожатие TLS на этой плате стоит десятки килобайт ВНУТРЕННЕЙ
+ * памяти, которой у нас сорок, и оно уже валилось на
+ * mbedtls_ssl_setup returned -0x7F00. Звук от смены схемы не меняется:
+ * это тот же поток, только канал без шифрования. Поэтому если хоть
+ * один из двух адресов обычный http - берём его.
+ *
+ * Если оба на https, берём url_resolved, как и раньше: выбора нет,
+ * и пусть решает mbedTLS. */
+static bool is_plain_http(const char *u)
+{
+    return strncmp(u, "http://", 7) == 0;
+}
+
+static void pick_url(const cJSON *el, char *dst, size_t cap)
+{
+    char resolved[192] = { 0 };
+    char raw[192]      = { 0 };
+
+    json_str(el, "url_resolved", resolved, sizeof(resolved));
+    json_str(el, "url",          raw,      sizeof(raw));
+
+    const char *chosen;
+
+    if (is_plain_http(resolved)) {
+        chosen = resolved;
+    } else if (is_plain_http(raw)) {
+        chosen = raw;
+    } else if (resolved[0]) {
+        chosen = resolved;
+    } else {
+        chosen = raw;
+    }
+
+    snprintf(dst, cap, "%s", chosen);
+}
+
 static int search_once(const char *query,
                        ipradio_station_t *out, int max_items)
 {
@@ -652,10 +694,7 @@ static int search_once(const char *query,
         memset(st, 0, sizeof(*st));
 
         json_str(el, "name",        st->name, sizeof(st->name));
-        json_str(el, "url_resolved", st->url, sizeof(st->url));
-        if (st->url[0] == '\0') {
-            json_str(el, "url", st->url, sizeof(st->url));
-        }
+        pick_url(el, st->url, sizeof(st->url));
         json_str(el, "stationuuid", st->uuid, sizeof(st->uuid));
         /* Поле country устарело — берём countrycode (§4). */
         json_str(el, "countrycode", st->countrycode, sizeof(st->countrycode));

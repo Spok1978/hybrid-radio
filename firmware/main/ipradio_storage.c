@@ -24,6 +24,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 
+#include "esp_attr.h"
 #include "esp_log.h"
 #include "sd_pwr_ctrl_by_on_chip_ldo.h"
 #include "esp_vfs_fat.h"
@@ -52,7 +53,9 @@ static const char *TAG = "storage";
 
 static sdmmc_card_t   *s_card;
 static bool            s_ready;
-static ipradio_store_t s_store;
+/* Хранилище целиком - 2548 байт. Оно живёт под мьютексом и трогается
+ * только из задач, так что внутренняя память ему ни к чему. */
+EXT_RAM_BSS_ATTR static ipradio_store_t s_store;
 static sd_pwr_ctrl_handle_t s_pwr;
 static uint32_t        s_generation;   /* растёт при каждой записи */
 

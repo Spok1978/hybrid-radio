@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "esp_attr.h"
 #include "esp_log.h"
 
 #include "ipradio_fonts.h"
@@ -29,7 +30,9 @@ static lv_obj_t *s_row_cell[IPRADIO_PRESET_MAX];
 static lv_obj_t *s_row_name[IPRADIO_PRESET_MAX];
 static lv_obj_t *s_row_info[IPRADIO_PRESET_MAX];
 
-static ipradio_store_t s_store;
+/* Ещё одна копия хранилища, для экрана списка станций - 2548 байт.
+ * Только задача интерфейса. */
+EXT_RAM_BSS_ATTR static ipradio_store_t s_store;
 static int  s_focus;
 static bool s_visible;
 static int  s_editing = -1;   /* какую ячейку переименовываем */

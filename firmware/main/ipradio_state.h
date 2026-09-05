@@ -132,6 +132,7 @@ typedef struct {
 typedef enum {
     /* От органов управления */
     IPRADIO_EV_VOLUME_DELTA,      /**< поворот регулятора 2, arg = ±шаги      */
+    IPRADIO_EV_VOLUME_SET,        /**< ползунок на экране, arg = 0…100       */
     IPRADIO_EV_MUTE_TOGGLE,       /**< нажатие регулятора 2                   */
     IPRADIO_EV_MODE_TOGGLE,       /**< кнопка MODE                          */
     IPRADIO_EV_PRESET_PRESSED,    /**< arg = номер ячейки, 1…N              */
@@ -158,6 +159,7 @@ typedef enum {
     IPRADIO_EV_PLAY_STATE,        /**< arg = ipradio_play_state_t           */
     IPRADIO_EV_SIGNAL_LEVEL,      /**< arg = 0…100                          */
     IPRADIO_EV_BUFFER_FILL,       /**< arg = 0…100                          */
+    IPRADIO_EV_BITRATE,           /**< arg = кбит/с, из декодера            */
 
     /* Служебное */
     IPRADIO_EV_TICK,              /**< раз в секунду: часы, ждущий режим    */

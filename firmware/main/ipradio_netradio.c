@@ -29,6 +29,7 @@
 #include "esp_crt_bundle.h"
 #include "esp_heap_caps.h"
 #include "esp_log.h"
+#include "esp_timer.h"
 
 #include "freertos/idf_additions.h"
 
@@ -43,6 +44,7 @@
 #include "ringbuf.h"
 
 #include "board_pins.h"
+#include "ipradio_board_codec.h"
 #include "ipradio_netradio.h"
 #include "ipradio_state.h"
 #include "ipradio_watchdog.h"
@@ -115,6 +117,41 @@ static void report_buffer_fill(void)
     ipradio_post_simple(IPRADIO_EV_BUFFER_FILL, pct);
 }
 
+/* ВРЕМЕННО: раз в пять секунд печатать, сколько байт ушло в I2S.
+ *
+ * ЦАП не подключён, услышать нечего, а знать, идёт ли звук на выход,
+ * надо. Счётчик byte_pos у элемента вывода растёт ровно тогда, когда
+ * данные действительно уходят в шину. УБРАТЬ, когда подключим ЦАП. */
+static void report_i2s_flow(void)
+{
+    static int64_t  prev;
+    static int64_t  prev_us;
+
+    if (!s_i2s || !s_active) {
+        prev = 0;
+        prev_us = 0;
+        return;
+    }
+
+    int64_t now_us = esp_timer_get_time();
+    if (prev_us && now_us - prev_us < 5000000) {
+        return;
+    }
+
+    audio_element_info_t info = { 0 };
+    audio_element_getinfo(s_i2s, &info);
+
+    int64_t delta = info.byte_pos - prev;
+    if (prev_us) {
+        ESP_LOGW(TAG, "ЗАМЕР: в I2S ушло %lld байт, за 5 с прибавилось %lld "
+                      "(%lld байт/с)",
+                 (long long) info.byte_pos, (long long) delta,
+                 (long long) (delta * 1000000 / (now_us - prev_us)));
+    }
+    prev = info.byte_pos;
+    prev_us = now_us;
+}
+
 static void events_task(void *arg)
 {
     (void) arg;
@@ -139,6 +176,7 @@ static void events_task(void *arg)
         if (audio_event_iface_listen(s_events, &msg,
                                      pdMS_TO_TICKS(500)) != ESP_OK) {
             report_buffer_fill();
+            report_i2s_flow();
             continue;
         }
 
@@ -154,17 +192,30 @@ static void events_task(void *arg)
             audio_element_info_t info = { 0 };
             audio_element_getinfo(s_decoder, &info);
 
-            ESP_LOGI(TAG, "поток: %d Гц, %d бит, %d канал(ов)",
-                     info.sample_rates, info.bits, info.channels);
+            ESP_LOGI(TAG, "поток: %d Гц, %d бит, %d канал(ов), %d бит/с",
+                     info.sample_rates, info.bits, info.channels, info.bps);
 
             i2s_stream_set_clk(s_i2s, info.sample_rates,
                                info.bits, info.channels);
+
+#if IPRADIO_USE_BOARD_CODEC
+            /* Кодеку платы нужен тот же формат, что и шине: иначе
+             * он будет тактоваться от своего и звук поедет по темпу. */
+            ipradio_board_codec_set_format(info.sample_rates,
+                                           info.bits, info.channels);
+#endif
 
             /* Регулятору тоже надо знать про каналы: моно и стерео
              * он обрабатывает по-разному, а станции бывают и такие,
              * и такие. */
             if (s_alc && info.channels > 0) {
                 alc_volume_setup_set_channel(s_alc, info.channels);
+            }
+
+            /* Битрейт декодер отдаёт в битах в секунду; на экране
+             * его показываем в килобитах, как принято у станций. */
+            if (info.bps > 0) {
+                ipradio_post_simple(IPRADIO_EV_BITRATE, info.bps / 1000);
             }
 
             ipradio_post_simple(IPRADIO_EV_PLAY_STATE, IPRADIO_PLAY_PLAYING);
@@ -215,6 +266,24 @@ static void events_task(void *arg)
                 ESP_LOGE(TAG, "станция не отвечает после %d попыток",
                          RETRY_MAX);
                 s_active = false;
+
+                /* Погасить конвейер обязательно, а не просто снять
+                 * признак.
+                 *
+                 * Раньше здесь стояло одно `s_active = false`,
+                 * и элементы оставались запущенными. Следующее
+                 * нажатие уходило в ipradio_netradio_play(), тот
+                 * видел s_active == false, останавливать было
+                 * «нечего», и звал audio_pipeline_run() поверх уже
+                 * работающего конвейера. В журнале это выглядело как
+                 * «Pipeline already started, state:3», после чего
+                 * задача i2s начинала крутиться вхолостую, забирала
+                 * ядро 0 у простоя, и сторож принимался срабатывать
+                 * раз в пять секунд без конца. Снаружи это выглядело
+                 * зависанием с мигающим экраном. */
+                audio_pipeline_stop(s_pipeline);
+                audio_pipeline_wait_for_stop(s_pipeline);
+                audio_pipeline_terminate(s_pipeline);
                 ipradio_post_simple(IPRADIO_EV_PLAY_STATE,
                                     IPRADIO_PLAY_ERROR);
             }
@@ -247,23 +316,24 @@ esp_err_t ipradio_netradio_init(void)
     http_cfg.crt_bundle_attach = esp_crt_bundle_attach;
     http_cfg.out_rb_size = 64 * 1024;
 
-    /* Стек ЗАДАЧИ элемента - во внутренней памяти, а не в PSRAM.
+    /* Стек ЗАДАЧИ элемента - в PSRAM.
      *
-     * По умолчанию ADF просит внешнюю память под стеки своих задач,
-     * а создаёт их функцией xTaskCreateRestrictedPinnedToCore. Этой
-     * функции в обычном ESP-IDF нет - она появляется вместе с патчами
-     * из каталога idf_patches, которые мы намеренно не применяли
-     * (docs/27, §1.1: обошлись одной настройкой вместо правки IDF).
+     * ADF умеет это сам, но создаёт такие задачи функцией
+     * xTaskCreateRestrictedPinnedToCore, которой в обычном ESP-IDF
+     * нет: она приходит с патчами из каталога idf_patches, а их мы
+     * намеренно не применяли. Без неё элементы вообще не запускались
+     * («Error creating RestrictedPinnedToCore»), и поток вечно висел
+     * на «Подключение…».
      *
-     * Расплата обнаружилась только на плате 2026-09-05: элементы
-     * конвейера просто не запускались, «Error creating
-     * RestrictedPinnedToCore», и поток вечно висел на «Подключение…».
-     * Ни одного сообщения о нехватке памяти при этом не было -
-     * ошибка выглядела как молчание.
+     * Некоторое время обходились обратным: просили внутреннюю память.
+     * На плате это упёрлось в стену - в момент подключения свободной
+     * внутренней оставалось 2 КБ, и рукопожатие TLS падало на
+     * alloc(2389 bytes) failed.
      *
-     * Просим внутреннюю память: она обычная, создаётся обычным
-     * вызовом, патчи не нужны. */
-    http_cfg.stack_in_ext = false;
+     * Теперь эту функцию мы определяем сами, в ipradio_adf_stack.c:
+     * в ADF она объявлена слабой, так что патчи к ESP-IDF не нужны.
+     * Четыре стека, почти 15 КБ, уезжают в PSRAM. */
+    http_cfg.stack_in_ext = true;
     s_http = http_stream_init(&http_cfg);
 
     /* Декодер: набор кодеков, выбор по типу потока.
@@ -276,7 +346,7 @@ esp_err_t ipradio_netradio_init(void)
     };
     esp_decoder_cfg_t dec_cfg = DEFAULT_ESP_DECODER_CONFIG();
     dec_cfg.out_rb_size = 32 * 1024;
-    dec_cfg.stack_in_ext = false;   /* см. пояснение выше */
+    dec_cfg.stack_in_ext = true;    /* см. пояснение выше */
     s_decoder = esp_decoder_init(&dec_cfg, decoders,
                                  sizeof(decoders) / sizeof(decoders[0]));
 
@@ -289,7 +359,7 @@ esp_err_t ipradio_netradio_init(void)
      * нечего - там сжатый поток. */
     alc_volume_setup_cfg_t alc_cfg = DEFAULT_ALC_VOLUME_SETUP_CONFIG();
     alc_cfg.channel = 2;
-    alc_cfg.stack_in_ext = false;   /* см. пояснение выше */
+    alc_cfg.stack_in_ext = true;    /* см. пояснение выше */
     s_alc = alc_volume_setup_init(&alc_cfg);
 
     /* Выход: I²S на наш PCM5102A. Порт нулевой - им владеет ТОЛЬКО
@@ -297,11 +367,27 @@ esp_err_t ipradio_netradio_init(void)
      * MCLK не используется - у ЦАП вывод тактирования на земле. */
     i2s_stream_cfg_t i2s_cfg = I2S_STREAM_CFG_DEFAULT();
     i2s_cfg.type = AUDIO_STREAM_WRITER;
-    i2s_cfg.stack_in_ext = false;   /* см. пояснение выше */
+    i2s_cfg.stack_in_ext = true;    /* см. пояснение выше */
+
+    /* Ядро 1: на нулевом рисует LVGL. У этой задачи приоритет 23,
+     * и на общем ядре она не оставляла отрисовке ничего - см.
+     * пояснение в ipradio_ui.c рядом с task_core_id. */
+    i2s_cfg.task_core = 1;
+#if IPRADIO_USE_BOARD_CODEC
+    /* ВРЕМЕННО: выход на штатный кодек платы ES8311, чтобы можно было
+     * послушать до подключения своего ЦАП. Выводы — из BSP платы
+     * и из поддержки этой же платы в ESP-ADF, они совпадают.
+     * MCLK здесь обязателен: ES8311 без него не тактируется. */
+    i2s_cfg.std_cfg.gpio_cfg.mclk = GPIO_NUM_13;
+    i2s_cfg.std_cfg.gpio_cfg.bclk = GPIO_NUM_12;
+    i2s_cfg.std_cfg.gpio_cfg.ws   = GPIO_NUM_10;
+    i2s_cfg.std_cfg.gpio_cfg.dout = GPIO_NUM_9;
+#else
     i2s_cfg.std_cfg.gpio_cfg.mclk = I2S_GPIO_UNUSED;
     i2s_cfg.std_cfg.gpio_cfg.bclk = PIN_I2S_BCK;
     i2s_cfg.std_cfg.gpio_cfg.ws   = PIN_I2S_LRCK;
     i2s_cfg.std_cfg.gpio_cfg.dout = PIN_I2S_DIN;
+#endif
     i2s_cfg.std_cfg.gpio_cfg.din  = I2S_GPIO_UNUSED;
     s_i2s = i2s_stream_init(&i2s_cfg);
 
@@ -340,9 +426,11 @@ esp_err_t ipradio_netradio_play(const char *url, const char *station_name)
         return ESP_ERR_INVALID_ARG;
     }
 
-    if (s_active) {
-        ipradio_netradio_stop();
-    }
+    /* Гасим безусловно. Признак s_active говорит лишь о том, считаем
+     * ли МЫ станцию играющей; конвейер может оставаться поднятым и
+     * при снятом признаке - например, после исчерпания попыток. */
+    ipradio_netradio_stop();
+    audio_pipeline_terminate(s_pipeline);
 
     strncpy(s_url, url, sizeof(s_url) - 1);
     s_url[sizeof(s_url) - 1] = '\0';
@@ -416,5 +504,9 @@ void ipradio_netradio_set_volume(uint8_t logical, bool mute)
         db = -40 + ((int) logical * 40) / 100;
     }
 
+    /* ВРЕМЕННО: печатаем, что реально ушло в регулятор. Проверяем,
+     * не в уровнях ли дело при отсутствии звука. */
+    ESP_LOGW(TAG, "ЗАМЕР: громкость %u%%, mute=%d -> ALC %d дБ",
+             (unsigned) logical, (int) mute, db);
     alc_volume_setup_set_volume(s_alc, db);
 }

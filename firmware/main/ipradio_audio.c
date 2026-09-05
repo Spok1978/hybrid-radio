@@ -125,8 +125,15 @@ esp_err_t ipradio_audio_init(void)
         .pull_down_en = GPIO_PULLDOWN_ENABLE,
         .intr_type    = GPIO_INTR_DISABLE,
     };
+#if IPRADIO_USE_BOARD_CODEC
+    /* ВРЕМЕННО: усилителем платы распоряжается драйвер ES8311,
+     * он же его и включает. Трогать вывод отсюда нельзя - погасим
+     * то, что сами же и слушаем. */
+    (void) board_pa;
+#else
     ESP_ERROR_CHECK(gpio_config(&board_pa));
     gpio_set_level(PIN_BOARD_PA_CTRL, 0);
+#endif
 
     ESP_LOGI(TAG, "тракт готов: усилитель выключен, штатный PA платы тоже");
     ESP_LOGI(TAG, "  I²S поднимет конвейер ADF: BCK=GPIO%d, LRCK=GPIO%d, DIN=GPIO%d",

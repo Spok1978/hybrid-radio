@@ -423,6 +423,15 @@ static void apply_event(const queued_event_t *e)
         apply_volume_delta(e->arg);
         break;
 
+    /* Ползунок задаёт уровень целиком, а не шагами: палец ставят
+     * сразу туда, где хотят. Mute снимаем по той же причине, что
+     * и при повороте регулятора - иначе человек ведёт ползунок,
+     * а звука нет. */
+    case IPRADIO_EV_VOLUME_SET:
+        s_state.muted = false;
+        s_state.volume = clamp_volume(e->arg);
+        break;
+
     case IPRADIO_EV_MUTE_TOGGLE:
         /* Mute — отдельный бит, а не громкость в ноль (§6.3).
          * Уровень при этом сохраняется. */
@@ -471,6 +480,15 @@ static void apply_event(const queued_event_t *e)
 
     case IPRADIO_EV_BUFFER_FILL:
         s_state.buffer_fill = (uint8_t) e->arg;
+        break;
+
+    /* Битрейт приходит от декодера один раз на станцию, вместе
+     * с частотой дискретизации. Раньше поле в снимке состояния
+     * никто не заполнял, и строка под названием станции показывала
+     * «0 кбит/с» при исправно играющем потоке. */
+    case IPRADIO_EV_BITRATE:
+        s_state.bitrate_kbps = (uint16_t) (e->arg < 0 ? 0 :
+                               (e->arg > 65535 ? 65535 : e->arg));
         break;
 
     case IPRADIO_EV_RDS_UPDATE:
