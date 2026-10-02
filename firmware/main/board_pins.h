@@ -113,10 +113,13 @@
 
   #define PIN_EXPANDER_INT       32
   #define PRESET_BUTTON_COUNT     8
-  /* Кнопки пресетов 1…8 — линии GPA0…GPA7 расширителя.
-   * Кнопка MODE — линия GPB0 расширителя.                               */
-  #define EXP_LINE_PRESET_BASE    0
-  #define EXP_LINE_MODE           8
+  /* Кнопки пресетов 1…7 — линии GPA0…GPA6 расширителя, пресет 8 — GPB1,
+   * MODE — GPB0. Номер линии: GPAn = n, GPBn = 8 + n.
+   * GPA7 и GPB7 у MCP23017 только выходы (Microchip DS20001952E) —
+   * кнопки на них не вешать (docs/33, §10).                            */
+  #define EXP_LINE_PRESET_BASE    0   /* пресеты 1…7: линии 0…6 */
+  #define EXP_LINE_PRESET_8       9   /* GPB1 */
+  #define EXP_LINE_MODE           8   /* GPB0 */
 
   /* Свободны про запас: GPIO4, GPIO5, GPIO34, GPIO50, GPIO51, GPIO52
    * и семь линий расширителя.                                           */

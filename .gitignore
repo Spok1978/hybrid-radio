@@ -52,3 +52,11 @@ firmware/sdkconfig.lvgl
 
 # Журналы, снятые с платы по последовательному порту
 *.log
+
+# KiCad — блокировки, автокопии и кеши
+*.lck
+*-backups/
+fp-info-cache
+*.kicad_prl
+*.erc
+*_sklib.py
