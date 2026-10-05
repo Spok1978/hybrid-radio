@@ -56,7 +56,9 @@ NOTES = {
              "FLT/DEMP/FMT/XSMT задаются с этой платы"],
     "amp_channel1": ["GAIN 26 дБ: перепаять делитель модуля (20k на GND, 100k на GVDD), docs/04"],
     "amp_channel2": ["GAIN 26 дБ: перепаять делитель модуля (20k на GND, 100k на GVDD), docs/04"],
-    "amp_mute1": ["R14 подобрать по замеру MUTE модуля HW-327 (docs/33, §8)"],
+    "amp_mute1": ["Впаять ОДИН из двух 100k: (SDZ) на GND или (MUTE) на +3V3 —",
+                  "по прозвонке площадки MUTE HW-327: вывод 2 SDZ или 12 MUTE TPA3118"],
+    "tuner1": ["C на LOUT/ROUT обязательны: у RDA5807M на выходах ~1,05 В постоянки"],
     "expander1": ["GPA7 и GPB7 — только выходы (Microchip DS20001952E): не подключать"],
 }
 NOTE_LINE = 2.54
