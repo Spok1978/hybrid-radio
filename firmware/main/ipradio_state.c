@@ -128,10 +128,45 @@ static void apply_volume_delta(int32_t steps)
     s_state.volume = clamp_volume((int32_t) s_state.volume + steps);
 }
 
+/* Последняя ячейка КАЖДОГО режима.
+ *
+ * Банки разделены, и номер ячейки сам по себе ничего не значит без
+ * режима: третья эфирная и третья интернетная - разные станции.
+ * s_state.active_preset показывает ячейку ТЕКУЩЕГО режима, а эти два
+ * поля помнят, на чём мы стояли в каждом. Без них переключение
+ * режима оставляло бы номер от прежнего банка, и мост включал бы
+ * станцию, которую человек не выбирал. */
+static int8_t s_preset_fm  = -1;
+static int8_t s_preset_net = -1;
+
+/* Запомнить текущую ячейку за уходящим режимом и достать ту,
+ * на которой стояли в приходящем. */
+static void switch_mode_preset(ipradio_mode_t from, ipradio_mode_t to)
+{
+    if (from == IPRADIO_MODE_NET) {
+        s_preset_net = s_state.active_preset;
+    } else {
+        s_preset_fm = s_state.active_preset;
+    }
+
+    int8_t want = (to == IPRADIO_MODE_NET) ? s_preset_net : s_preset_fm;
+
+    /* Ячейку, на которой стояли, могли за это время очистить - из меню
+     * долгого нажатия или из списка станций. Вставать на пустую нельзя:
+     * мост попробует её включить и покажет «станция не отвечает» про
+     * станцию, которой больше нет. */
+    ipradio_preset_t p;
+    if (want >= 1 && !ipradio_storage_get_preset(to, want, &p)) {
+        want = -1;
+    }
+    s_state.active_preset = want;
+}
+
 static void apply_mode_toggle(void)
 {
     if (s_state.mode == IPRADIO_MODE_NET) {
         /* Обратно в эфир — всегда можно, звук появится сразу. */
+        switch_mode_preset(IPRADIO_MODE_NET, IPRADIO_MODE_FM);
         s_state.mode = IPRADIO_MODE_FM;
         s_state.play = IPRADIO_PLAY_PLAYING;
         return;
@@ -150,8 +185,12 @@ static void apply_mode_toggle(void)
         return;
     }
 
+    switch_mode_preset(IPRADIO_MODE_FM, IPRADIO_MODE_NET);
     s_state.mode = IPRADIO_MODE_NET;
-    s_state.play = IPRADIO_PLAY_BUFFERING;
+    /* Без выбранной ячейки наполнять нечего: «буферизация» висела бы
+     * на экране вечно. */
+    s_state.play = (s_state.active_preset >= 1) ? IPRADIO_PLAY_BUFFERING
+                                                : IPRADIO_PLAY_IDLE;
 }
 
 /* ------------------------------------------------------------------ *
@@ -210,10 +249,22 @@ static void apply_preset_pressed(int32_t cell)
         return;
     }
 
-    /* Одна ячейка, а не весь банк: полная копия не влезает в стек
+    /* Отмечаем сам факт нажатия, до всего прочего: человек попросил,
+     * и мост должен об этом узнать, даже если ячейка та же самая. */
+    s_state.preset_seq++;
+
+    /* Банк берём по ТЕКУЩЕМУ режиму.
+     *
+     * До 2026-09-15 банк был один на оба режима, тип лежал в самой
+     * ячейке, и нажатие пресета само переключало эфир на интернет
+     * и обратно. Теперь банки разные: в эфире работают эфирные
+     * ячейки, в интернете - интернетные, и нажатие режим не меняет.
+     * Чтобы перейти в другой режим, есть плашка вверху экрана.
+     *
+     * Одна ячейка, а не весь банк: полная копия не влезает в стек
      * этой задачи вместе с тем, что зовётся дальше. */
     ipradio_preset_t p;
-    if (ipradio_storage_get_preset((int) cell, &p)) {
+    if (ipradio_storage_get_preset(s_state.mode, (int) cell, &p)) {
         load_preset(&p, (int8_t) cell);
     }
 }
@@ -225,8 +276,14 @@ static void apply_preset_hold(int32_t cell)
         return;
     }
 
-    ipradio_store_t store;
-    ipradio_storage_get(&store);
+    /* Правим хранилище на месте, под одним замком: прежде здесь
+     * читали копию, меняли и писали целиком, и между чтением
+     * и записью правка другой задачи терялась. Заодно уходит
+     * копия на 2548 байт со стека. */
+    ipradio_store_t *store_p = ipradio_storage_edit_begin();
+    if (!store_p) {
+        return;
+    }
 
     /* Адрес потока копируем В ЛОКАЛЬНЫЕ буферы до очистки ячейки.
      * Источник и приёмник лежат в одной структуре store, и прямое
@@ -236,16 +293,20 @@ static void apply_preset_hold(int32_t cell)
     char src_url[IPRADIO_URL_MAX]  = { 0 };
     char src_uuid[IPRADIO_UUID_MAX] = { 0 };
 
+    /* Оба обращения - к банку ТЕКУЩЕГО режима: записываем то, что
+     * играет сейчас, а играет оно в этом режиме. */
+    ipradio_preset_t *bank = ipradio_storage_bank(store_p, s_state.mode);
+
     const int8_t src = s_state.active_preset;
     if (src >= 1 && src <= IPRADIO_PRESET_MAX) {
-        const ipradio_preset_t *from = &store.presets[src - 1];
-        if (from->used && from->type == IPRADIO_MODE_NET) {
+        const ipradio_preset_t *from = &bank[src - 1];
+        if (from->used && s_state.mode == IPRADIO_MODE_NET) {
             memcpy(src_url,  from->url,         sizeof(src_url));
             memcpy(src_uuid, from->stationuuid, sizeof(src_uuid));
         }
     }
 
-    ipradio_preset_t *p = &store.presets[cell - 1];
+    ipradio_preset_t *p = &bank[cell - 1];
     memset(p, 0, sizeof(*p));
     p->used = true;
     p->type = s_state.mode;
@@ -282,11 +343,105 @@ static void apply_preset_hold(int32_t cell)
 
     s_state.active_preset = (int8_t) cell;
 
-    if (ipradio_storage_save(&store) == ESP_OK) {
+    if (ipradio_storage_edit_end(true) == ESP_OK) {
         ESP_LOGI(TAG, "пресет %d записан", (int) cell);
     } else {
         ESP_LOGW(TAG, "пресет %d записать не удалось", (int) cell);
     }
+}
+
+/* Ячейку поправили с экрана: переименовали или очистили.
+ * arg - IPRADIO_PRESET_ARG(режим, ячейка).
+ *
+ * Поток здесь НЕ трогаем никогда: preset_seq не поднимаем,
+ * active_preset не меняем. И то и другое мост понял бы как просьбу
+ * включить станцию заново (ipradio_bridge.c, apply_stream), а она
+ * и так играет. */
+static void apply_preset_edited(int32_t arg)
+{
+    const int            cell = (int) (arg & 0xFF);
+    const ipradio_mode_t mode = (ipradio_mode_t) ((arg >> 8) & 0xFF);
+
+    if (cell < 1 || cell > IPRADIO_PRESET_MAX) {
+        return;
+    }
+
+    ipradio_preset_t p;
+    const bool used = ipradio_storage_get_preset(mode, cell, &p);
+
+    if (mode != s_state.mode) {
+        /* Поправили банк другого режима. Если очистили ту ячейку,
+         * которую он помнит, - забываем её, иначе при возврате
+         * встали бы на пустую. */
+        int8_t *mem = (mode == IPRADIO_MODE_NET) ? &s_preset_net
+                                                 : &s_preset_fm;
+        if (!used && *mem == cell) {
+            *mem = -1;
+        }
+        return;
+    }
+
+    if (cell != s_state.active_preset || !used) {
+        /* Не та, что играет, - на экране воспроизведения менять нечего.
+         *
+         * Очищенная играющая остаётся отмеченной до следующего выбора:
+         * звук идёт, а снять отметку значило бы сказать мосту, что
+         * выбрана другая ячейка. При уходе в другой режим и возврате
+         * на пустую уже не встанем - это сторожит switch_mode_preset. */
+        return;
+    }
+
+    /* Переименовали ту, что играет, - новое имя сразу на экран, а не
+     * при следующем нажатии. */
+    if (mode == IPRADIO_MODE_NET) {
+        snprintf(s_state.station_name, sizeof(s_state.station_name),
+                 "%s", p.name);
+    } else if (!s_state.rds_valid) {
+        /* Имя эфирной станции - заглушка до настоящего RDS, см.
+         * load_preset. Настоящее RDS перебивать нельзя. */
+        snprintf(s_state.rds_name, sizeof(s_state.rds_name), "%s", p.name);
+    }
+}
+
+/* Включить интернетную ячейку из любого режима.
+ *
+ * PRESET_PRESSED для этого не годится с 2026-09-15: банки разделены,
+ * и нажатие берёт ячейку ТЕКУЩЕГО режима. Было две беды:
+ *
+ *   - мост при загрузке возвращал последнюю интернет-станцию событием
+ *     PRESET_PRESSED, а прибор в этот момент в эфире - бралась эфирная
+ *     ячейка с тем же номером;
+ *   - поиск по каталогу, открытый в эфире, записывал станцию
+ *     в интернетный банк, а включал эфирную ячейку с её номером.
+ *
+ * Режим и ячейка меняются одним событием, а не MODE_TOGGLE плюс
+ * PRESET_PRESSED: после первого мост успел бы запустить прежнюю
+ * интернетную станцию, а мгновением позже - новую. */
+static void apply_net_preset_pressed(int32_t cell)
+{
+    if (cell < 1 || cell > IPRADIO_PRESET_MAX) {
+        return;
+    }
+
+    /* Пустую ячейку не включаем и режим ради неё не меняем: в интернете
+     * без станции человек увидел бы тишину. */
+    ipradio_preset_t p;
+    if (!ipradio_storage_get_preset(IPRADIO_MODE_NET, (int) cell, &p)) {
+        return;
+    }
+
+    if (s_state.mode != IPRADIO_MODE_NET) {
+        if (!net_playable()) {
+            /* Как у кнопки MODE: эфир не прерываем, причину покажет
+             * интерфейс по счётчику. */
+            s_state.mode_denied_seq++;
+            return;
+        }
+        switch_mode_preset(IPRADIO_MODE_FM, IPRADIO_MODE_NET);
+        s_state.mode = IPRADIO_MODE_NET;
+    }
+
+    apply_preset_pressed(cell);
 }
 
 /* Перебор сохранённых станций регулятором 1 (§6.1).
@@ -301,15 +456,24 @@ static void apply_station_step(int32_t steps)
         return;
     }
 
-    ipradio_store_t store;
-    ipradio_storage_get(&store);
+    /* Только читаем - но берём хранилище на месте, а не копией:
+     * копия это 2548 байт на стеке, а стек у этой задачи в PSRAM
+     * и не резиновый. Замок отпускаем сразу, как дочитали. */
+    const ipradio_store_t *store_p = ipradio_storage_edit_begin();
+    if (!store_p) {
+        return;
+    }
 
     int8_t list[IPRADIO_PRESET_MAX];
     int    n = 0;
     int    cur = -1;
 
+    /* Отбор по типу больше не нужен: банк и так принадлежит режиму. */
+    const ipradio_preset_t *bank =
+        ipradio_storage_bank((ipradio_store_t *) store_p, s_state.mode);
+
     for (int i = 0; i < IPRADIO_PRESET_MAX; i++) {
-        if (!store.presets[i].used || store.presets[i].type != s_state.mode) {
+        if (!bank[i].used) {
             continue;
         }
         if (s_state.active_preset == i + 1) {
@@ -319,6 +483,7 @@ static void apply_station_step(int32_t steps)
     }
 
     if (n == 0) {
+        ipradio_storage_edit_end(false);
         return;   /* перебирать нечего */
     }
 
@@ -330,7 +495,11 @@ static void apply_station_step(int32_t steps)
         next += n;
     }
 
-    load_preset(&store.presets[list[next] - 1], list[next]);
+    ipradio_preset_t chosen = bank[list[next] - 1];
+    int8_t chosen_cell = list[next];
+    ipradio_storage_edit_end(false);
+
+    load_preset(&chosen, chosen_cell);
 }
 
 /* ------------------------------------------------------------------ *
@@ -408,7 +577,16 @@ static void apply_power(void)
     set.last_mode     = s_state.mode;
     set.last_band     = s_state.band;
     set.last_freq_khz = s_state.freq_khz;
-    set.last_preset   = s_state.active_preset;
+    /* Текущую ячейку сначала кладём в поле своего режима, иначе
+     * она бы не сохранилась - в s_preset_* её записывает только
+     * переключение режима. */
+    if (s_state.mode == IPRADIO_MODE_NET) {
+        s_preset_net = s_state.active_preset;
+    } else {
+        s_preset_fm = s_state.active_preset;
+    }
+    set.last_preset_fm  = s_preset_fm;
+    set.last_preset_net = s_preset_net;
     ipradio_storage_save_settings(&set);
 
     s_state.power_off = true;
@@ -460,6 +638,14 @@ static void apply_event(const queued_event_t *e)
 
     case IPRADIO_EV_PRESET_HOLD:
         apply_preset_hold(e->arg);
+        break;
+
+    case IPRADIO_EV_PRESET_EDITED:
+        apply_preset_edited(e->arg);
+        break;
+
+    case IPRADIO_EV_NET_PRESET_PRESSED:
+        apply_net_preset_pressed(e->arg);
         break;
 
     case IPRADIO_EV_POWER:
@@ -520,6 +706,27 @@ static void apply_event(const queued_event_t *e)
     }
 }
 
+#ifdef IPRADIO_HOST_TEST
+/* Разобрать всё, что накопилось в очереди, здесь и сейчас.
+ *
+ * Только для самопроверки на машине разработчика. Там задачи автомата
+ * нет - заглушка FreeRTOS её не создаёт, и это сделано намеренно:
+ * тест должен подать событие и тут же посмотреть состояние, без
+ * планировщика и ожидания. На плате эта функция не собирается вовсе.
+ *
+ * Замок берём, как и настоящая задача: пусть путь исполнения будет
+ * тот же, даже если в тесте замок и не нужен. */
+void ipradio_state_pump(void)
+{
+    queued_event_t e;
+    while (xQueueReceive(s_queue, &e, 0) == pdTRUE) {
+        xSemaphoreTake(s_lock, portMAX_DELAY);
+        apply_event(&e);
+        xSemaphoreGive(s_lock);
+    }
+}
+#endif
+
 static void state_task(void *arg)
 {
     (void) arg;
@@ -577,20 +784,26 @@ esp_err_t ipradio_state_init(void)
      * здесь не нужно. */
     memset(&s_state, 0, sizeof(s_state));
 
-    ipradio_store_t store;
-    ipradio_storage_get(&store);
+    /* Только настройки: банки здесь не нужны, а целое хранилище
+     * после разделения весит около пяти килобайт - стек этой задачи
+     * такого не выдержит. */
+    ipradio_settings_t set;
+    ipradio_storage_get_settings(&set);
 
-    s_state.volume        = store.settings.volume;
+    s_state.volume        = set.volume;
 #if IPRADIO_ENABLE_OIRT
-    s_state.band          = store.settings.last_band;
+    s_state.band          = set.last_band;
 #else
     /* Диапазон один. Читать его из файла нельзя: там может лежать
      * УКВ от сборки, где он был включён, и тогда приёмник встал бы
      * на частоту, которой в FM не существует. */
     s_state.band          = IPRADIO_BAND_CCIR;
 #endif
-    s_state.freq_khz      = store.settings.last_freq_khz;
-    s_state.active_preset = store.settings.last_preset;
+    s_state.freq_khz      = set.last_freq_khz;
+    s_preset_fm  = set.last_preset_fm;
+    s_preset_net = set.last_preset_net;
+    s_state.active_preset = (s_state.mode == IPRADIO_MODE_NET)
+                            ? s_preset_net : s_preset_fm;
     s_state.muted         = false;
     s_state.play          = IPRADIO_PLAY_IDLE;
     s_state.net           = IPRADIO_NET_NOT_CONFIGURED;

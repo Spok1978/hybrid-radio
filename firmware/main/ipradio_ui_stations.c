@@ -11,6 +11,7 @@
 #include "esp_log.h"
 
 #include "ipradio_fonts.h"
+#include "ipradio_preset_edit.h"
 #include "ipradio_state.h"
 #include "ipradio_storage.h"
 #include "ipradio_ui_keyboard.h"
@@ -33,6 +34,22 @@ static lv_obj_t *s_row_info[IPRADIO_PRESET_MAX];
 /* Ещё одна копия хранилища, для экрана списка станций - 2548 байт.
  * Только задача интерфейса. */
 EXT_RAM_BSS_ATTR static ipradio_store_t s_store;
+
+/* Режим, чей банк показываем.
+ *
+ * Банки разделены: эфирные станции живут отдельно от интернетных
+ * (ipradio_storage.h). Экран показывает банк ТОГО режима, в котором
+ * прибор находится сейчас, - иначе человек правил бы список, которым
+ * не пользуется, и не понимал, почему нажатия не дают эффекта.
+ * Запоминаем при открытии: режим не может смениться, пока этот
+ * экран наверху. */
+static ipradio_mode_t s_mode = IPRADIO_MODE_FM;
+
+/* Короткая ссылка на показываемый банк. */
+static ipradio_preset_t *bank(void)
+{
+    return ipradio_storage_bank(&s_store, s_mode);
+}
 static int  s_focus;
 static bool s_visible;
 static int  s_editing = -1;   /* какую ячейку переименовываем */
@@ -48,7 +65,7 @@ static void paint_focus(void)
 {
     for (int i = 0; i < IPRADIO_PRESET_MAX; i++) {
         bool on = (i == s_focus);
-        bool fm = (s_store.presets[i].type == IPRADIO_MODE_FM);
+        bool fm = (bank()[i].type == IPRADIO_MODE_FM);
         lv_color_t accent = fm ? COL_AMBER : COL_CYAN;
 
         lv_obj_set_style_bg_color(s_row[i], on ? lv_color_hex(0x1e2228)
@@ -64,7 +81,7 @@ static void paint_focus(void)
 static void render(void)
 {
     for (int i = 0; i < IPRADIO_PRESET_MAX; i++) {
-        const ipradio_preset_t *p = &s_store.presets[i];
+        const ipradio_preset_t *p = &bank()[i];
 
         char cell[8];
         snprintf(cell, sizeof(cell), "П%d", i + 1);
@@ -98,8 +115,16 @@ static void render(void)
                      (unsigned) (p->freq_khz / 1000),
                      (unsigned) ((p->freq_khz % 1000) / 10));
         } else {
-            snprintf(info, sizeof(info), "интернет   •   %s",
-                     p->url[0] ? p->url : "адрес не записан");
+            /* Адрес обрезаем явно, до ста знаков.
+             *
+             * В строке списка он всё равно не читается целиком, а без
+             * ограничения компилятор справедливо ругается: адрес
+             * бывает длиной 191 байт, а в буфере под него остаётся
+             * 135. Обрезать молча по длине буфера - хуже: там, где
+             * адрес обрывается, не видно, что он обрезан. */
+            snprintf(info, sizeof(info), "интернет   •   %.100s%s",
+                     p->url[0] ? p->url : "адрес не записан",
+                     strlen(p->url) > 100 ? "…" : "");
         }
         lv_label_set_text(s_row_info[i], info);
     }
@@ -122,25 +147,42 @@ static void on_renamed(const char *text, void *ctx)
         return;                       /* отказались */
     }
 
-    snprintf(s_store.presets[cell].name, IPRADIO_NAME_MAX, "%s", text);
-
-    if (ipradio_storage_save(&s_store) != ESP_OK) {
-        lv_label_set_text(s_status, "Не удалось записать на карту");
-        /* Читаем банк заново: в памяти у нас теперь не то, что
-         * на карте, и показывать несохранённое имя нельзя - человек
-         * решит, что всё получилось. */
-        ipradio_storage_get(&s_store);
-    } else {
+    /* Правка - в ipradio_preset_edit.c, под одним замком.
+     *
+     * До 2026-10-06 сообщения здесь стояли наоборот: «Название
+     * сохранено» показывалось, когда карты НЕТ и ничего не записано,
+     * а при удачной записи экран молчал. */
+    ipradio_pedit_t r = ipradio_preset_rename(s_mode, cell + 1, text);
+    switch (r) {
+    case IPRADIO_PEDIT_OK:
         lv_label_set_text(s_status, "Название сохранено");
-        ESP_LOGI(TAG, "ячейка %d переименована в «%s»", cell + 1, text);
+        ESP_LOGI(TAG, "ячейка %d переименована", cell + 1);
+        break;
+    case IPRADIO_PEDIT_NO_CARD:
+        lv_label_set_text(s_status, "Карты памяти нет - записать некуда");
+        break;
+    case IPRADIO_PEDIT_EMPTY:
+        lv_label_set_text(s_status, "Ячейка уже свободна");
+        break;
+    default:
+        lv_label_set_text(s_status, "Не удалось записать на карту");
+        break;
+    }
+    if (r == IPRADIO_PEDIT_OK || r == IPRADIO_PEDIT_WRITE_FAILED) {
+        /* Если ячейка играет, новое имя должно сразу встать на главный
+         * экран. */
+        ipradio_post_simple(IPRADIO_EV_PRESET_EDITED,
+                            IPRADIO_PRESET_ARG(s_mode, cell + 1));
     }
 
+    /* Показываем то, что в хранилище, а не то, что хотели записать. */
+    ipradio_storage_get(&s_store);
     render();
 }
 
 static void rename_cell(int cell)
 {
-    if (!s_store.presets[cell].used) {
+    if (!bank()[cell].used) {
         lv_label_set_text(s_status,
             "Ячейка свободна. Записать в неё станцию можно долгим "
             "нажатием её кнопки во время воспроизведения.");
@@ -154,13 +196,13 @@ static void rename_cell(int cell)
 
     /* Показываем то, что уже записано: чаще всего имя надо поправить,
      * а не набрать заново. */
-    ipradio_keyboard_open(title, s_store.presets[cell].name, false,
+    ipradio_keyboard_open(title, bank()[cell].name, false,
                           on_renamed, NULL);
 }
 
 static void delete_cell(int cell)
 {
-    if (!s_store.presets[cell].used) {
+    if (!bank()[cell].used) {
         return;
     }
 
@@ -168,16 +210,28 @@ static void delete_cell(int cell)
      * эфирную станцию вернёт автопоиск, интернетную - поиск
      * по каталогу. Диалог на каждое нажатие стоил бы дороже, чем
      * редкая ошибка, а долгое нажатие само по себе не случайно. */
-    ESP_LOGI(TAG, "ячейка %d очищена", cell + 1);
-    memset(&s_store.presets[cell], 0, sizeof(s_store.presets[cell]));
-
-    if (ipradio_storage_save(&s_store) != ESP_OK) {
-        lv_label_set_text(s_status, "Не удалось записать на карту");
-        ipradio_storage_get(&s_store);
-    } else {
+    ipradio_pedit_t r = ipradio_preset_clear(s_mode, cell + 1);
+    switch (r) {
+    case IPRADIO_PEDIT_OK:
+    case IPRADIO_PEDIT_EMPTY:
         lv_label_set_text(s_status, "Ячейка освобождена");
+        ESP_LOGI(TAG, "ячейка %d очищена", cell + 1);
+        break;
+    case IPRADIO_PEDIT_NO_CARD:
+        lv_label_set_text(s_status, "Карты памяти нет - записать некуда");
+        break;
+    default:
+        lv_label_set_text(s_status, "Не удалось записать на карту");
+        break;
+    }
+    if (r == IPRADIO_PEDIT_OK || r == IPRADIO_PEDIT_WRITE_FAILED) {
+        /* Автомат забудет ячейку, если какой-то режим на ней стоял:
+         * иначе при возврате в режим встал бы на пустую. */
+        ipradio_post_simple(IPRADIO_EV_PRESET_EDITED,
+                            IPRADIO_PRESET_ARG(s_mode, cell + 1));
     }
 
+    ipradio_storage_get(&s_store);
     render();
 }
 
@@ -285,7 +339,12 @@ void ipradio_stations_ui_open(void (*on_close)(void *ctx), void *ctx)
 
     /* Банк читаем заново при каждом открытии: между открытиями его
      * мог поменять автопоиск, поиск по каталогу или долгое нажатие
-     * кнопки пресета. */
+     * кнопки пресета. Заодно запоминаем режим - от него зависит,
+     * какой из двух банков показывать. */
+    ipradio_snapshot_t snap;
+    ipradio_get(&snap);
+    s_mode = snap.mode;
+
     ipradio_storage_get(&s_store);
 
     lv_label_set_text(s_status,

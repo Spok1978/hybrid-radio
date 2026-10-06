@@ -62,6 +62,21 @@ static audio_element_handle_t  s_i2s;
 static audio_event_iface_handle_t s_events;
 
 static bool  s_active;
+
+static void worker_task(void *arg);
+static void teardown_locked(void);
+
+/* Замок на сам конвейер и очередь пожеланий - см. ниже, у worker_task. */
+static SemaphoreHandle_t s_pipe_lock;
+static SemaphoreHandle_t s_wish_lock;
+static TaskHandle_t      s_worker;
+
+static struct {
+    bool want_play;
+    bool pending;
+    char url[256];
+    char name[IPRADIO_NAME_MAX];
+} s_wish;
 static char  s_url[256];
 static int   s_retries;
 
@@ -117,13 +132,16 @@ static void report_buffer_fill(void)
     ipradio_post_simple(IPRADIO_EV_BUFFER_FILL, pct);
 }
 
-/* ВРЕМЕННО: раз в пять секунд печатать, сколько байт ушло в I2S.
+/* Раз в пять секунд печатать, сколько байт ушло в I2S.
  *
  * ЦАП не подключён, услышать нечего, а знать, идёт ли звук на выход,
  * надо. Счётчик byte_pos у элемента вывода растёт ровно тогда, когда
- * данные действительно уходят в шину. УБРАТЬ, когда подключим ЦАП. */
+ * данные действительно уходят в шину. См. IPRADIO_DEBUG_AUDIO_FLOW. */
 static void report_i2s_flow(void)
 {
+#if !IPRADIO_DEBUG_AUDIO_FLOW
+    return;
+#else
     static int64_t  prev;
     static int64_t  prev_us;
 
@@ -150,6 +168,7 @@ static void report_i2s_flow(void)
     }
     prev = info.byte_pos;
     prev_us = now_us;
+#endif
 }
 
 static void events_task(void *arg)
@@ -253,12 +272,16 @@ static void events_task(void *arg)
                  * витка. */
                 ipradio_watchdog_feed(wdt);
 
+                /* Под тем же замком, что и работник: иначе повтор
+                 * и новое нажатие встречаются на конвейере. */
+                xSemaphoreTake(s_pipe_lock, portMAX_DELAY);
                 audio_pipeline_stop(s_pipeline);
                 audio_pipeline_wait_for_stop(s_pipeline);
                 audio_pipeline_reset_ringbuffer(s_pipeline);
                 audio_pipeline_reset_elements(s_pipeline);
                 audio_element_set_uri(s_http, s_url);
                 audio_pipeline_run(s_pipeline);
+                xSemaphoreGive(s_pipe_lock);
             } else {
                 /* Попытки исчерпаны. Только теперь это «станция
                  * не отвечает», а не «нет сети»: Wi-Fi при этом
@@ -281,9 +304,11 @@ static void events_task(void *arg)
                  * ядро 0 у простоя, и сторож принимался срабатывать
                  * раз в пять секунд без конца. Снаружи это выглядело
                  * зависанием с мигающим экраном. */
+                xSemaphoreTake(s_pipe_lock, portMAX_DELAY);
                 audio_pipeline_stop(s_pipeline);
                 audio_pipeline_wait_for_stop(s_pipeline);
                 audio_pipeline_terminate(s_pipeline);
+                xSemaphoreGive(s_pipe_lock);
                 ipradio_post_simple(IPRADIO_EV_PLAY_STATE,
                                     IPRADIO_PLAY_ERROR);
             }
@@ -412,6 +437,22 @@ esp_err_t ipradio_netradio_init(void)
     xTaskCreateWithCaps(events_task, "netradio_evt", 4096, NULL, 5, NULL,
                         MALLOC_CAP_SPIRAM);
 
+    s_pipe_lock = xSemaphoreCreateMutex();
+    s_wish_lock = xSemaphoreCreateMutex();
+    if (!s_pipe_lock || !s_wish_lock) {
+        ESP_LOGE(TAG, "не создались замки проигрывателя");
+        return ESP_ERR_NO_MEM;
+    }
+
+    /* Работник: медленные пуск и остановка, см. worker_task.
+     * Приоритет ниже задачи событий - он никуда не спешит. */
+    xTaskCreateWithCaps(worker_task, "netradio_cmd", 4096, NULL, 4,
+                        &s_worker, MALLOC_CAP_SPIRAM);
+    if (!s_worker) {
+        ESP_LOGE(TAG, "работник проигрывателя не создался");
+        return ESP_ERR_NO_MEM;
+    }
+
     ESP_LOGI(TAG, "конвейер собран: http -> декодер -> I²S");
     return ESP_OK;
 }
@@ -420,17 +461,49 @@ esp_err_t ipradio_netradio_init(void)
  *  Управление
  * ------------------------------------------------------------------ */
 
-esp_err_t ipradio_netradio_play(const char *url, const char *station_name)
+static esp_err_t play_now(const char *url, const char *station_name)
 {
     if (!s_pipeline || !url || !url[0]) {
         return ESP_ERR_INVALID_ARG;
     }
 
-    /* Гасим безусловно. Признак s_active говорит лишь о том, считаем
-     * ли МЫ станцию играющей; конвейер может оставаться поднятым и
-     * при снятом признаке - например, после исчерпания попыток. */
-    ipradio_netradio_stop();
-    audio_pipeline_terminate(s_pipeline);
+    /* Конвейером распоряжаются двое: этот работник и задача событий,
+     * которая при обрыве потока сама перезапускает конвейер. Без
+     * замка они могли встретиться на audio_pipeline_stop/run
+     * и оставить конвейер в состоянии, из которого он не выходит -
+     * ровно то, что мы уже ловили как «Pipeline already started». */
+    xSemaphoreTake(s_pipe_lock, portMAX_DELAY);
+
+    /* Предыдущий поток останавливаем БЕЗ разбора конвейера.
+     *
+     * Здесь стоял полный разбор - audio_pipeline_terminate(), который
+     * уничтожает задачи всех четырёх элементов, чтобы следующий
+     * audio_pipeline_run() создал их заново. Это дорого и опасно:
+     *
+     *   - каждый разбор и сборка порождают шторм событий. Набор
+     *     очередей ADF рассчитан на сумму длин очередей элементов,
+     *     и при быстром переключении станций он переполняется.
+     *     Прибор падает по assert в queue.c, prvNotifyQueueSetContainer.
+     *     На плате 2026-10-05 это ловилось после трёх-четырёх
+     *     переключений подряд;
+     *   - создание и уничтожение четырёх задач на каждое нажатие
+     *     рвёт внутреннюю память. За девять переключений наибольший
+     *     непрерывный кусок просел с 36 до 8 КБ и там застрял,
+     *     а рукопожатию TLS непрерывный кусок нужен.
+     *
+     * Разбор для смены станции не нужен вовсе: элементы остаются
+     * теми же, меняется только адрес. Ровно такую последовательность
+     * уже делает путь повтора при обрыве потока в events_task,
+     * и она работает.
+     *
+     * Полный разбор остаётся только в teardown_locked() - для
+     * настоящей остановки, когда поток больше не нужен.
+     *
+     * Замок уже взят выше. */
+    if (s_active) {
+        audio_pipeline_stop(s_pipeline);
+        audio_pipeline_wait_for_stop(s_pipeline);
+    }
 
     strncpy(s_url, url, sizeof(s_url) - 1);
     s_url[sizeof(s_url) - 1] = '\0';
@@ -447,22 +520,142 @@ esp_err_t ipradio_netradio_play(const char *url, const char *station_name)
     audio_pipeline_reset_elements(s_pipeline);
     audio_element_set_uri(s_http, s_url);
 
-    return audio_pipeline_run(s_pipeline);
+    esp_err_t err = audio_pipeline_run(s_pipeline);
+    xSemaphoreGive(s_pipe_lock);
+    return err;
 }
 
-esp_err_t ipradio_netradio_stop(void)
+/* Погасить конвейер. ЗАМОК ДОЛЖЕН БЫТЬ УЖЕ ВЗЯТ вызывающим.
+ *
+ * Вынесено отдельно затем, чтобы запуск мог гасить предыдущий поток,
+ * не выходя наружу через публичный интерфейс. Подробности - в stop_now
+ * и в play_now. */
+static void teardown_locked(void)
 {
-    if (!s_pipeline || !s_active) {
-        return ESP_OK;
-    }
-
     s_active = false;
 
     audio_pipeline_stop(s_pipeline);
     audio_pipeline_wait_for_stop(s_pipeline);
     audio_pipeline_terminate(s_pipeline);
+}
+
+static esp_err_t stop_now(void)
+{
+    if (!s_pipeline || !s_active) {
+        return ESP_OK;
+    }
+
+    xSemaphoreTake(s_pipe_lock, portMAX_DELAY);
+    teardown_locked();
+    xSemaphoreGive(s_pipe_lock);
 
     ipradio_post_simple(IPRADIO_EV_PLAY_STATE, IPRADIO_PLAY_IDLE);
+    return ESP_OK;
+}
+
+/* ------------------------------------------------------------------ *
+ *  Работник: медленные действия прочь из задачи автомата
+ * ------------------------------------------------------------------ */
+
+/* ЗАЧЕМ.
+ *
+ * Запуск и остановка конвейера идут через audio_pipeline_stop() и
+ * audio_pipeline_wait_for_stop(), а те ждут остановки всех четырёх
+ * элементов. Элемент HTTP в этот момент может сидеть в чтении
+ * сокета на умершей сети - остановка занимает СЕКУНДЫ.
+ *
+ * Раньше это делалось прямо в задаче автомата, из ipradio_bridge.
+ * На всё это время автомат переставал разбирать события: нажатия
+ * копились в очереди на 24 места, а при переполнении молча
+ * терялись. Снаружи это выглядело как «панель задумалась».
+ *
+ * Теперь автомат только оставляет пожелание и идёт дальше.
+ *
+ * ПОЧЕМУ ПОЖЕЛАНИЕ, А НЕ ОЧЕРЕДЬ КОМАНД.
+ *
+ * Если человек ткнул три станции подряд, играть надо ПОСЛЕДНЮЮ,
+ * а не все три по очереди. Очередь команд заставила бы честно
+ * отработать каждую - то есть трижды поднять и погасить конвейер.
+ * Одно поле «чего хотим» само склеивает такие нажатия. */
+static void worker_task(void *arg)
+{
+    (void) arg;
+
+    /* Лимит велик намеренно: остановка конвейера на умершей сети
+     * законно занимает секунды, и сторож не должен принимать это
+     * за зависание. */
+    int wdt = ipradio_watchdog_register("netradio_cmd", 20000, 0);
+
+    for (;;) {
+        ipradio_watchdog_feed(wdt);
+
+        /* Ждём не бесконечно: сторожа надо кормить и в тишине. */
+        ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(1000));
+
+        bool have;
+        bool want_play;
+        char url[sizeof(s_wish.url)];
+        char name[IPRADIO_NAME_MAX];
+
+        xSemaphoreTake(s_wish_lock, portMAX_DELAY);
+        have = s_wish.pending;
+        want_play = s_wish.want_play;
+        snprintf(url,  sizeof(url),  "%s", s_wish.url);
+        snprintf(name, sizeof(name), "%s", s_wish.name);
+        s_wish.pending = false;
+        xSemaphoreGive(s_wish_lock);
+
+        if (!have) {
+            continue;
+        }
+
+        if (want_play) {
+            play_now(url, name);
+        } else {
+            stop_now();
+        }
+    }
+}
+
+esp_err_t ipradio_netradio_play(const char *url, const char *station_name)
+{
+    if (!url || !url[0]) {
+        return ESP_ERR_INVALID_ARG;
+    }
+    if (!s_worker) {
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    xSemaphoreTake(s_wish_lock, portMAX_DELAY);
+    s_wish.want_play = true;
+    s_wish.pending   = true;
+    snprintf(s_wish.url,  sizeof(s_wish.url),  "%s", url);
+    snprintf(s_wish.name, sizeof(s_wish.name), "%s",
+             station_name ? station_name : "");
+    xSemaphoreGive(s_wish_lock);
+
+    /* Признак «играем» ставим СРАЗУ, не дожидаясь работника: по нему
+     * мост решает, надо ли перезапускать поток, и он не должен
+     * увидеть «не играет» в те доли секунды, пока работник ещё
+     * не проснулся. */
+    s_active = true;
+
+    xTaskNotifyGive(s_worker);
+    return ESP_OK;
+}
+
+esp_err_t ipradio_netradio_stop(void)
+{
+    if (!s_worker) {
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    xSemaphoreTake(s_wish_lock, portMAX_DELAY);
+    s_wish.want_play = false;
+    s_wish.pending   = true;
+    xSemaphoreGive(s_wish_lock);
+
+    xTaskNotifyGive(s_worker);
     return ESP_OK;
 }
 
@@ -504,9 +697,17 @@ void ipradio_netradio_set_volume(uint8_t logical, bool mute)
         db = -40 + ((int) logical * 40) / 100;
     }
 
-    /* ВРЕМЕННО: печатаем, что реально ушло в регулятор. Проверяем,
-     * не в уровнях ли дело при отсутствии звука. */
-    ESP_LOGW(TAG, "ЗАМЕР: громкость %u%%, mute=%d -> ALC %d дБ",
-             (unsigned) logical, (int) mute, db);
+#if IPRADIO_DEBUG_AUDIO_FLOW
+    /* Только на изменение: раньше печаталось каждую секунду
+     * и забивало журнал, мешая увидеть настоящие события. */
+    {
+        static int last_db = 1000;
+        if (db != last_db) {
+            last_db = db;
+            ESP_LOGW(TAG, "ЗАМЕР: громкость %u%%, mute=%d -> ALC %d дБ",
+                     (unsigned) logical, (int) mute, db);
+        }
+    }
+#endif
     alc_volume_setup_set_volume(s_alc, db);
 }

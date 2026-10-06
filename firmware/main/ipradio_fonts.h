@@ -61,6 +61,12 @@ extern const lv_font_t *ipradio_font_56;   /* диапазон, строка   *
 extern const lv_font_t *ipradio_font_64b;  /* название станции   */
 extern const lv_font_t *ipradio_font_96b;  /* частота во всю ширь */
 
+/* Ждущий экран. Его читают с другого конца комнаты, поэтому
+ * кегли здесь свои и заметно крупнее всего остального. */
+extern const lv_font_t *ipradio_font_44;   /* что играет        */
+extern const lv_font_t *ipradio_font_60;   /* дата и день недели */
+extern const lv_font_t *ipradio_font_144b; /* часы               */
+
 #ifdef __cplusplus
 }
 #endif

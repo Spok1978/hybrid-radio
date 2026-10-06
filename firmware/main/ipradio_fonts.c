@@ -31,6 +31,9 @@ const lv_font_t *ipradio_font_40;
 const lv_font_t *ipradio_font_56;
 const lv_font_t *ipradio_font_64b;
 const lv_font_t *ipradio_font_96b;
+const lv_font_t *ipradio_font_44;
+const lv_font_t *ipradio_font_60;
+const lv_font_t *ipradio_font_144b;
 
 esp_err_t ipradio_fonts_init(void)
 {
@@ -57,6 +60,14 @@ esp_err_t ipradio_fonts_init(void)
         { &ipradio_font_56,  dejavu_ru_ttf_start,      reg_size,  56 },
         { &ipradio_font_64b, dejavu_ru_bold_ttf_start, bold_size, 64 },
         { &ipradio_font_96b, dejavu_ru_bold_ttf_start, bold_size, 96 },
+
+        /* Кегли ждущего экрана. Глифы Tiny TTF рисует по мере
+         * надобности, так что 144-й размер стоит ровно тех
+         * одиннадцати знаков, что нужны часам, а не всего
+         * алфавита. Кэш при этом в PSRAM. */
+        { &ipradio_font_44,  dejavu_ru_ttf_start,      reg_size,  44 },
+        { &ipradio_font_60,  dejavu_ru_ttf_start,      reg_size,  60 },
+        { &ipradio_font_144b, dejavu_ru_bold_ttf_start, bold_size, 144 },
     };
 
     for (size_t i = 0; i < sizeof(wanted) / sizeof(wanted[0]); i++) {

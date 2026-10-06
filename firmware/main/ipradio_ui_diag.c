@@ -155,7 +155,11 @@ void ipradio_diag_ui_update(const ipradio_snapshot_t *s)
     /* --- сеть --- */
     switch (s->net) {
     case IPRADIO_NET_CONNECTED:
-        set_row(ROW_NET, COL_GREEN, "%s", ipradio_net_ssid());
+        {
+            char ssid[IPRADIO_SSID_MAX];
+            ipradio_net_ssid(ssid, sizeof(ssid));
+            set_row(ROW_NET, COL_GREEN, "%s", ssid);
+        }
         break;
     case IPRADIO_NET_CONNECTING:
         set_row(ROW_NET, COL_AMBER, "подключение…");

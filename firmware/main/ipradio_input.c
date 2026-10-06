@@ -23,6 +23,7 @@
 #include "esp_timer.h"
 
 #include "board_pins.h"
+#include "ipradio_storage.h"
 #include "ipradio_input.h"
 #include "ipradio_watchdog.h"
 #include "ipradio_state.h"
@@ -122,6 +123,12 @@ static button_t s_buttons[] = {
 
 #define BUTTON_COUNT (sizeof(s_buttons) / sizeof(s_buttons[0]))
 
+/* Кнопка не может звать ячейку, которой нет в банке. Проверка
+ * статическая: оба числа - константы времени сборки, и ошибка
+ * должна ловиться компилятором, а не на плате. */
+_Static_assert(IPRADIO_PRESET_BUTTONS <= IPRADIO_PRESET_MAX,
+               "кнопок пресетов больше, чем ячеек в хранилище");
+
 /* ------------------------------------------------------------------ *
  *  Регуляторы
  * ------------------------------------------------------------------ */
@@ -179,10 +186,21 @@ static void mark_activity(void)
     s_last_activity_ms = (uint32_t) (esp_timer_get_time() / 1000);
 }
 
+void ipradio_input_note_activity(void)
+{
+    mark_activity();
+}
+
 uint32_t ipradio_input_idle_ms(void)
 {
-    uint32_t dt = (uint32_t) (esp_timer_get_time() / 1000) - s_last_activity_ms;
-    return (uint32_t) (dt / 1000);
+    /* Возвращаем МИЛЛИСЕКУНДЫ, как и обещано именем.
+     *
+     * Здесь стояло лишнее деление на тысячу, и функция отдавала
+     * секунды. Единственный потребитель - ipradio_ui.c - сравнивает
+     * результат с IPRADIO_IDLE_TIMEOUT_MS, то есть со 180 000.
+     * Получалось «180 000 секунд», пятьдесят часов: ждущий экран
+     * не включался никогда. */
+    return (uint32_t) (esp_timer_get_time() / 1000) - s_last_activity_ms;
 }
 
 static void fire(int event, int32_t arg)

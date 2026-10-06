@@ -98,7 +98,8 @@ static void paint_focus(void)
 
 static void render_list(void)
 {
-    const char *current = ipradio_net_ssid();
+    char current[IPRADIO_SSID_MAX];
+    ipradio_net_ssid(current, sizeof(current));
 
     for (int i = 0; i < IPRADIO_SCAN_MAX; i++) {
         if (i >= s_ap_count) {
@@ -397,7 +398,11 @@ void ipradio_wifi_ui_update(const void *snap_v)
 
     if (s->net == IPRADIO_NET_CONNECTED) {
         char buf[96];
-        snprintf(buf, sizeof(buf), "Подключено к «%s»", ipradio_net_ssid());
+        {
+            char ssid[IPRADIO_SSID_MAX];
+            ipradio_net_ssid(ssid, sizeof(ssid));
+            snprintf(buf, sizeof(buf), "Подключено к «%s»", ssid);
+        }
         lv_label_set_text(s_status, buf);
     } else if (s->net == IPRADIO_NET_CONNECTING) {
         lv_label_set_text(s_status, "Подключение…");

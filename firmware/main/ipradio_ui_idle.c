@@ -48,19 +48,28 @@ esp_err_t ipradio_idle_init(lv_obj_t *parent)
     lv_obj_set_style_pad_all(s_screen, 0, 0);
     lv_obj_clear_flag(s_screen, LV_OBJ_FLAG_SCROLLABLE);
 
-    /* Часы. Крупнее в наборе кеглей ничего нет, и это правильный
-     * предел: буквы выше примерно четверти высоты экрана начинают
-     * выглядеть не «издалека видно», а «сломалось». */
-    s_clock = ipradio_ui_label(s_screen, ipradio_font_48b, COL_TEXT, "--:--");
-    lv_obj_align(s_clock, LV_ALIGN_CENTER, 0, -40);
+    /* Часы во всю ширь. Ждущий экран смотрят от двери, а не в упор,
+     * поэтому кегль здесь свой, 144 - втрое против прежнего.
+     * На панели 1280x720 это пятая часть высоты: «21:47» занимает
+     * примерно четыреста точек по ширине и читается через комнату. */
+    s_clock = ipradio_ui_label(s_screen, ipradio_font_144b, COL_TEXT, "--:--");
+    lv_obj_align(s_clock, LV_ALIGN_CENTER, 0, -70);
 
-    /* Дата приглушена сильно: она нужна взглядом, а не с порога. */
-    s_date = ipradio_ui_label(s_screen, ipradio_font_20, COL_TEXT_FAINT, "");
-    lv_obj_align_to(s_date, s_clock, LV_ALIGN_OUT_BOTTOM_MID, 0, 16);
+    /* Дата раньше была намеренно приглушена - «нужна взглядом,
+     * а не с порога». На деле оказалось наоборот: с порога как раз
+     * хочется знать день недели. Поэтому цвет обычный, а кегль
+     * втрое крупнее. */
+    s_date = ipradio_ui_label(s_screen, ipradio_font_60, COL_TEXT, "");
+    lv_obj_set_width(s_date, LV_PCT(100));
+    lv_obj_set_style_text_align(s_date, LV_TEXT_ALIGN_CENTER, 0);
+    /* Привязываем к экрану, а не к часам: у метки во всю ширину
+     * выравнивание по центру относительно часов дало бы сдвиг
+     * на половину их ширины. */
+    lv_obj_align(s_date, LV_ALIGN_CENTER, 0, 60);
 
     /* Что играет. Цветом кодируется режим — то же правило, что
      * на главном экране: янтарь эфир, циан интернет. */
-    s_now_playing = ipradio_ui_label(s_screen, ipradio_font_22, COL_AMBER, "");
+    s_now_playing = ipradio_ui_label(s_screen, ipradio_font_44, COL_AMBER, "");
     lv_obj_set_width(s_now_playing, LV_PCT(80));
     lv_label_set_long_mode(s_now_playing, LV_LABEL_LONG_DOT);
     lv_obj_set_style_text_align(s_now_playing, LV_TEXT_ALIGN_CENTER, 0);
@@ -130,9 +139,13 @@ static const char *const MONTHS[12] = {
     "июля",   "августа", "сентября", "октября", "ноября", "декабря",
 };
 
+/* С прописной буквы - так задумано, день недели стоит первым
+ * в строке даты. Заглавную ставим прямо здесь, а не поднимаем
+ * регистр в коде: в UTF-8 кириллическая буква занимает два байта,
+ * и toupper() над первым байтом даст мусор. */
 static const char *const WEEKDAYS[7] = {
-    "воскресенье", "понедельник", "вторник", "среда",
-    "четверг",     "пятница",     "суббота",
+    "Воскресенье", "Понедельник", "Вторник", "Среда",
+    "Четверг",     "Пятница",     "Суббота",
 };
 
 void ipradio_idle_update(const ipradio_snapshot_t *s)

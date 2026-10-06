@@ -76,6 +76,27 @@ esp_err_t ipradio_audio_apply(const ipradio_snapshot_t *snap)
     /* Интернет. Физически глушить нечего: если поток не играет,
      * на ЦАП просто ничего не идёт. Достаточно увести регулятор
      * в конвейере в тишину. */
+#if IPRADIO_DEBUG_AUDIO_FLOW
+    /* Печатаем ВЕСЬ расклад, а не одну громкость.
+     *
+     * 2026-10-05: на плате звука не было, в журнале стояло mute=1.
+     * По одной этой строке нельзя было понять, кто его включил -
+     * человек или несовпадение режима. Теперь видно сразу. */
+    {
+        static int last;
+        int now = (snap->mode << 8) | (snap->play << 4) |
+                  (snap->muted ? 1 : 0);
+        if (now != last) {
+            last = now;
+            ESP_LOGW("audio", "ЗАМЕР: режим %s, состояние %d, mute %d, "
+                              "ячейка %d, сеть %d",
+                     fm ? "эфир" : "интернет", (int) snap->play,
+                     (int) snap->muted, (int) snap->active_preset,
+                     (int) snap->net);
+        }
+    }
+#endif
+
     ipradio_netradio_set_volume(snap->volume, snap->muted || fm);
 
     /* Усилитель выключаем, только когда молчат оба источника: щелчок

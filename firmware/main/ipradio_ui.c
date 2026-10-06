@@ -40,6 +40,7 @@
 #include "ipradio_fonts.h"
 #include "ipradio_ui_theme.h"
 #include "ipradio_ui_dialog.h"
+#include "ipradio_ui_presetmenu.h"
 #include "ipradio_ui_idle.h"
 #include "ipradio_ui_menu.h"
 #include "ipradio_ui_tune.h"
@@ -88,9 +89,46 @@ static inline void ui_unlock(void)
 
 static void apply_snapshot(const ipradio_snapshot_t *s);
 
+/* Записать в метку, только если текст правда изменился.
+ *
+ * LVGL такой проверки не делает: в lv_label.c, set_text_internal,
+ * нет ни strcmp, ни memcmp - строка перевыделяется через lv_realloc
+ * и объект помечается на перерисовку безусловно. Проверено по
+ * исходнику LVGL 9.5, который лежит у нас в managed_components.
+ *
+ * А эта функция зовётся на каждое событие автомата и на каждый тик,
+ * то есть не реже раза в секунду, и переписывает семнадцать меток.
+ * Из них меняются обычно одна-две: часы раз в минуту, громкость
+ * при повороте. Остальные пятнадцать - это перевыделение памяти
+ * и перерисовка области впустую.
+ *
+ * На этой панели отрисовка - самое дорогое, что есть: она идёт
+ * через поворот на PPA и передачу по MIPI-DSI. */
+static void set_text(lv_obj_t *label, const char *text)
+{
+    if (!label || !text) {
+        return;
+    }
+    const char *cur = lv_label_get_text(label);
+    if (cur && strcmp(cur, text) == 0) {
+        return;
+    }
+    lv_label_set_text(label, text);
+}
+
 /* Столько же, сколько физических кнопок: ячейку, которую нечем
  * нажать, показывать нельзя (board_pins.h). */
-#define PRESET_CELLS    IPRADIO_PRESET_BUTTONS
+/* На экране показываем ВСЕ ячейки хранилища, а не столько, сколько
+ * физических кнопок.
+ *
+ * Прежде было наоборот, и по делу: рисовать ячейку, которую нечем
+ * нажать, бессмысленно. Но кнопок на приборе до сих пор нет, зато
+ * есть касание, и оно достаёт до любой ячейки. Физические кнопки,
+ * когда появятся, будут адресовать первые IPRADIO_PRESET_BUTTONS -
+ * это их предел, а не предел прибора. */
+#define PRESET_CELLS    IPRADIO_PRESET_MAX
+#define PRESET_ROWS     2
+#define PRESET_COLS     (PRESET_CELLS / PRESET_ROWS)
 
 static SemaphoreHandle_t  s_lock;      /* защищает снимок и очередь ниже */
 static ipradio_snapshot_t s_pending;
@@ -252,7 +290,7 @@ static void build_volume_slider(lv_obj_t *root)
      * состояния, чтобы не спорить с ячейками станций внизу. */
     s_vol_slider = lv_slider_create(root);
     lv_obj_set_size(s_vol_slider, 44, 300);
-    lv_obj_align(s_vol_slider, LV_ALIGN_RIGHT_MID, -28, -10);
+    lv_obj_align(s_vol_slider, LV_ALIGN_RIGHT_MID, -28, -90);
     lv_slider_set_range(s_vol_slider, 0, 100);
 
     lv_obj_set_style_bg_color(s_vol_slider, COL_SURFACE, LV_PART_MAIN);
@@ -344,13 +382,13 @@ static void build_center(lv_obj_t *root)
      * Кегли при этом не менялись: подпись взяла тот же 56, что был
      * у голого «FM», частота осталась на 96. */
     s_band_cap = make_label(root, ipradio_font_56, COL_AMBER, "");
-    lv_obj_align(s_band_cap, LV_ALIGN_CENTER, 0, -140);
+    lv_obj_align(s_band_cap, LV_ALIGN_CENTER, 0, -220);
 
     s_title = make_label(root, ipradio_font_96b, COL_TEXT, "");
     lv_obj_set_width(s_title, LV_PCT(90));
     lv_obj_set_style_text_align(s_title, LV_TEXT_ALIGN_CENTER, 0);
     lv_label_set_long_mode(s_title, LV_LABEL_LONG_DOT);
-    lv_obj_align(s_title, LV_ALIGN_CENTER, 0, -40);
+    lv_obj_align(s_title, LV_ALIGN_CENTER, 0, -120);
 
     s_subtitle = make_label(root, ipradio_font_56, COL_AMBER, "");
     /* В интернет-режиме сюда попадает название трека из метаданных,
@@ -359,20 +397,20 @@ static void build_center(lv_obj_t *root)
     lv_obj_set_width(s_subtitle, LV_PCT(92));
     lv_obj_set_style_text_align(s_subtitle, LV_TEXT_ALIGN_CENTER, 0);
     lv_label_set_long_mode(s_subtitle, LV_LABEL_LONG_DOT);
-    lv_obj_align(s_subtitle, LV_ALIGN_CENTER, 0, 50);
+    lv_obj_align(s_subtitle, LV_ALIGN_CENTER, 0, -30);
 
     s_detail = make_label(root, ipradio_font_28, COL_TEXT_FAINT, "");
     lv_obj_set_width(s_detail, LV_PCT(92));
     lv_obj_set_style_text_align(s_detail, LV_TEXT_ALIGN_CENTER, 0);
     lv_label_set_long_mode(s_detail, LV_LABEL_LONG_DOT);
-    lv_obj_align(s_detail, LV_ALIGN_CENTER, 0, 60);
+    lv_obj_align(s_detail, LV_ALIGN_CENTER, 0, -20);
 
     /* Плашка приглушения. Значка в углу мало: человек решит, что прибор
      * сломался, а не что он сам выключил звук. */
     s_mute_badge = lv_obj_create(root);
     lv_obj_remove_style_all(s_mute_badge);
     lv_obj_set_size(s_mute_badge, 300, 56);
-    lv_obj_align(s_mute_badge, LV_ALIGN_CENTER, 0, 175);
+    lv_obj_align(s_mute_badge, LV_ALIGN_CENTER, 0, 95);
     lv_obj_set_style_radius(s_mute_badge, 28, 0);
     lv_obj_set_style_bg_color(s_mute_badge, lv_color_hex(0x2a1210), 0);
     lv_obj_set_style_bg_opa(s_mute_badge, LV_OPA_COVER, 0);
@@ -392,29 +430,53 @@ static void on_preset_click(lv_event_t *e)
     ipradio_post_simple(IPRADIO_EV_PRESET_PRESSED, cell);
 }
 
+/* Долгое нажатие на ячейку - меню: переименовать, заменить, удалить
+ * (ipradio_ui_presetmenu.h). Режим берём из снимка сейчас: меню
+ * правит банк того режима, на ячейку которого нажали. */
+static void on_preset_long_press(lv_event_t *e)
+{
+    int cell = (int) (intptr_t) lv_event_get_user_data(e);
+    ESP_LOGI(TAG, "долгое нажатие на ячейку %d", cell);
+
+    ipradio_snapshot_t snap;
+    ipradio_get(&snap);
+    ipradio_presetmenu_open(&snap, cell);
+}
+
 static void build_presets(lv_obj_t *root)
 {
-    static int32_t cols[PRESET_CELLS + 1];
-    for (int i = 0; i < PRESET_CELLS; i++) {
+    static int32_t cols[PRESET_COLS + 1];
+    for (int i = 0; i < PRESET_COLS; i++) {
         cols[i] = LV_GRID_FR(1);
     }
-    cols[PRESET_CELLS] = LV_GRID_TEMPLATE_LAST;
-    static int32_t rows[] = { 88, LV_GRID_TEMPLATE_LAST };
+    cols[PRESET_COLS] = LV_GRID_TEMPLATE_LAST;
+
+    /* Два ряда по 78 точек плюс зазор. Ниже полосы остаётся место
+     * под кнопку «Меню» и строку подсказок, выше - под название
+     * станции; весь текстовый блок для этого поднят, см. build_main. */
+    static int32_t rows[PRESET_ROWS + 1];
+    for (int i = 0; i < PRESET_ROWS; i++) {
+        rows[i] = 78;
+    }
+    rows[PRESET_ROWS] = LV_GRID_TEMPLATE_LAST;
 
     lv_obj_t *strip = lv_obj_create(root);
     lv_obj_remove_style_all(strip);
-    lv_obj_set_size(strip, LV_PCT(100), 110);
-    lv_obj_align(strip, LV_ALIGN_BOTTOM_MID, 0, -106);
+    lv_obj_set_size(strip, LV_PCT(100), PRESET_ROWS * 78 + 12);
+    lv_obj_align(strip, LV_ALIGN_BOTTOM_MID, 0, -96);
     lv_obj_set_style_pad_hor(strip, 32, 0);
     lv_obj_set_style_pad_column(strip, 12, 0);
+    lv_obj_set_style_pad_row(strip, 10, 0);
     lv_obj_set_grid_dsc_array(strip, cols, rows);
     lv_obj_set_layout(strip, LV_LAYOUT_GRID);
 
     for (int i = 0; i < PRESET_CELLS; i++) {
         lv_obj_t *cell = lv_obj_create(strip);
         lv_obj_remove_style_all(cell);
-        lv_obj_set_grid_cell(cell, LV_GRID_ALIGN_STRETCH, i, 1,
-                                   LV_GRID_ALIGN_STRETCH, 0, 1);
+        lv_obj_set_grid_cell(cell, LV_GRID_ALIGN_STRETCH,
+                                   i % PRESET_COLS, 1,
+                                   LV_GRID_ALIGN_STRETCH,
+                                   i / PRESET_COLS, 1);
         lv_obj_set_style_bg_color(cell, COL_SURFACE, 0);
         lv_obj_set_style_bg_opa(cell, LV_OPA_COVER, 0);
         lv_obj_set_style_radius(cell, 12, 0);
@@ -464,10 +526,25 @@ static void build_presets(lv_obj_t *root)
          * человек тыкал в ячейки, а прибор молчал.
          *
          * Шлём ТО ЖЕ событие, что и кнопка: дальше всё идёт общим
-         * путём, включая переключение режима по типу ячейки. */
+         * путём.
+         *
+         * SHORT_CLICKED, а не CLICKED (2026-10-06). В LVGL 9.5 CLICKED
+         * приходит при отпускании «независимо от долгого нажатия»
+         * (lv_event.h): после долгого нажатия, открывшего меню ячейки,
+         * станция ещё и переключилась бы. SHORT_CLICKED после долгого
+         * нажатия не приходит (indev_proc_release в lv_indev.c). */
         lv_obj_add_flag(cell, LV_OBJ_FLAG_CLICKABLE);
-        lv_obj_add_event_cb(cell, on_preset_click, LV_EVENT_CLICKED,
+        lv_obj_add_event_cb(cell, on_preset_click, LV_EVENT_SHORT_CLICKED,
                             (void *) (intptr_t) (i + 1));
+        lv_obj_add_event_cb(cell, on_preset_long_press, LV_EVENT_LONG_PRESSED,
+                            (void *) (intptr_t) (i + 1));
+        /* Палец, открывший меню, ещё лежит на экране. Без PRESS_LOCK
+         * LVGL на каждом опросе ищет объект под пальцем заново
+         * (lv_indev.c), нашёл бы кнопку появившегося меню, и отпускание
+         * нажало бы её - вплоть до «Удалить». Флаг и так ставится
+         * всем объектам с родителем (lv_obj.c, конструктор), здесь
+         * он выставлен явно, чтобы эту зависимость было видно. */
+        lv_obj_add_flag(cell, LV_OBJ_FLAG_PRESS_LOCK);
 
         s_presets[i] = cell;
     }
@@ -568,6 +645,14 @@ static const modal_screen_t MODALS[] = {
     { dialog_visible,             ipradio_dialog_move,
       ipradio_dialog_select,      NULL,
       NULL },
+
+    /* Меню ячейки - под диалогом, последним. Открывается только
+     * с главного экрана, когда ничего модального нет, а диалог
+     * «станция не отвечает» может всплыть поверх него сам. Кто
+     * лежит выше на экране, тот и выше в таблице. */
+    { ipradio_presetmenu_visible, ipradio_presetmenu_move,
+      ipradio_presetmenu_select,  NULL,
+      ipradio_presetmenu_back },
 };
 
 #define MODAL_COUNT (sizeof(MODALS) / sizeof(MODALS[0]))
@@ -645,13 +730,34 @@ static void nav_update(void)
     if (!s_nav_text) {
         return;
     }
+
+    /* На ждущем экране кнопки нет вовсе.
+     *
+     * Там написано «любое действие вернёт экран», и это правда:
+     * выход происходит по касанию в любом месте. Кнопка рядом
+     * с такой надписью только сбивает с толку - подсказывает,
+     * что нажимать надо именно в неё. */
+    static int hidden = -1;
+    int hide = ipradio_idle_active() ? 1 : 0;
+    if (hide != hidden) {
+        hidden = hide;
+        if (hide) {
+            lv_obj_add_flag(s_nav_btn, LV_OBJ_FLAG_HIDDEN);
+        } else {
+            lv_obj_clear_flag(s_nav_btn, LV_OBJ_FLAG_HIDDEN);
+        }
+    }
+    if (hide) {
+        return;
+    }
+
     static int shown = -1;
     int want = modal_any() ? 1 : 0;
     if (want == shown) {
         return;
     }
     shown = want;
-    lv_label_set_text(s_nav_text, want ? "Назад" : "Меню");
+    set_text(s_nav_text, want ? "Назад" : "Меню");
 }
 
 /* Фильтр событий. Ставится один раз при подъёме интерфейса и висит
@@ -981,10 +1087,17 @@ static void render_presets(const ipradio_snapshot_t *s)
 
     bool net_ok = (s->net == IPRADIO_NET_CONNECTED);
 
+    /* Показываем банк ТЕКУЩЕГО режима.
+     *
+     * Банки разделены: в эфире на полосе эфирные станции, в интернете
+     * интернетные. Переключение режима меняет всю полосу целиком -
+     * это и есть смысл разделения, о котором просил заказчик. */
+    bool is_net = (s->mode == IPRADIO_MODE_NET);
+    const ipradio_preset_t *bank = ipradio_storage_bank(&s_bank, s->mode);
+
     for (int i = 0; i < PRESET_CELLS; i++) {
-        const ipradio_preset_t *p = &s_bank.presets[i];
+        const ipradio_preset_t *p = &bank[i];
         bool active = (s->active_preset == i + 1);
-        bool is_net = p->used && (p->type == IPRADIO_MODE_NET);
 
         /* Недоступна = интернетная ячейка при отсутствии сети. */
         bool unavailable = is_net && !net_ok;
@@ -992,31 +1105,31 @@ static void render_presets(const ipradio_snapshot_t *s)
         lv_color_t cell_accent = is_net ? COL_CYAN : COL_AMBER;
 
         if (!p->used) {
-            lv_label_set_text(s_preset_names[i], "");
-            lv_label_set_text(s_preset_kind[i], "");
+            set_text(s_preset_names[i], "");
+            set_text(s_preset_kind[i], "");
         } else {
             /* Безымянная эфирная станция - обычное дело после
              * автопоиска. Показываем частоту: она хотя бы говорит,
              * куда попадёшь. */
             if (p->name[0]) {
-                lv_label_set_text(s_preset_names[i], p->name);
-            } else if (p->type == IPRADIO_MODE_FM) {
+                set_text(s_preset_names[i], p->name);
+            } else if (!is_net) {
                 char f[16];
                 snprintf(f, sizeof(f), "%u.%02u",
                          (unsigned) (p->freq_khz / 1000),
                          (unsigned) ((p->freq_khz % 1000) / 10));
-                lv_label_set_text(s_preset_names[i], f);
+                set_text(s_preset_names[i], f);
             } else {
-                lv_label_set_text(s_preset_names[i], "без названия");
+                set_text(s_preset_names[i], "без названия");
             }
 
             /* Перечёркнутый значок сети нарисовать нечем: в шрифте
              * его нет, а тащить ради одного знака набор пиктограмм
              * незачем. Пишем словом - оно и понятнее. */
             if (unavailable) {
-                lv_label_set_text(s_preset_kind[i], "нет сети");
+                set_text(s_preset_kind[i], "нет сети");
             } else {
-                lv_label_set_text(s_preset_kind[i], is_net ? "сеть" : "эфир");
+                set_text(s_preset_kind[i], is_net ? "сеть" : "эфир");
             }
         }
 
@@ -1043,6 +1156,7 @@ static void render_presets(const ipradio_snapshot_t *s)
     }
 }
 
+
 static void apply_snapshot(const ipradio_snapshot_t *s)
 {
     bool fm = (s->mode == IPRADIO_MODE_FM);
@@ -1054,7 +1168,7 @@ static void apply_snapshot(const ipradio_snapshot_t *s)
     localtime_r(&now, &tmv);
     char buf[64];
     strftime(buf, sizeof(buf), "%H:%M", &tmv);
-    lv_label_set_text(s_clock, buf);
+    set_text(s_clock, buf);
 
     /* Бейдж режима: цвет и есть основной носитель смысла. */
     lv_obj_set_style_bg_color(s_mode_badge,
@@ -1062,12 +1176,12 @@ static void apply_snapshot(const ipradio_snapshot_t *s)
     lv_obj_set_style_border_color(s_mode_badge,
         fm ? lv_color_hex(0x6b5216) : lv_color_hex(0x1c5b66), 0);
     lv_obj_set_style_text_color(s_mode_text, accent, 0);
-    lv_label_set_text(s_mode_text, fm ? "ЭФИР" : "ИНТЕРНЕТ");
+    set_text(s_mode_text, fm ? "ЭФИР" : "ИНТЕРНЕТ");
 
     /* Громкость: при mute зачёркнутой её не сделать без своего шрифта,
      * поэтому просто гасим цвет — сигналом служит плашка по центру. */
     snprintf(buf, sizeof(buf), "%u", (unsigned) s->volume);
-    lv_label_set_text(s_vol_text, buf);
+    set_text(s_vol_text, buf);
 
     /* Ползунок ведём за состоянием - громкость меняется не только им,
      * но и регулятором, и снятием mute. Пока его держат пальцем,
@@ -1093,13 +1207,13 @@ static void apply_snapshot(const ipradio_snapshot_t *s)
         /* Частота крупная, и мелкая строка стоит выше: над ней
          * всего одна строка. Так одобрено заказчиком. */
         lv_obj_set_style_text_font(s_title, ipradio_font_96b, 0);
-        lv_obj_align(s_detail, LV_ALIGN_CENTER, 0, 60);
+        lv_obj_align(s_detail, LV_ALIGN_CENTER, 0, -20);
 
         /* Диапазон — всегда сверху и всегда одинаково: он не
          * зависит от того, передаёт станция RDS или нет. */
         snprintf(buf, sizeof(buf), "%s диапазон",
                  ipradio_band_label(s->band));
-        lv_label_set_text(s_band_cap, buf);
+        set_text(s_band_cap, buf);
         lv_obj_clear_flag(s_band_cap, LV_OBJ_FLAG_HIDDEN);
 
         snprintf(buf, sizeof(buf), "%u.%02u МГц",
@@ -1109,13 +1223,13 @@ static void apply_snapshot(const ipradio_snapshot_t *s)
         if (s->rds_valid && s->rds_name[0]) {
             /* Станция назвалась — её имя и есть главное,
              * а частота уходит строкой ниже. */
-            lv_label_set_text(s_title, s->rds_name);
-            lv_label_set_text(s_subtitle, buf);
-            lv_label_set_text(s_detail, "");
+            set_text(s_title, s->rds_name);
+            set_text(s_subtitle, buf);
+            set_text(s_detail, "");
         } else {
-            lv_label_set_text(s_title, buf);
-            lv_label_set_text(s_subtitle, "");
-            lv_label_set_text(s_detail, "RDS не передаётся");
+            set_text(s_title, buf);
+            set_text(s_subtitle, "");
+            set_text(s_detail, "RDS не передаётся");
         }
     } else {
         /* В интернет-режиме диапазона нет — подпись убираем. */
@@ -1130,28 +1244,28 @@ static void apply_snapshot(const ipradio_snapshot_t *s)
 
         /* И мелкая строка опускается: в этом режиме над ней две
          * строки, а не одна. */
-        lv_obj_align(s_detail, LV_ALIGN_CENTER, 0, 120);
+        lv_obj_align(s_detail, LV_ALIGN_CENTER, 0, 40);
 
-        lv_label_set_text(s_title,
+        set_text(s_title,
             s->station_name[0] ? s->station_name : "-");
 
         switch (s->play) {
         case IPRADIO_PLAY_BUFFERING:
             /* На экране пишем, что происходит, а не молчим:
              * тишина без объяснения читается как поломка. */
-            lv_label_set_text(s_subtitle, "Подключение…");
-            lv_label_set_text(s_detail, "поток открыт, наполняется буфер");
+            set_text(s_subtitle, "Подключение…");
+            set_text(s_detail, "поток открыт, наполняется буфер");
             break;
         case IPRADIO_PLAY_ERROR:
-            lv_label_set_text(s_subtitle, "Станция не отвечает");
-            lv_label_set_text(s_detail, "Wi-Fi работает — дело в станции");
+            set_text(s_subtitle, "Станция не отвечает");
+            set_text(s_detail, "Wi-Fi работает — дело в станции");
             break;
         default:
-            lv_label_set_text(s_subtitle,
+            set_text(s_subtitle,
                 s->icy_title[0] ? s->icy_title : "");
             snprintf(buf, sizeof(buf), "%u кбит/с   •   буфер %u %%",
                      (unsigned) s->bitrate_kbps, (unsigned) s->buffer_fill);
-            lv_label_set_text(s_detail, buf);
+            set_text(s_detail, buf);
             break;
         }
     }
@@ -1201,6 +1315,22 @@ void ipradio_ui_notify(const ipradio_snapshot_t *snap)
  * учёта здесь не нужно. */
 static void service_idle(void)
 {
+    /* Касание - тоже действие.
+     *
+     * Счёт бездействия ведётся в ipradio_input.c и до сих пор
+     * пополнялся только кнопками и регуляторами, то есть обвязкой,
+     * которой на приборе нет. Экран при этом работает. Без этой
+     * проверки ждущий режим включался бы прямо во время работы
+     * и не убирался бы пальцем.
+     *
+     * Спрашиваем устройство ввода напрямую, а не через обработчики
+     * нажатий: ждущий экран - сплошной объект, событий по нему
+     * никто не получает, а знать про касание надо именно на нём. */
+    lv_indev_t *in = lv_indev_get_next(NULL);
+    if (in && lv_indev_get_state(in) == LV_INDEV_STATE_PRESSED) {
+        ipradio_input_note_activity();
+    }
+
     bool should = (ipradio_input_idle_ms() >= IPRADIO_IDLE_TIMEOUT_MS);
 
     /* Любой модальный экран важнее ждущего режима: если прибор ждёт
@@ -1413,6 +1543,15 @@ esp_err_t ipradio_ui_init(void)
      * значило бы выделять память ровно тогда, когда что-то пошло
      * не так, - худший момент из возможных. */
     esp_err_t derr = ipradio_dialog_init(root);
+    if (derr != ESP_OK) {
+        ui_unlock();
+        return derr;
+    }
+
+    /* Меню ячейки строится сразу, как и диалоги: выделять память под
+     * экран в момент нажатия - значит рвать внутреннюю кучу тогда,
+     * когда уже играет поток (docs/34-memory.md). */
+    derr = ipradio_presetmenu_init(root);
     if (derr != ESP_OK) {
         ui_unlock();
         return derr;

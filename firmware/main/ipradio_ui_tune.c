@@ -158,8 +158,16 @@ void ipradio_tune_clear_marks(void)
  * заметное время, и делать её в задаче отрисовки нельзя. */
 static void save_found(const uint32_t *freqs, int n)
 {
-    ipradio_store_t store;
-    ipradio_storage_get(&store);
+    /* Правка на месте, под одним замком: см. ipradio_storage.h,
+     * ipradio_storage_edit_begin. */
+    ipradio_store_t *store_p = ipradio_storage_edit_begin();
+    if (!store_p) {
+        return;
+    }
+
+    /* Проход по диапазону пишет только в ЭФИРНЫЙ банк: интернетные
+     * станции здесь появиться не могут по определению. */
+    ipradio_preset_t *bank = ipradio_storage_bank(store_p, IPRADIO_MODE_FM);
 
     int saved = 0;
 
@@ -168,9 +176,7 @@ static void save_found(const uint32_t *freqs, int n)
          * запустить дважды. */
         bool known = false;
         for (int c = 0; c < IPRADIO_PRESET_MAX; c++) {
-            if (store.presets[c].used &&
-                store.presets[c].type == IPRADIO_MODE_FM &&
-                store.presets[c].freq_khz == freqs[i]) {
+            if (bank[c].used && bank[c].freq_khz == freqs[i]) {
                 known = true;
                 break;
             }
@@ -181,7 +187,7 @@ static void save_found(const uint32_t *freqs, int n)
 
         int cell = -1;
         for (int c = 0; c < IPRADIO_PRESET_MAX; c++) {
-            if (!store.presets[c].used) {
+            if (!bank[c].used) {
                 cell = c;
                 break;
             }
@@ -190,18 +196,18 @@ static void save_found(const uint32_t *freqs, int n)
             break;             /* свободных ячеек не осталось */
         }
 
-        memset(&store.presets[cell], 0, sizeof(store.presets[cell]));
-        store.presets[cell].used     = true;
-        store.presets[cell].type     = IPRADIO_MODE_FM;
-        store.presets[cell].band     = s_band;
-        store.presets[cell].freq_khz = freqs[i];
+        memset(&bank[cell], 0, sizeof(bank[cell]));
+        bank[cell].used     = true;
+        bank[cell].type     = IPRADIO_MODE_FM;
+        bank[cell].band     = s_band;
+        bank[cell].freq_khz = freqs[i];
         /* Имя пустое: RDS за доли секунды прохода прочитать нельзя.
          * Подписать станции - следующий шаг по §5.3.1, и делается
          * он клавиатурой из списка станций. */
         saved++;
     }
 
-    if (saved > 0 && ipradio_storage_save(&store) != ESP_OK) {
+    if (ipradio_storage_edit_end(saved > 0) != ESP_OK) {
         ESP_LOGW(TAG, "найденное записать не удалось");
         saved = 0;
     }

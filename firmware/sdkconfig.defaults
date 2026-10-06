@@ -260,8 +260,38 @@ CONFIG_ESP_WIFI_DYNAMIC_TX_BUFFER_NUM=24
 CONFIG_MBEDTLS_DYNAMIC_BUFFER=y
 CONFIG_MBEDTLS_DYNAMIC_FREE_CONFIG_DATA=y
 CONFIG_MBEDTLS_DYNAMIC_FREE_CA_CERT=y
-CONFIG_MBEDTLS_SSL_IN_CONTENT_LEN=8192
+# [исправлено 2026-10-06] Приём - снова 16 КБ, как велит TLS.
+#
+# Довод «радиопоток такими записями не пользуется» был неверен: размер
+# записи выбирает СЕРВЕР, а не битрейт потока. mbedTLS проверяет
+# входящую запись по этой величине (mbedtls_ssl_fetch_input в
+# library/ssl_msg.c), и запись больше 8 КБ отвергалась с «read error
+# -0x7100» = MBEDTLS_ERR_SSL_BAD_INPUT_DATA. Так не играла одна из пяти
+# станций на карте: 32 отказа из 32 попыток в прогоне 2026-10-06.
+# Раньше её прятала нехватка памяти - она падала ещё на рукопожатии.
+#
+# Цена теперь - PSRAM, а не внутренняя память: см. блок ниже.
+CONFIG_MBEDTLS_SSL_IN_CONTENT_LEN=16384
 CONFIG_MBEDTLS_SSL_OUT_CONTENT_LEN=2048
+
+# --- Память TLS - в PSRAM (2026-10-06) --------------------------------------
+#
+# Блок выше лечил следствие. Причина в том, что по умолчанию ESP-IDF
+# выделяет ВСЮ память mbedTLS во внутренней: выбор
+# MBEDTLS_INTERNAL_MEM_ALLOC, вызов heap_caps_calloc(...,
+# MALLOC_CAP_INTERNAL) в components/mbedtls/port/esp_mem.c. Порог
+# SPIRAM_MALLOC_ALWAYSINTERNAL на неё не действует вовсе - свойство
+# памяти задано явно. Никто этот выбор не делал, он стоял по умолчанию.
+#
+# 2026-10-05 это выглядело как «станция иногда не подключается»:
+# «PK verify failed with error 0x4290» - это RSA_PUBLIC_FAILED (-0x4280)
+# плюс MPI_ALLOC_FAILED (-0x0010), длинной арифметике не хватило
+# внутренней памяти. 21 раз за три журнала.
+#
+# В PSRAM можно: аппаратный AES ESP32-P4 сам работает с буферами
+# во внешней памяти (port/aes/dma/esp_aes_dma_core.c), а из прерываний
+# mbedTLS никто не зовёт. Цена - рукопожатие чуть медленнее.
+CONFIG_MBEDTLS_EXTERNAL_MEM_ALLOC=y
 
 # --- Крупные статические массивы - в PSRAM (2026-09-05) --------------------
 #

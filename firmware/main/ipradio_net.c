@@ -46,21 +46,36 @@ static const char *TAG = "net";
 /* Требование сервиса: внятный User-Agent с именем и версией. */
 #define USER_AGENT        "ipradio/0.1"
 
-/* Зеркала каталога — ПОИМЕННО.
+/* Зеркала каталога.
  *
- * Раньше брали A-записи all.api.radio-browser.info, соединялись
- * по адресу и вручную ставили Host: all.api... Так не работает:
- * это имя живёт только в DNS как указатель на зеркала, и ни одно
- * зеркало не обслуживает его как виртуальный хост — соединение
- * сбрасывается. То есть поиск станций не работал никогда.
+ * ПЕРВЫМ идёт all.api.radio-browser.info - имя, за которым сервис
+ * сам держит список живых зеркал через DNS. Так и рекомендует
+ * документация: «Never use a direct link to a single new server.
+ * It is much better to get a list of the servers», имена серверов
+ * меняются.
  *
- * Ходим по именам самих зеркал. Тогда Host подставляет клиент,
- * и вручную его трогать не надо. */
+ * Раньше это имя стояло в списке отвергнутых. В коде было записано,
+ * что оно «живёт только в DNS как указатель на зеркала, и ни одно
+ * зеркало не обслуживает его как виртуальный хост». Это оказалось
+ * неверно, и вывод был сделан из другого опыта: тогда соединялись
+ * по IP и подставляли Host вручную. Вот ЭТО и не работает. Если же
+ * ходить по имени и дать клиенту подставить Host самому, всё
+ * отвечает - проверено 2026-09-06 запросом /json/stations/byname.
+ *
+ * Почему это важно. В прежнем списке из четырёх имён nl1 и at1
+ * УЖЕ НЕ СУЩЕСТВУЮТ - их нет в DNS вовсе (проверено там же).
+ * А зеркало выбиралось случайно, то есть каждый второй поиск
+ * station уходил в никуда и человек видел «ничего не нашлось»
+ * при исправной сети. de1 и de2 при этом указывают на один и тот
+ * же адрес, что и all.
+ *
+ * Оставшиеся два - подстраховка на случай, если сломается сам
+ * указатель. Идём по порядку, а не вразнобой: раскладывать
+ * нагрузку между зеркалами - забота DNS, а не наша. */
 static const char *const MIRRORS[] = {
+    "all.api.radio-browser.info",
     "de1.api.radio-browser.info",
     "de2.api.radio-browser.info",
-    "nl1.api.radio-browser.info",
-    "at1.api.radio-browser.info",
 };
 #define MIRROR_MAX        (sizeof(MIRRORS) / sizeof(MIRRORS[0]))
 #define HTTP_TIMEOUT_MS   8000
@@ -249,20 +264,19 @@ bool ipradio_net_has_credentials(void)
     return s_have_credentials;
 }
 
-const char *ipradio_net_ssid(void)
+void ipradio_net_ssid(char *out, size_t cap)
 {
-    /* Имя берём у драйвера, а не храним своё: он и так его держит
-     * в NVS, и две копии рано или поздно разошлись бы. Буфер
-     * статический, потому что отдаём указатель наружу. */
-    static char ssid[IPRADIO_SSID_MAX];
+    if (!out || cap == 0) {
+        return;
+    }
+    out[0] = '\0';
 
+    /* Имя берём у драйвера, а не храним своё: он и так его держит
+     * в NVS, и две копии рано или поздно разошлись бы. */
     wifi_config_t wc;
     if (esp_wifi_get_config(WIFI_IF_STA, &wc) == ESP_OK) {
-        snprintf(ssid, sizeof(ssid), "%s", (const char *) wc.sta.ssid);
-    } else {
-        ssid[0] = '\0';
+        snprintf(out, cap, "%s", (const char *) wc.sta.ssid);
     }
-    return ssid;
 }
 
 int ipradio_net_scan(ipradio_ap_t *out, int max_items)
@@ -396,7 +410,14 @@ esp_err_t ipradio_net_start_sntp(const char *tz)
  * нагрузка должна расходиться по зеркалам сама. */
 static bool pick_mirror(void)
 {
-    const char *m = MIRRORS[esp_random() % MIRROR_MAX];
+    /* По кругу, начиная с первого. Номер сохраняем между вызовами:
+     * зеркало сбрасывается только при отказе, и тогда надо взять
+     * СЛЕДУЮЩЕЕ, а не то же самое снова. */
+    static size_t next;
+
+    const char *m = MIRRORS[next % MIRROR_MAX];
+    next++;
+
     snprintf(s_mirror, sizeof(s_mirror), "%s", m);
     ESP_LOGI(TAG, "зеркало каталога: %s", s_mirror);
     return true;

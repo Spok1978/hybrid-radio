@@ -19,6 +19,7 @@
 
 #include "ipradio_fonts.h"
 #include "ipradio_net.h"
+#include "ipradio_preset_edit.h"
 #include "ipradio_state.h"
 #include "ipradio_storage.h"
 #include "ipradio_ui_keyboard.h"
@@ -31,6 +32,7 @@ static const char *TAG = "ui.search";
 #define SIDE_PAD  48
 
 static lv_obj_t *s_screen;
+static lv_obj_t *s_head;
 static lv_obj_t *s_status;
 static lv_obj_t *s_list;
 static lv_obj_t *s_row[IPRADIO_SEARCH_MAX];
@@ -47,6 +49,10 @@ static bool s_visible;
 static bool s_busy;
 
 static char s_query[64];
+
+/* Куда записать найденное: 0 - обычный поиск (туда, где станция уже
+ * есть, иначе в первую свободную), 1…N - замена из меню ячейки. */
+static int s_target;
 
 /* Итог запроса из задачи поиска в задачу интерфейса. */
 static SemaphoreHandle_t s_lock;
@@ -229,72 +235,57 @@ void ipradio_search_ui_poll(void)
 
 /* Записать станцию в банк и включить её.
  *
+ * Обычный поиск кладёт станцию туда, где она уже есть, иначе в первую
+ * свободную ячейку. Поиск из меню ячейки («Заменить») - в ту ячейку,
+ * с которой его открыли (s_target).
+ *
  * Свободной ячейки может не быть. Молча ничего не делать нельзя,
- * подменять чужую ячейку — тем более: человек её сам туда положил.
- * Поэтому просто говорим, в чём дело, и оставляем решение за ним. */
+ * подменять чужую ячейку без спроса - тем более: человек её сам туда
+ * положил. Поэтому говорим, в чём дело, и как это поправить.
+ *
+ * Правка банка - в ipradio_preset_edit.c. До 2026-10-06 она была
+ * написана здесь же, и при полном банке функция возвращалась, не
+ * отпустив замок хранилища: следующее обращение к карте из любой
+ * задачи вставало навсегда. */
 static void save_and_play(int idx)
 {
-    /* Хранилище целиком тут нужно по делу: перебираем все ячейки,
-     * ищем свободную и заодно проверяем, не сохранена ли станция
-     * уже. Но на СТЕКЕ его держать нельзя - 2548 байт, а функция
-     * вызывается из обработчика касания, то есть в задаче lvgl.
-     * Ровно на этом панель перезагружалась при выходе с экрана
-     * часов. Кладём в PSRAM: экран поиска один, а обработчики
-     * событий LVGL идут по очереди, так что делить его не с кем. */
-    static EXT_RAM_BSS_ATTR ipradio_store_t store;
-    ipradio_storage_get(&store);
-
-    /* Та же станция могла быть сохранена раньше — тогда просто
-     * включаем её, а не заводим второй такой же пресет. */
-    int cell = -1;
-    for (int c = 0; c < IPRADIO_PRESET_MAX; c++) {
-        if (store.presets[c].used &&
-            store.presets[c].type == IPRADIO_MODE_NET &&
-            strcmp(store.presets[c].url, s_found[idx].url) == 0) {
-            cell = c;
-            break;
-        }
+    int cell = 0;
+    ipradio_pedit_t r = ipradio_preset_put_net(s_target,
+                                               s_found[idx].name,
+                                               s_found[idx].url,
+                                               s_found[idx].uuid, &cell);
+    switch (r) {
+    case IPRADIO_PEDIT_OK:
+        break;
+    case IPRADIO_PEDIT_FULL:
+        lv_label_set_text(s_status,
+            "Все ячейки заняты. Долгое нажатие на ячейку главного "
+            "экрана - заменить или удалить станцию.");
+        return;
+    case IPRADIO_PEDIT_NO_CARD:
+        lv_label_set_text(s_status, "Карты памяти нет - записать некуда");
+        return;
+    case IPRADIO_PEDIT_BAD_ARG:
+        lv_label_set_text(s_status,
+            "Адрес потока этой станции не помещается в память прибора");
+        return;
+    case IPRADIO_PEDIT_WRITE_FAILED:
+    default:
+        lv_label_set_text(s_status, "Не удалось записать на карту");
+        return;
     }
 
-    if (cell < 0) {
-        for (int c = 0; c < IPRADIO_PRESET_MAX; c++) {
-            if (!store.presets[c].used) {
-                cell = c;
-                break;
-            }
-        }
-
-        if (cell < 0) {
-            lv_label_set_text(s_status,
-                "Все ячейки заняты. Освободите одну в списке станций.");
-            return;
-        }
-
-        memset(&store.presets[cell], 0, sizeof(store.presets[cell]));
-        store.presets[cell].used = true;
-        store.presets[cell].type = IPRADIO_MODE_NET;
-        snprintf(store.presets[cell].name, IPRADIO_NAME_MAX,
-                 "%s", s_found[idx].name);
-        snprintf(store.presets[cell].url, IPRADIO_URL_MAX,
-                 "%s", s_found[idx].url);
-        snprintf(store.presets[cell].stationuuid, IPRADIO_UUID_MAX,
-                 "%s", s_found[idx].uuid);
-
-        if (ipradio_storage_save(&store) != ESP_OK) {
-            lv_label_set_text(s_status, "Не удалось записать на карту");
-            return;
-        }
-        ESP_LOGI(TAG, "станция «%s» записана в ячейку %d",
-                 s_found[idx].name, cell + 1);
-    }
+    ESP_LOGI(TAG, "станция «%s» в ячейке %d", s_found[idx].name, cell);
 
     /* Отметить запуск в каталоге — вежливость, по ней там строится
      * рейтинг (§4). Не наша обязанность, но нам это ничего не стоит. */
     ipradio_net_report_click_async(s_found[idx].uuid);
 
-    /* Нажатие пресета само переключает режим на интернетный: тип
-     * лежит в самой ячейке. Отдельно режим переключать не надо. */
-    ipradio_post_simple(IPRADIO_EV_PRESET_PRESSED, cell + 1);
+    /* Включаем ИНТЕРНЕТНУЮ ячейку из любого режима. Обычное нажатие
+     * пресета для этого не годится с разделения банков: оно берёт
+     * ячейку текущего режима, и из эфира включилась бы эфирная
+     * станция с тем же номером. */
+    ipradio_post_simple(IPRADIO_EV_NET_PRESET_PRESSED, cell);
 
     ipradio_search_ui_close();
 }
@@ -330,9 +321,9 @@ esp_err_t ipradio_search_ui_init(lv_obj_t *parent)
     lv_obj_set_style_pad_all(s_screen, 0, 0);
     lv_obj_clear_flag(s_screen, LV_OBJ_FLAG_SCROLLABLE);
 
-    lv_obj_t *head = ipradio_ui_label(s_screen, ipradio_font_28,
-                                      COL_TEXT, "Поиск станций");
-    lv_obj_align(head, LV_ALIGN_TOP_LEFT, SIDE_PAD, 30);
+    s_head = ipradio_ui_label(s_screen, ipradio_font_28,
+                              COL_TEXT, "Поиск станций");
+    lv_obj_align(s_head, LV_ALIGN_TOP_LEFT, SIDE_PAD, 30);
 
     s_status = ipradio_ui_label(s_screen, ipradio_font_16, COL_TEXT_DIM, "");
     lv_obj_set_width(s_status, LV_PCT(88));
@@ -388,18 +379,42 @@ esp_err_t ipradio_search_ui_init(lv_obj_t *parent)
  *  Открытие и закрытие
  * ------------------------------------------------------------------ */
 
-void ipradio_search_ui_open(void (*on_close)(void *ctx), void *ctx)
+/* Вопрос на клавиатуре. При замене говорим, какую ячейку заменяем:
+ * человек мог отвлечься между меню ячейки и вводом. */
+static void ask_query(const char *initial)
+{
+    char title[96];
+    if (s_target > 0) {
+        snprintf(title, sizeof(title),
+                 "Станция для ячейки П%d: название или жанр", s_target);
+    } else {
+        snprintf(title, sizeof(title), "Название станции или жанр");
+    }
+    ipradio_keyboard_open(title, initial, false, on_query, NULL);
+}
+
+void ipradio_search_ui_open_into(int cell, void (*on_close)(void *ctx),
+                                 void *ctx)
 {
     if (!s_screen) {
         return;
     }
 
+    s_target      = (cell >= 1 && cell <= IPRADIO_PRESET_MAX) ? cell : 0;
     s_on_close    = on_close;
     s_ctx         = ctx;
     s_visible     = true;
     s_busy        = false;
     s_found_count = 0;
     s_focus       = 0;
+
+    char head[48];
+    if (s_target > 0) {
+        snprintf(head, sizeof(head), "Замена станции в ячейке П%d", s_target);
+    } else {
+        snprintf(head, sizeof(head), "Поиск станций");
+    }
+    lv_label_set_text(s_head, head);
 
     for (int i = 0; i < IPRADIO_SEARCH_MAX; i++) {
         lv_obj_add_flag(s_row[i], LV_OBJ_FLAG_HIDDEN);
@@ -411,8 +426,12 @@ void ipradio_search_ui_open(void (*on_close)(void *ctx), void *ctx)
 
     /* Сразу спрашиваем, что искать: пустой экран со списком, которого
      * ещё нет, ничего не объясняет. */
-    ipradio_keyboard_open("Название станции или жанр", NULL, false,
-                          on_query, NULL);
+    ask_query(NULL);
+}
+
+void ipradio_search_ui_open(void (*on_close)(void *ctx), void *ctx)
+{
+    ipradio_search_ui_open_into(0, on_close, ctx);
 }
 
 void ipradio_search_ui_close(void)
@@ -427,6 +446,7 @@ void ipradio_search_ui_close(void)
     s_visible  = false;
     s_on_close = NULL;
     s_ctx      = NULL;
+    s_target   = 0;
 
     lv_obj_add_flag(s_screen, LV_OBJ_FLAG_HIDDEN);
 
@@ -466,8 +486,7 @@ void ipradio_search_ui_select(void)
     if (s_found_count == 0) {
         /* Ничего не нашлось — нажатие означает «спросить заново».
          * Иначе из этого состояния был бы только выход. */
-        ipradio_keyboard_open("Название станции или жанр", s_query, false,
-                              on_query, NULL);
+        ask_query(s_query);
         return;
     }
 

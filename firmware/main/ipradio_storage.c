@@ -33,6 +33,7 @@
 #include "cJSON.h"
 
 #include "ipradio_storage.h"
+#include "ipradio_store_format.h"
 
 static const char *TAG = "storage";
 
@@ -83,231 +84,6 @@ static bool            s_next_is_b;    /* куда писать в следую�
  *  Умолчания
  * ------------------------------------------------------------------ */
 
-static void fill_defaults(ipradio_store_t *st)
-{
-    memset(st, 0, sizeof(*st));
-    st->settings.volume        = 40;
-    st->settings.last_mode     = IPRADIO_MODE_FM;
-    st->settings.last_band     = IPRADIO_BAND_CCIR;
-    st->settings.last_freq_khz = 102500;
-    st->settings.last_preset   = -1;
-    st->settings.brightness    = 80;
-    st->settings.clock_24h     = true;
-    strncpy(st->settings.tz, "MSK-3", sizeof(st->settings.tz) - 1);
-}
-
-/* ------------------------------------------------------------------ *
- *  Контрольная сумма
- * ------------------------------------------------------------------ */
-
-/* FNV-1a: короткая, без таблиц, для нашей задачи более чем достаточна.
- * Нам нужно отличить целый файл от обрезанного, а не защититься
- * от подделки. */
-static uint32_t fnv1a(const char *s)
-{
-    uint32_t h = 2166136261u;
-    while (*s) {
-        h ^= (uint8_t) *s++;
-        h *= 16777619u;
-    }
-    return h;
-}
-
-/* ------------------------------------------------------------------ *
- *  Разбор
- * ------------------------------------------------------------------ */
-
-static void json_get_str(const cJSON *obj, const char *key,
-                         char *dst, size_t dst_size)
-{
-    const cJSON *it = cJSON_GetObjectItemCaseSensitive(obj, key);
-    if (cJSON_IsString(it) && it->valuestring) {
-        strncpy(dst, it->valuestring, dst_size - 1);
-        dst[dst_size - 1] = '\0';
-    }
-}
-
-static int json_get_int(const cJSON *obj, const char *key, int fallback)
-{
-    const cJSON *it = cJSON_GetObjectItemCaseSensitive(obj, key);
-    return cJSON_IsNumber(it) ? it->valueint : fallback;
-}
-
-static bool json_get_bool(const cJSON *obj, const char *key, bool fallback)
-{
-    const cJSON *it = cJSON_GetObjectItemCaseSensitive(obj, key);
-    return cJSON_IsBool(it) ? cJSON_IsTrue(it) : fallback;
-}
-
-static bool parse_document(const char *text, ipradio_store_t *st,
-                           uint32_t *generation)
-{
-    cJSON *root = cJSON_Parse(text);
-    if (!root) {
-        return false;
-    }
-
-    bool ok = false;
-
-    /* Контрольная сумма считается от поля payload как от строки —
-     * поэтому сравнение не зависит от того, как cJSON расставит
-     * пробелы при повторной печати. */
-    const cJSON *crc_it = cJSON_GetObjectItemCaseSensitive(root, "crc");
-    const cJSON *body   = cJSON_GetObjectItemCaseSensitive(root, "payload");
-    if (!cJSON_IsString(crc_it) || !cJSON_IsString(body) || !body->valuestring) {
-        goto done;
-    }
-
-    char expect[16];
-    snprintf(expect, sizeof(expect), "%08" PRIx32, fnv1a(body->valuestring));
-    if (strcmp(expect, crc_it->valuestring) != 0) {
-        ESP_LOGW(TAG, "контрольная сумма не сошлась");
-        goto done;
-    }
-
-    cJSON *payload = cJSON_Parse(body->valuestring);
-    if (!payload) {
-        goto done;
-    }
-
-    fill_defaults(st);
-    *generation = (uint32_t) json_get_int(payload, "generation", 0);
-
-    const cJSON *set = cJSON_GetObjectItemCaseSensitive(payload, "settings");
-    if (cJSON_IsObject(set)) {
-        st->settings.volume        = (uint8_t) json_get_int(set, "volume", 40);
-        st->settings.last_mode     = (ipradio_mode_t) json_get_int(set, "last_mode", 0);
-        st->settings.last_band     = (ipradio_band_t) json_get_int(set, "last_band", 1);
-        st->settings.last_freq_khz = (uint32_t) json_get_int(set, "last_freq_khz", 102500);
-        st->settings.last_preset   = (int8_t) json_get_int(set, "last_preset", -1);
-        st->settings.brightness    = (uint8_t) json_get_int(set, "brightness", 80);
-        st->settings.clock_24h     = json_get_bool(set, "clock_24h", true);
-        json_get_str(set, "tz", st->settings.tz, sizeof(st->settings.tz));
-    }
-
-    const cJSON *arr = cJSON_GetObjectItemCaseSensitive(payload, "presets");
-    if (cJSON_IsArray(arr)) {
-        int i = 0;
-        const cJSON *el = NULL;
-        cJSON_ArrayForEach(el, arr) {
-            if (i >= IPRADIO_PRESET_MAX) {
-                break;
-            }
-            ipradio_preset_t *p = &st->presets[i++];
-            if (!cJSON_IsObject(el)) {
-                continue;
-            }
-            /* Занятость - по явному признаку.
-             *
-             * Для файлов, записанных до появления этого поля, есть
-             * запасной путь: ячейка считается занятой, если в ней
-             * лежит хоть что-то осмысленное. Иначе после обновления
-             * прошивки старый банк прочитался бы как полностью
-             * пустой, и человек потерял бы свои станции. */
-            const cJSON *u = cJSON_GetObjectItemCaseSensitive(el, "used");
-            if (u) {
-                p->used = cJSON_IsTrue(u);
-            } else {
-                p->used = cJSON_GetObjectItemCaseSensitive(el, "type") ||
-                          cJSON_GetObjectItemCaseSensitive(el, "name");
-            }
-            if (!p->used) {
-                continue;
-            }
-
-            p->type     = (ipradio_mode_t) json_get_int(el, "type", 0);
-            p->band     = (ipradio_band_t) json_get_int(el, "band", 1);
-            p->freq_khz = (uint32_t) json_get_int(el, "freq_khz", 0);
-            json_get_str(el, "name", p->name, sizeof(p->name));
-            json_get_str(el, "url",  p->url,  sizeof(p->url));
-            json_get_str(el, "stationuuid", p->stationuuid,
-                         sizeof(p->stationuuid));
-        }
-    }
-
-    cJSON_Delete(payload);
-    ok = true;
-
-done:
-    cJSON_Delete(root);
-    return ok;
-}
-
-/* ------------------------------------------------------------------ *
- *  Печать
- * ------------------------------------------------------------------ */
-
-/* Имена станций санитизируются при записи: кавычки и переводы строк
- * из них вычищаются (§8). cJSON экранировал бы их правильно, но файл
- * должен оставаться пригодным для правки руками через SSH. */
-static void sanitize(const char *src, char *dst, size_t dst_size)
-{
-    size_t j = 0;
-    for (size_t i = 0; src[i] && j + 1 < dst_size; i++) {
-        char c = src[i];
-        if (c == '"' || c == '\\' || c == '\n' || c == '\r') {
-            c = ' ';
-        }
-        dst[j++] = c;
-    }
-    dst[j] = '\0';
-}
-
-static char *build_payload(const ipradio_store_t *st, uint32_t generation)
-{
-    cJSON *root = cJSON_CreateObject();
-    if (!root) {
-        return NULL;
-    }
-
-    cJSON_AddNumberToObject(root, "generation", generation);
-
-    cJSON *set = cJSON_AddObjectToObject(root, "settings");
-    cJSON_AddNumberToObject(set, "volume",        st->settings.volume);
-    cJSON_AddNumberToObject(set, "last_mode",     st->settings.last_mode);
-    cJSON_AddNumberToObject(set, "last_band",     st->settings.last_band);
-    cJSON_AddNumberToObject(set, "last_freq_khz", st->settings.last_freq_khz);
-    cJSON_AddNumberToObject(set, "last_preset",   st->settings.last_preset);
-    cJSON_AddNumberToObject(set, "brightness",    st->settings.brightness);
-    cJSON_AddBoolToObject  (set, "clock_24h",     st->settings.clock_24h);
-    cJSON_AddStringToObject(set, "tz",            st->settings.tz);
-
-    cJSON *arr = cJSON_AddArrayToObject(root, "presets");
-    char clean[IPRADIO_NAME_MAX];
-
-    for (int i = 0; i < IPRADIO_PRESET_MAX; i++) {
-        const ipradio_preset_t *p = &st->presets[i];
-        cJSON *el = cJSON_CreateObject();
-
-        /* Признак занятости пишем ЯВНО.
-         *
-         * Раньше пустая ячейка выходила пустым объектом {}, а при
-         * чтении пустой объект - тоже объект, и ячейка помечалась
-         * занятой. После первой же перезагрузки банк выглядел полным:
-         * на плате 2026-09-05 сохранить найденную станцию стало
-         * некуда, экран писал «все ячейки заняты». */
-        cJSON_AddBoolToObject(el, "used", p->used);
-
-        if (p->used) {
-            sanitize(p->name, clean, sizeof(clean));
-            cJSON_AddNumberToObject(el, "type", p->type);
-            cJSON_AddStringToObject(el, "name", clean);
-            if (p->type == IPRADIO_MODE_FM) {
-                cJSON_AddNumberToObject(el, "band",     p->band);
-                cJSON_AddNumberToObject(el, "freq_khz", p->freq_khz);
-            } else {
-                cJSON_AddStringToObject(el, "url",         p->url);
-                cJSON_AddStringToObject(el, "stationuuid", p->stationuuid);
-            }
-        }
-        cJSON_AddItemToArray(arr, el);
-    }
-
-    char *text = cJSON_PrintUnformatted(root);
-    cJSON_Delete(root);
-    return text;
-}
-
 /* ------------------------------------------------------------------ *
  *  Файлы
  * ------------------------------------------------------------------ */
@@ -323,7 +99,14 @@ static char *read_whole_file(const char *path)
     long size = ftell(f);
     fseek(f, 0, SEEK_SET);
 
-    if (size <= 0 || size > 64 * 1024) {
+    /* Потолок по РЕАЛЬНОМУ размеру, а не «на всякий случай».
+     *
+     * Хранилище - настройки плюс восемь ячеек, это три-шесть
+     * килобайт. Шестнадцати хватает с тройным запасом, а прежние
+     * шестьдесят четыре означали, что при испорченной таблице
+     * файлов мы поверим любому вранью ftell и выделим под него
+     * память. */
+    if (size <= 0 || size > 16 * 1024) {
         fclose(f);
         return NULL;
     }
@@ -342,22 +125,37 @@ static char *read_whole_file(const char *path)
 
 static esp_err_t write_atomically(const char *path, const char *payload)
 {
-    /* Обёртка с контрольной суммой: payload кладём строкой, чтобы
-     * сумма считалась ровно от того, что будет прочитано обратно. */
+    /* Обёртку с контрольной суммой складываем строкой сами.
+     *
+     * Раньше здесь строился второй документ cJSON, куда payload
+     * клался ЗНАЧЕНИЕМ СТРОКИ. Это стоило дорого: cJSON копировал
+     * строку себе, потом печатал заново - и при печати экранировал
+     * каждую кавычку, а payload это JSON, в нём кавычки на каждом
+     * поле. Файл на карте раздувался примерно вдвое, а в памяти
+     * одновременно жили три копии.
+     *
+     * Теперь payload вкладывается КАК ОБЪЕКТ, без экранирования:
+     * {"crc":"xxxxxxxx","payload":{...}}. Сумма при этом считается
+     * от той же самой строки, что уходит в файл, - значит, читатель
+     * может пересчитать её по тексту, ничего не разбирая.
+     *
+     * Старые файлы читаются по-прежнему: разбор понимает оба вида,
+     * см. parse_document. */
     char crc[16];
-    snprintf(crc, sizeof(crc), "%08" PRIx32, fnv1a(payload));
+    snprintf(crc, sizeof(crc), "%08" PRIx32, ipradio_store_crc(payload));
 
-    cJSON *wrap = cJSON_CreateObject();
-    if (!wrap) {
-        return ESP_ERR_NO_MEM;
-    }
-    cJSON_AddStringToObject(wrap, "crc", crc);
-    cJSON_AddStringToObject(wrap, "payload", payload);
-    char *text = cJSON_PrintUnformatted(wrap);
-    cJSON_Delete(wrap);
+    const char *head = "{\"crc\":\"";
+    const char *mid  = "\",\"payload\":";
+    const char *tail = "}";
+
+    size_t need = strlen(head) + strlen(crc) + strlen(mid) +
+                  strlen(payload) + strlen(tail) + 1;
+
+    char *text = malloc(need);
     if (!text) {
         return ESP_ERR_NO_MEM;
     }
+    snprintf(text, need, "%s%s%s%s%s", head, crc, mid, payload, tail);
 
     esp_err_t err = ESP_FAIL;
     FILE *f = fopen(FILE_TMP, "wb");
@@ -451,7 +249,7 @@ esp_err_t ipradio_storage_init(void)
         return ESP_ERR_NO_MEM;
     }
 
-    fill_defaults(&s_store);
+    ipradio_store_fill_defaults(&s_store);
 
     esp_err_t err = mount_card();
     if (err != ESP_OK) {
@@ -466,18 +264,28 @@ esp_err_t ipradio_storage_init(void)
     s_ready = true;
 
     /* Читаем обе копии и берём ту, что целее и новее. */
-    ipradio_store_t a, b;
+    /* ДВЕ копии хранилища - НЕ на стеке.
+     *
+     * После разделения банков структура выросла примерно до пяти
+     * килобайт, две штуки - десять. Стек главной задачи 10240 байт,
+     * и этого хватило ровно на то, чтобы при первой же загрузке
+     * словить Stack protection fault и уйти в цикл перезагрузок.
+     * До разделения две копии были по три килобайта и влезали.
+     *
+     * Статические и в PSRAM: читаются один раз при подъёме, из одной
+     * задачи, делить их не с кем. */
+    static EXT_RAM_BSS_ATTR ipradio_store_t a, b;
     uint32_t gen_a = 0, gen_b = 0;
     bool ok_a = false, ok_b = false;
 
     char *text = read_whole_file(FILE_A);
     if (text) {
-        ok_a = parse_document(text, &a, &gen_a);
+        ok_a = ipradio_store_parse(text, &a, &gen_a);
         free(text);
     }
     text = read_whole_file(FILE_B);
     if (text) {
-        ok_b = parse_document(text, &b, &gen_b);
+        ok_b = ipradio_store_parse(text, &b, &gen_b);
         free(text);
     }
 
@@ -518,25 +326,14 @@ bool ipradio_storage_ready(void)
     return s_ready;
 }
 
-esp_err_t ipradio_storage_save(const ipradio_store_t *in)
+/* Записать текущее содержимое s_store на карту. ЗАМОК ДОЛЖЕН БЫТЬ
+ * УЖЕ ВЗЯТ вызывающим. */
+static esp_err_t save_locked(void)
 {
-    if (!in) {
-        return ESP_ERR_INVALID_ARG;
-    }
-    if (!s_ready) {
-        return ESP_ERR_NOT_FOUND;
-    }
-
-    /* Вся запись - под замком, включая временный файл: он один
-     * на всех, и два одновременных сохранения перемешали бы его. */
-    xSemaphoreTake(s_lock, portMAX_DELAY);
-
-    s_store = *in;
     s_generation++;
 
-    char *payload = build_payload(&s_store, s_generation);
+    char *payload = ipradio_store_build(&s_store, s_generation);
     if (!payload) {
-        xSemaphoreGive(s_lock);
         return ESP_ERR_NO_MEM;
     }
 
@@ -552,7 +349,42 @@ esp_err_t ipradio_storage_save(const ipradio_store_t *in)
         ESP_LOGI(TAG, "сохранено в %s, поколение %" PRIu32,
                  s_next_is_b ? "A" : "B", s_generation);
     }
+    return err;
+}
 
+esp_err_t ipradio_storage_save(const ipradio_store_t *in)
+{
+    if (!in) {
+        return ESP_ERR_INVALID_ARG;
+    }
+    if (!s_ready) {
+        return ESP_ERR_NOT_FOUND;
+    }
+
+    /* Вся запись - под замком, включая временный файл: он один
+     * на всех, и два одновременных сохранения перемешали бы его. */
+    xSemaphoreTake(s_lock, portMAX_DELAY);
+    s_store = *in;
+    esp_err_t err = save_locked();
+    xSemaphoreGive(s_lock);
+    return err;
+}
+
+ipradio_store_t *ipradio_storage_edit_begin(void)
+{
+    if (!s_ready) {
+        return NULL;
+    }
+    xSemaphoreTake(s_lock, portMAX_DELAY);
+    return &s_store;
+}
+
+esp_err_t ipradio_storage_edit_end(bool save)
+{
+    esp_err_t err = ESP_OK;
+    if (save) {
+        err = save_locked();
+    }
     xSemaphoreGive(s_lock);
     return err;
 }
@@ -562,21 +394,26 @@ esp_err_t ipradio_storage_save_settings(const ipradio_settings_t *s)
     if (!s) {
         return ESP_ERR_INVALID_ARG;
     }
+    /* Правим на месте, не копируя банки.
+     *
+     * Раньше здесь снималась полная копия хранилища на стек ради
+     * одной подструктуры. После разделения банков это около пяти
+     * килобайт, и зовётся отсюда в том числе задача lvgl. */
     xSemaphoreTake(s_lock, portMAX_DELAY);
-    ipradio_store_t st = s_store;
+    s_store.settings = *s;
+    esp_err_t err = save_locked();
     xSemaphoreGive(s_lock);
-
-    st.settings = *s;
-    return ipradio_storage_save(&st);
+    return err;
 }
 
-bool ipradio_storage_get_preset(int cell, ipradio_preset_t *out)
+bool ipradio_storage_get_preset(ipradio_mode_t mode, int cell,
+                                ipradio_preset_t *out)
 {
     if (!out || cell < 1 || cell > IPRADIO_PRESET_MAX) {
         return false;
     }
     xSemaphoreTake(s_lock, portMAX_DELAY);
-    *out = s_store.presets[cell - 1];
+    *out = ipradio_storage_bank(&s_store, mode)[cell - 1];
     xSemaphoreGive(s_lock);
     return out->used;
 }

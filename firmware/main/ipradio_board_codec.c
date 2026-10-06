@@ -12,6 +12,7 @@
 #include "esp_codec_dev_defaults.h"
 #include "esp_codec_dev_types.h"
 
+#include "board_pins.h"
 #include "ipradio_board_codec.h"
 
 static const char *TAG = "board.codec";
@@ -115,11 +116,13 @@ esp_err_t ipradio_board_codec_set_format(int sample_rate, int bits, int channels
         s_codec->mute(s_codec, false);
     }
 
-    /* ВРЕМЕННО: полный дамп регистров. Без него не отличить
-     * «кодек молчит» от «до кодека не доходит». */
+    /* Полный дамп регистров, см. IPRADIO_DEBUG_CODEC_REGS. Без него
+     * не отличить «кодек молчит» от «до кодека не доходит». */
+#if IPRADIO_DEBUG_CODEC_REGS
     if (s_codec->dump_reg) {
         ESP_LOGW(TAG, "ЗАМЕР: регистры ES8311 после настройки формата");
         s_codec->dump_reg(s_codec);
     }
+#endif
     return ESP_OK;
 }
