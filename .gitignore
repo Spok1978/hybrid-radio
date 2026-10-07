@@ -65,3 +65,4 @@ fp-info-cache
 *.kicad_prl
 *.erc
 *_sklib.py
+.history/

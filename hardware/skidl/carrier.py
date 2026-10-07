@@ -60,6 +60,13 @@ def xh(n):
     return f"Connector_JST:JST_XH_B{n}B-XH-A_1x{n:02d}_P2.50mm_Vertical"
 
 
+def solder(n):
+    """Отверстия под пайку провода 0,25 мм² (AWG 24), шаг 4,2 мм — для
+    органов на корпусе: провода паяются в плату (решение 2026-10-07).
+    В библиотеке KiCad эта серия есть на 1-6 контактов."""
+    return f"Connector_Wire:SolderWire-0.25sqmm_1x{n:02d}_P4.2mm_D0.65mm_OD1.7mm"
+
+
 def R(value, a, b):
     r = Part("Device", "R", value=value, footprint=FP_R)
     r[1] += a
@@ -337,13 +344,18 @@ def expander():
         u[f"GPB{i}"] += NC
     C("100n", v3_esp, gnd)
 
-    # Порядок контактов разъёма прежний: 1-8 — пресеты, 9 — MODE, 10 — GND.
-    j = Part("Connector_Generic", "Conn_01x10", ref="J7", value="PRESETS+MODE", footprint=xh(10))
+    # Кнопки на корпусе, провода паяются в плату. Серия площадок под пайку
+    # в KiCad не длиннее 6 контактов, поэтому две группы, в каждой своя GND:
+    # J7 — пресеты 1-4 + GND, J12 — пресеты 5-8, MODE + GND.
     lines = [f"GPA{i}" for i in range(7)] + ["GPB1"]
-    for i, line in enumerate(lines):
-        Net(f"BTN_P{i + 1}").connect(u[line], j[i + 1])
-    Net("BTN_MODE").connect(u["GPB0"], j[9])
-    j[10] += gnd
+    nets = [Net(f"BTN_P{i + 1}").connect(u[line]) for i, line in enumerate(lines)]
+    nets.append(Net("BTN_MODE").connect(u["GPB0"]))
+    for ref, value, group in (("J7", "PRESETS 1-4", nets[:4]), ("J12", "PRESETS 5-8 + MODE", nets[4:])):
+        j = Part("Connector_Generic", f"Conn_01x{len(group) + 1:02d}", ref=ref, value=value,
+                 footprint=solder(len(group) + 1))
+        for i, net in enumerate(group):
+            j[i + 1] += net
+        j[len(group) + 1] += gnd
 
 
 @subcircuit
@@ -352,7 +364,7 @@ def controls():
     на линиях A/B энкодеров: провода к панели длинные, внутренней
     подтяжки ESP32 (~45 кОм) мало."""
     for ref, a, b, sw in (("J9", enc1_a, enc1_b, enc1_sw), ("J10", enc2_a, enc2_b, enc2_sw)):
-        j = Part("Connector_Generic", "Conn_01x05", ref=ref, value="EC11", footprint=xh(5))
+        j = Part("Connector_Generic", "Conn_01x05", ref=ref, value="EC11", footprint=solder(5))
         j[1] += a
         j[2] += gnd        # C
         j[3] += b
@@ -362,7 +374,7 @@ def controls():
             R("10k", line, v3_esp)
             C("10n", line, gnd)
 
-    j = Part("Connector_Generic", "Conn_01x02", ref="J11", value="BTN PWR", footprint=xh(2))
+    j = Part("Connector_Generic", "Conn_01x02", ref="J11", value="BTN PWR", footprint=solder(2))
     j[1] += pwr_btn
     j[2] += gnd
 
