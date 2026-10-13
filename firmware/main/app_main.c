@@ -67,6 +67,7 @@
 #include "ipradio_storage.h"
 #include "ipradio_mem.h"
 #include "ipradio_soak.h"
+#include "ipradio_fmprobe.h"
 
 #include "bsp/display.h"
 
@@ -298,6 +299,9 @@ void app_main(void)
 
 #if IPRADIO_DEBUG_SOAK
     ipradio_soak_start();
+#endif
+#if IPRADIO_DEBUG_FM_PROBE
+    ipradio_fmprobe_start();
 #endif
 
 #if IPRADIO_DEMO_SCREEN

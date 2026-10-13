@@ -1222,7 +1222,12 @@ static void apply_snapshot(const ipradio_snapshot_t *s)
 
         if (s->rds_valid && s->rds_name[0]) {
             /* Станция назвалась — её имя и есть главное,
-             * а частота уходит строкой ниже. */
+             * а частота уходит строкой ниже.
+             *
+             * Кегль имени вдвое меньше частоты: 48, а не 96 (просьба
+             * заказчика 2026-10-14, после первого настоящего RDS
+             * на плате). Частоту без RDS по-прежнему показываем 96. */
+            lv_obj_set_style_text_font(s_title, ipradio_font_48b, 0);
             set_text(s_title, s->rds_name);
             set_text(s_subtitle, buf);
             set_text(s_detail, "");

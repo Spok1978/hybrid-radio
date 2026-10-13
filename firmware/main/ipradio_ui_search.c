@@ -58,6 +58,7 @@ static int s_target;
 static SemaphoreHandle_t s_lock;
 EXT_RAM_BSS_ATTR static ipradio_station_t s_pending[IPRADIO_SEARCH_MAX];
 static int               s_pending_count = -1;
+static bool              s_pending_failed;  /* каталог не ответил вовсе */
 
 static void (*s_on_close)(void *ctx);
 static void  *s_ctx;
@@ -134,7 +135,8 @@ static void search_task(void *arg)
     if (n > 0) {
         memcpy(s_pending, found, sizeof(found[0]) * n);
     }
-    s_pending_count = (n < 0) ? 0 : n;
+    s_pending_count  = (n < 0) ? 0 : n;
+    s_pending_failed = (n < 0);
     xSemaphoreGive(s_lock);
 
     vTaskDeleteWithCaps(NULL);
@@ -196,10 +198,12 @@ void ipradio_search_ui_poll(void)
         return;
     }
 
-    int n = -1;
+    int  n = -1;
+    bool failed = false;
     xSemaphoreTake(s_lock, portMAX_DELAY);
     if (s_pending_count >= 0) {
         n = s_pending_count;
+        failed = s_pending_failed;
         if (n > 0) {
             memcpy(s_found, s_pending, sizeof(s_found[0]) * n);
         }
@@ -215,7 +219,13 @@ void ipradio_search_ui_poll(void)
     s_busy        = false;
     s_focus       = 0;
 
-    if (n == 0) {
+    if (failed) {
+        /* Не «ничего не нашлось»: с ним человек меняет запрос, а дело
+         * в связи. Нажатие на пустом экране спросит запрос заново. */
+        lv_label_set_text(s_status,
+            "Каталог не ответил - проверьте сеть. Нажмите, чтобы "
+            "попробовать ещё раз");
+    } else if (n == 0) {
         char buf[128];
         snprintf(buf, sizeof(buf),
                  "По запросу «%s» ничего не нашлось", s_query);

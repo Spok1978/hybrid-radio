@@ -26,8 +26,10 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
+#include "freertos/idf_additions.h"
 
 #include "esp_event.h"
+#include "esp_crt_bundle.h"
 #include "esp_http_client.h"
 #include "esp_log.h"
 #include "esp_timer.h"
@@ -233,10 +235,15 @@ esp_err_t ipradio_net_connect(const char *ssid, const char *pass)
 {
     if (ssid && ssid[0]) {
         wifi_config_t wc = { 0 };
-        strncpy((char *) wc.sta.ssid, ssid, sizeof(wc.sta.ssid) - 1);
+        /* Поля драйвера - не строки Си: SSID бывает ровно 32 знака,
+         * ключ WPA - ровно 64 шестнадцатеричных, и завершающего нуля
+         * в поле тогда нет (wifi_sta_config_t в esp_wifi_types).
+         * Прежнее копирование «размер минус один» отрезало последний
+         * знак у таких имён, и подключиться было нельзя. */
+        memcpy(wc.sta.ssid, ssid, strnlen(ssid, sizeof(wc.sta.ssid)));
         if (pass) {
-            strncpy((char *) wc.sta.password, pass,
-                    sizeof(wc.sta.password) - 1);
+            memcpy(wc.sta.password, pass,
+                   strnlen(pass, sizeof(wc.sta.password)));
         }
         ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wc));
         s_have_credentials = true;
@@ -275,7 +282,11 @@ void ipradio_net_ssid(char *out, size_t cap)
      * в NVS, и две копии рано или поздно разошлись бы. */
     wifi_config_t wc;
     if (esp_wifi_get_config(WIFI_IF_STA, &wc) == ESP_OK) {
-        snprintf(out, cap, "%s", (const char *) wc.sta.ssid);
+        /* Не "%s": в 32-знаковом имени нуля нет, и печать ушла бы
+         * дальше, в поле пароля. */
+        snprintf(out, cap, "%.*s",
+                 (int) strnlen((const char *) wc.sta.ssid, sizeof(wc.sta.ssid)),
+                 (const char *) wc.sta.ssid);
     }
 }
 
@@ -463,8 +474,15 @@ static char *fetch_ex(const char *path, bool post)
         return NULL;
     }
 
+    /* Каталог - по https (2026-10-08): ответ каталога решает, какой
+     * адрес ляжет в ячейку и куда прибор пойдёт за звуком, и подменить
+     * его по дороге без шифрования ничего не стоит. Прежде здесь был
+     * http ради внутренней памяти: рукопожатие TLS её съедало. С переносом
+     * mbedTLS в PSRAM (docs/34-memory.md) этот довод отпал. Сертификаты
+     * у всех трёх зеркал действительны (проверено 2026-10-08), корни -
+     * из встроенного набора ESP-IDF (MBEDTLS_CERTIFICATE_BUNDLE). */
     char url[256];
-    snprintf(url, sizeof(url), "http://%s%s", s_mirror, path);
+    snprintf(url, sizeof(url), "https://%s%s", s_mirror, path);
 
     response_t r = {
         .buf = calloc(1, RESPONSE_MAX),
@@ -480,6 +498,7 @@ static char *fetch_ex(const char *path, bool post)
         .event_handler = http_collect,
         .user_data     = &r,
         .timeout_ms    = HTTP_TIMEOUT_MS,
+        .crt_bundle_attach = esp_crt_bundle_attach,
     };
 
     esp_http_client_handle_t cli = esp_http_client_init(&cfg);
@@ -607,8 +626,18 @@ int ipradio_net_search(const char *query,
     }
 
     int n = search_once(query, out, max_items);
-    if (n > 0) {
-        return n;
+    if (n < 0) {
+        /* Отказ связи - ещё раз. fetch_ex при отказе сбросил зеркало,
+         * и pick_mirror возьмёт СЛЕДУЮЩЕЕ. Прогон 2026-10-06: один поиск
+         * из восьми кончился таймаутом и выдал «ничего не нашлось»,
+         * хотя второе зеркало ответило бы. Один повтор, а не больше:
+         * каждый отказ - до HTTP_TIMEOUT_MS ожидания под надписью
+         * «Ищем…». */
+        ESP_LOGW(TAG, "каталог не ответил, пробую другое зеркало");
+        n = search_once(query, out, max_items);
+    }
+    if (n != 0) {
+        return n;           /* нашлось или связи нет вовсе */
     }
 
     /* Не нашлось целиком - пробуем без слова «радио». */
@@ -648,13 +677,29 @@ static bool is_plain_http(const char *u)
     return strncmp(u, "http://", 7) == 0;
 }
 
+/* Адрес из ответа каталога, только если он целиком влезает в cap.
+ *
+ * Обрезанный адрес не играет, а записался бы в ячейку как исправный:
+ * человек увидел бы «станция не отвечает» про живую станцию. Длинный
+ * адрес считаем отсутствующим - станция не попадёт в выдачу вовсе
+ * (search_once пропускает станции без адреса). */
+static void json_url(const cJSON *o, const char *k, char *dst, size_t cap)
+{
+    const cJSON *it = cJSON_GetObjectItemCaseSensitive(o, k);
+    dst[0] = '\0';
+    if (cJSON_IsString(it) && it->valuestring &&
+        strlen(it->valuestring) < cap) {
+        memcpy(dst, it->valuestring, strlen(it->valuestring) + 1);
+    }
+}
+
 static void pick_url(const cJSON *el, char *dst, size_t cap)
 {
     char resolved[192] = { 0 };
     char raw[192]      = { 0 };
 
-    json_str(el, "url_resolved", resolved, sizeof(resolved));
-    json_str(el, "url",          raw,      sizeof(raw));
+    json_url(el, "url_resolved", resolved, sizeof(resolved));
+    json_url(el, "url",          raw,      sizeof(raw));
 
     const char *chosen;
 
@@ -691,14 +736,16 @@ static int search_once(const char *query,
     char *body = fetch(path);
     if (!body) {
         ESP_LOGE(TAG, "ЗАМЕР: каталог не ответил");
-        return 0;
+        return -1;          /* отказ связи - не то же, что «ничего нет» */
     }
 
     cJSON *arr = cJSON_Parse(body);
     free(body);
     if (!cJSON_IsArray(arr)) {
+        /* Обрезанный или чужой ответ (например, страница входа
+         * гостевой сети) - тоже отказ, а не пустой результат. */
         cJSON_Delete(arr);
-        return 0;
+        return -1;
     }
 
     int n = 0;
@@ -759,7 +806,7 @@ static void click_task(void *arg)
     char *body = fetch_post(path);
     free(body);
 
-    vTaskDelete(NULL);
+    vTaskDeleteWithCaps(NULL);
 }
 
 void ipradio_net_report_click_async(const char *uuid)
@@ -771,7 +818,13 @@ void ipradio_net_report_click_async(const char *uuid)
     if (!copy) {
         return;
     }
-    if (xTaskCreate(click_task, "click", 6144, copy, 3, NULL) != pdPASS) {
+    /* Стек 12 КБ и в PSRAM, как у задачи поиска (ipradio_ui_search.c):
+     * запрос тот же, и с 2026-10-08 он идёт по https - рукопожатию TLS
+     * прежних 6 КБ могло не хватить. Внутренняя память под стек разовой
+     * задачи - та самая, которой не хватало драйверу SDIO
+     * (docs/34-memory.md). Удаляется парной vTaskDeleteWithCaps. */
+    if (xTaskCreateWithCaps(click_task, "click", 12288, copy, 3, NULL,
+                            MALLOC_CAP_SPIRAM) != pdPASS) {
         free(copy);
     }
 }
