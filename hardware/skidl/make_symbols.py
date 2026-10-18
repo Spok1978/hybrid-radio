@@ -24,7 +24,9 @@ OUT = Path(__file__).resolve().parents[1] / "kicad" / "hybrid-radio.kicad_sym"
 SYMBOLS = [
     ("RRD-102", "U", "FM tuner RDA5807M, RRD-102 V2.0 module, castellated 2.0 mm pitch. "
      "Pinout: JLCEDA/EasyEDA official library, LCSC C9900205627",
-     [(5, "VCC"), (1, "SDA"), (2, "SCL"), (4, "NC"), (3, "GND"), (6, "GND"), (9, "GND")],
+     # 3 и 9 — NC: прозвонено заказчиком 2026-10-18 на своём модуле, на землю
+     # не звонятся (в библиотеке JLCEDA они GND); земля только вывод 6.
+     [(5, "VCC"), (1, "SDA"), (2, "SCL"), (4, "NC"), (3, "NC"), (6, "GND"), (9, "NC")],
      [(10, "ANT"), (7, "LOUT"), (8, "ROUT")]),
 
     ("GY-PCM5102A", "U", "DAC PCM5102A, GY-PCM5102A module (TZT). Pins 1-6: I2S row, "
@@ -46,7 +48,7 @@ SYMBOLS = [
      "11-20: column B of the double row, 21-30: column A. "
      "Which column is at the edge: verify on the module",
      [(10, "VCC"), (11, "VCC"), (9, "GND"), (21, "GND"), (7, "SDA"), (8, "SCL"),
-      (3, "A0"), (2, "A1"), (1, "A2"), (4, "~{RESET}"), (5, "NC/SO"), (6, "NC/CS"),
+      (3, "A0"), (2, "A1"), (1, "A2"), (4, "~{RESET}"), (5, "NC_SO"), (6, "NC_CS"),
       (22, "INTA"), (12, "INTB")],
      [(23, "GPA0"), (24, "GPA1"), (25, "GPA2"), (26, "GPA3"), (27, "GPA4"),
       (28, "GPA5"), (29, "GPA6"), (30, "GPA7"),
@@ -57,6 +59,22 @@ SYMBOLS = [
      "rev. 1.30, Pin Assignment, TO-92 front view: 1 GND, 2 VIN, 3 VOUT",
      [(2, "VIN")],
      [(3, "VOUT"), (1, "GND")]),
+
+    # Плата Waveshare ESP32-P4-WIFI6-Touch-LCD-5 как внешнее устройство — только
+    # для листа макетирования (make_carriers_sheet.py), на платы не ставится.
+    # 1-40 — гребёнка J3 платы P4, имена по docs/33 §2 (сверено со схемой
+    # Waveshare, шелкографией и таблицей производителя); 41-42 — USB-C, куда
+    # по кабелю приходит 5 В с J2.
+    ("ESP32-P4-Board", "P", "Waveshare ESP32-P4-WIFI6-Touch-LCD-5 as external device: "
+     "J3 header 2x20 (pins 1-40) and USB-C power input (41-42)",
+     [(1, "VCC_5V"), (3, "VCC_5V"), (5, "GND"), (7, "GPIO37"), (9, "GPIO38"), (11, "GPIO5"),
+      (13, "GND"), (15, "GPIO21"), (17, "GPIO22"), (19, "GND"), (21, "GPIO24"), (23, "GPIO25"),
+      (25, "USBD_N"), (27, "USBD_P"), (29, "GND"), (31, "GPIO32"), (33, "GND"), (35, "GPIO46"),
+      (37, "GPIO47"), (39, "GPIO48"), (41, "USB-C_VBUS")],
+     [(2, "ESP_3V3"), (4, "GPIO7/SDA"), (6, "GPIO8/SCL"), (8, "GPIO2"), (10, "GND"), (12, "GPIO3"),
+      (14, "GPIO4"), (16, "GPIO28"), (18, "ESP_3V3"), (20, "GPIO29"), (22, "GPIO30"), (24, "GPIO31"),
+      (26, "GND"), (28, "GPIO34"), (30, "GPIO35"), (32, "GPIO49"), (34, "GPIO50"), (36, "GPIO51"),
+      (38, "GPIO52"), (40, "GND"), (42, "USB-C_GND")]),
 ]
 
 PITCH = 2.54
@@ -79,8 +97,13 @@ def symbol(name, ref, desc, left, right):
     rows = max(len(left), len(right))
     top = (rows - 1) * PITCH / 2
     box_top, box_bot = top + PITCH, -top - PITCH
-    pins = [pin(n, s, -HALF_W - PIN_LEN, top - i * PITCH, 0) for i, (n, s) in enumerate(left)]
-    pins += [pin(n, s, HALF_W + PIN_LEN, top - i * PITCH, 180) for i, (n, s) in enumerate(right)]
+    # Ширина корпуса — по самым длинным именам слева и справа (~1 мм на знак
+    # шрифта 1,27 + отступы), кратно шагу 2,54, не меньше HALF_W: иначе имена
+    # выводов P4 (USB-C_VBUS / USB-C_GND) наезжают друг на друга.
+    longest = max((len(x[1]) for x in left), default=0) + max((len(x[1]) for x in right), default=0)
+    half = max(HALF_W, -(-(longest * 1.3 + 4.0) / 2 // PITCH) * PITCH)
+    pins = [pin(n, s, -half - PIN_LEN, top - i * PITCH, 0) for i, (n, s) in enumerate(left)]
+    pins += [pin(n, s, half + PIN_LEN, top - i * PITCH, 180) for i, (n, s) in enumerate(right)]
     return f'''\t(symbol "{name}"
 \t\t(pin_names (offset 1.016))
 \t\t(exclude_from_sim no) (in_bom yes) (on_board yes)
@@ -90,7 +113,7 @@ def symbol(name, ref, desc, left, right):
 \t\t(property "Datasheet" "" (at 0 0 0) {effects(True)})
 \t\t(property "Description" "{desc}" (at 0 0 0) {effects(True)})
 \t\t(symbol "{name}_0_1"
-\t\t\t(rectangle (start {-HALF_W} {box_top:.2f}) (end {HALF_W} {box_bot:.2f})
+\t\t\t(rectangle (start {-half} {box_top:.2f}) (end {half} {box_bot:.2f})
 \t\t\t\t(stroke (width 0.254) (type default)) (fill (type background)))
 \t\t)
 \t\t(symbol "{name}_1_1"

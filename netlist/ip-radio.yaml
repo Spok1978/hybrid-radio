@@ -1,3 +1,8 @@
+# НЕАКТУАЛЬНО — ревизия на Raspberry Pi (A1). С 2026-08-26 приёмник строится
+# только на Waveshare ESP32-P4-WIFI6-Touch-LCD-5 (docs/24). Файл сохранён как
+# история; для сборки не применять. Актуальные цепи доп. плат —
+# hardware/skidl/carrier.py и hardware/kicad/carriers/hybrid-radio-carriers.net.
+#
 # Машиночитаемый список цепей приёмника IP-Radio.
 #
 # Источник истины — docs/16-connection-list.md. Этот файл написан из него

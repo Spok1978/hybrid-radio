@@ -1,0 +1,4 @@
+(sym_lib_table
+	(version 7)
+	(lib (name "hybrid-radio") (type "KiCad") (uri "${KIPRJMOD}/../hybrid-radio.kicad_sym") (options "") (descr ""))
+)

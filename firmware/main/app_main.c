@@ -35,6 +35,7 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 #include <inttypes.h>
 
 #include "freertos/FreeRTOS.h"
@@ -191,6 +192,95 @@ static void scan_i2c(void)
     s_i2c_bus = bus;
 }
 
+#if IPRADIO_SEED_NET_PRESETS
+/* Одноразовая запись станций в интернет-банк и печать банка (ключ -
+ * board_pins.h). Адреса и uuid - каталог radio-browser, запрос
+ * 2026-10-19, записи с отметкой «поток проверен» (hidebroken=true). */
+static void seed_and_dump_net_presets(void)
+{
+    static const struct {
+        int cell;
+        const char *name, *url, *uuid;
+    } seed[] = {
+        { 1, "Наше радио", "http://nashe1.hostingradio.ru/nashe-128.mp3",
+          "960b1967-0601-11e8-ae97-52543be04c81" },
+        { 6, "Бизнес FM", "https://bfm.hostingradio.ru/bfm256.mp3?radiostatistica=bfmru",
+          "fb9bcbf8-67c9-40ee-9f92-e643e796fd72" },
+        { 7, "Русское радио", "http://rusradio.hostingradio.ru/rusradio96.aacp",
+          "53c29beb-295c-11ea-aa0c-52543be04c81" },
+        { 8, "Радио Маяк", "http://icecast.vgtrk.cdnvideo.ru/mayakfm_mp3_192kbps",
+          "9614aa8d-0601-11e8-ae97-52543be04c81" },
+    };
+
+    ipradio_store_t *st = ipradio_storage_edit_begin();
+    if (!st) {
+        ESP_LOGW(TAG, "ЗАПИСЬ СТАНЦИЙ: хранилище недоступно, пропуск");
+        return;
+    }
+    ipradio_preset_t *bank = ipradio_storage_bank(st, IPRADIO_MODE_NET);
+    for (size_t i = 0; i < sizeof(seed) / sizeof(seed[0]); i++) {
+        ipradio_preset_t *p = &bank[seed[i].cell - 1];
+        memset(p, 0, sizeof(*p));
+        p->used = true;
+        p->type = IPRADIO_MODE_NET;
+        snprintf(p->name, sizeof(p->name), "%s", seed[i].name);
+        snprintf(p->url, sizeof(p->url), "%s", seed[i].url);
+        snprintf(p->stationuuid, sizeof(p->stationuuid), "%s", seed[i].uuid);
+    }
+    for (int c = 1; c <= IPRADIO_PRESET_MAX; c++) {
+        const ipradio_preset_t *p = &bank[c - 1];
+        ESP_LOGW(TAG, "БАНК СЕТИ %d: %s | %s", c,
+                 p->used ? p->name : "(пусто)", p->used ? p->url : "");
+    }
+    esp_err_t err = ipradio_storage_edit_end(true);
+    ESP_LOGW(TAG, "ЗАПИСЬ СТАНЦИЙ: %s", esp_err_to_name(err));
+}
+#endif
+
+#if IPRADIO_SEED_FM_PRESETS
+/* Одноразовая запись частот в эфирный банк (ключ - board_pins.h).
+ * Имя - частота: настоящее название придёт по RDS. */
+static void seed_and_dump_fm_presets(void)
+{
+    static const uint32_t khz[] = { 98700, 100700, 105200, 107700, 96600 };
+
+    ipradio_store_t *st = ipradio_storage_edit_begin();
+    if (!st) {
+        ESP_LOGW(TAG, "ЗАПИСЬ FM: хранилище недоступно, пропуск");
+        return;
+    }
+    ipradio_preset_t *bank = ipradio_storage_bank(st, IPRADIO_MODE_FM);
+    for (size_t i = 0; i < sizeof(khz) / sizeof(khz[0]); i++) {
+        ipradio_preset_t *p = &bank[i];
+        memset(p, 0, sizeof(*p));
+        p->used     = true;
+        p->type     = IPRADIO_MODE_FM;
+        p->band     = IPRADIO_BAND_CCIR;
+        p->freq_khz = khz[i];
+        snprintf(p->name, sizeof(p->name), "FM %u.%u",
+                 (unsigned) (khz[i] / 1000), (unsigned) (khz[i] % 1000 / 100));
+    }
+    /* Остальные ячейки - пустые: 2026-10-19 ложные удержания записали
+     * в 6…8 текущую частоту, заказчик их не заполнял. */
+    for (size_t i = sizeof(khz) / sizeof(khz[0]); i < IPRADIO_PRESET_MAX; i++) {
+        memset(&bank[i], 0, sizeof(bank[i]));
+    }
+    for (int c = 1; c <= IPRADIO_PRESET_MAX; c++) {
+        const ipradio_preset_t *p = &bank[c - 1];
+        ESP_LOGW(TAG, "БАНК FM %d: %s | %" PRIu32 " кГц", c,
+                 p->used ? p->name : "(пусто)", p->used ? p->freq_khz : 0);
+    }
+    /* Интернет-банк - только печать: проверить, не задели ли его. */
+    const ipradio_preset_t *net = ipradio_storage_bank(st, IPRADIO_MODE_NET);
+    for (int c = 1; c <= IPRADIO_PRESET_MAX; c++) {
+        ESP_LOGW(TAG, "БАНК СЕТИ %d: %s", c,
+                 net[c - 1].used ? net[c - 1].name : "(пусто)");
+    }
+    esp_err_t err = ipradio_storage_edit_end(true);
+    ESP_LOGW(TAG, "ЗАПИСЬ FM: %s", esp_err_to_name(err));
+}
+#endif
+
 void app_main(void)
 {
     ESP_LOGI(TAG, "=== IP-Radio, проверочная сборка ===");
@@ -216,6 +306,12 @@ void app_main(void)
      * с последнего сохранённого состояния, а не с умолчаний.
      * Отсутствие карты не фатально — прибор поднимется без неё. */
     ipradio_storage_init();
+#if IPRADIO_SEED_NET_PRESETS
+    seed_and_dump_net_presets();
+#endif
+#if IPRADIO_SEED_FM_PRESETS
+    seed_and_dump_fm_presets();
+#endif
 
     ESP_ERROR_CHECK(ipradio_state_init());
 
@@ -226,7 +322,7 @@ void app_main(void)
      * не быть вовсе - сейчас их и нет, - а управлять можно пальцем
      * по экрану. Ронять из-за этого весь прибор было бы прямым
      * нарушением того, что обещано в шапке файла. */
-    if (ipradio_input_init() != ESP_OK) {
+    if (ipradio_input_init(s_i2c_bus) != ESP_OK) {
         ESP_LOGE(TAG, "кнопки и регуляторы не поднялись, "
                       "остаётся управление с экрана");
     }

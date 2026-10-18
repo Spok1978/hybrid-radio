@@ -46,19 +46,32 @@ def footprint(name, descr, attr, pads, body, note, holes=()):
     SolderWire-0.5sqmm в библиотеке KiCad) или ('smd', w, h).
     holes: [(x, y)] — крепёжные отверстия 3,2 мм без металлизации."""
     x0, y0, x1, y1 = body
+    # Шелкография и курьёр — по корпусу и по площадкам, что выходят за него
+    # (у RRD-102 полуотверстия на самом краю): линия шелкографии не должна
+    # лежать на меди площадок (руководство разводки §9.2; DRC 2026-10-08 —
+    # 10 «silk_over_copper» на U3). Зазор линии до площадки 0,2 мм.
+    half = {"tht": 1.0, "wire": 1.05}
+    ext = [(x - half[k], y - half[k], x + half[k], y + half[k]) if k in half
+           else (x - k[1] / 2, y - k[2] / 2, x + k[1] / 2, y + k[2] / 2) for _n, x, y, k in pads]
+    gap = 0.2 + 0.06
+    sx0 = min([x0 - 0.12] + [e[0] - gap for e in ext if e[0] < x0])
+    sy0 = min([y0 - 0.12] + [e[1] - gap for e in ext if e[1] < y0])
+    sx1 = max([x1 + 0.12] + [e[2] + gap for e in ext if e[2] > x1])
+    sy1 = max([y1 + 0.12] + [e[3] + gap for e in ext if e[3] > y1])
     lines = [f'(footprint "{name}"', '\t(version 20260206)', '\t(generator "make_footprints.py")',
              '\t(layer "F.Cu")', f'\t(descr "{descr}")', f'\t(attr {attr})',
-             text("Reference", "REF**", (x0 + x1) / 2, y0 - 1.5, "F.SilkS"),
-             text("Value", name, (x0 + x1) / 2, y1 + 1.5, "F.Fab"),
+             text("Reference", "REF**", (x0 + x1) / 2, sy0 - 1.0, "F.SilkS"),
+             text("Value", name, (x0 + x1) / 2, sy1 + 1.0, "F.Fab"),
              text("Datasheet", "", 0, 0, "F.Fab", hide=True),
-             text("Description", note, 0, 0, "F.Fab", hide=True),
              rect("F.Fab", x0, y0, x1, y1, 0.1),
-             rect("F.SilkS", x0 - 0.12, y0 - 0.12, x1 + 0.12, y1 + 0.12, 0.12),
-             rect("F.CrtYd", x0 - 0.5, y0 - 0.5, x1 + 0.5, y1 + 0.5, 0.05)]
+             rect("F.SilkS", sx0, sy0, sx1, sy1, 0.12),
+             rect("F.CrtYd", sx0 - 0.38, sy0 - 0.38, sx1 + 0.38, sy1 + 0.38, 0.05)]
     for num, x, y, kind in pads:
         if kind in ("tht", "wire"):
             shape = "rect" if num == 1 else "circle"
-            size, drill = ("1.7", "1") if kind == "tht" else ("2.1", "0.9")
+            # Гнёзда 2,54: площадка 2,0 при сверле 1,0 — кольцо 0,5 для домашнего
+            # травления; зазор между соседними 0,54 мм.
+            size, drill = ("2", "1") if kind == "tht" else ("2.1", "0.9")
             lines.append(f'\t(pad "{num}" thru_hole {shape} (at {fmt(x)} {fmt(y)}) (size {size} {size}) '
                          f'(drill {drill}) (layers "*.Cu" "*.Mask"))')
         else:
@@ -189,6 +202,24 @@ def hw327():
                      holes=holes)
 
 
+def mounting_hole_m3():
+    """Крепёжное отверстие платы M3 (3,2 мм без металлизации). Своё, а не
+    MountingHole_3.2mm_M3 из библиотеки KiCad: у того надпись H1-H4 на
+    шелкографии вылезает за край платы, а скрыть её через pcbnew API
+    не удалось (make_board.py, 2026-10-07). Здесь надпись на слое F.Fab."""
+    lines = ['(footprint "MountingHole_M3_FabRef"', '	(version 20260206)',
+             '	(generator "make_footprints.py")', '	(layer "F.Cu")',
+             '	(descr "Mounting hole 3.2 mm M3, NPTH, reference on F.Fab")', '	(attr board_only exclude_from_pos_files exclude_from_bom)',
+             text("Reference", "REF**", 0, 0, "F.Fab"),
+             text("Value", "M3", 0, 2.5, "F.Fab", hide=True),
+             '	(fp_circle (center 0 0) (end 3 0) (stroke (width 0.05) (type solid)) (fill no) (layer "F.CrtYd"))',
+             '	(pad "" np_thru_hole circle (at 0 0) (size 3.2 3.2) (drill 3.2) (layers "*.Cu" "*.Mask"))',
+             ")"]
+    path = OUT / "MountingHole_M3_FabRef.kicad_mod"
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return path
+
+
 def check_against_symbols():
     """Номера площадок каждого посадочного места = номера выводов символа."""
     sys.path.insert(0, str(Path(__file__).parent))
@@ -196,8 +227,8 @@ def check_against_symbols():
     errors = []
     for name, _ref, _desc, left, right in SYMBOLS:
         fp = OUT / f"{name}.kicad_mod"
-        if name == "HT7333-A":
-            continue                     # стандартный TO-92_Inline из библиотеки KiCad
+        if name in ("HT7333-A", "ESP32-P4-Board"):
+            continue                     # TO-92 из библиотеки KiCad; P4 — внешнее устройство, без места
         if not fp.exists():
             errors.append(f"{name}: нет посадочного места")
             continue
@@ -213,7 +244,7 @@ def check_against_symbols():
 def main():
     sys.stdout.reconfigure(encoding="utf-8")
     OUT.mkdir(parents=True, exist_ok=True)
-    for make in (rrd102, gy_pcm5102a, mcp23017_cjmcu, weact_sy8205, hw327):
+    for make in (rrd102, gy_pcm5102a, mcp23017_cjmcu, weact_sy8205, hw327, mounting_hole_m3):
         print(make())
     errors = check_against_symbols()
     print("площадки = выводы символов: " + ("всё сошлось" if not errors else "; ".join(errors)))

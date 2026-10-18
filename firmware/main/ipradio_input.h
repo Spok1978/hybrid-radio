@@ -12,6 +12,7 @@
 #pragma once
 
 #include "esp_err.h"
+#include "driver/i2c_master.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -19,8 +20,12 @@ extern "C" {
 
 /** Поднять опрос органов управления и его задачу.
  *  Вызывать ПОСЛЕ ipradio_state_init(): модуль сразу начнёт слать
- *  события в автомат. */
-esp_err_t ipradio_input_init(void);
+ *  события в автомат.
+ *
+ *  bus - шина I²C платы: на ней расширитель MCP23017 с кнопками
+ *  пресетов и MODE (IPRADIO_USE_IO_EXPANDER). Может быть NULL - тогда
+ *  работают только кнопки и регуляторы на выводах самого ESP32. */
+esp_err_t ipradio_input_init(i2c_master_bus_handle_t bus);
 
 /** Сколько миллисекунд прошло с последнего действия человека.
  *  Нужно ждущему режиму: вход через три минуты бездействия (§5.4). */

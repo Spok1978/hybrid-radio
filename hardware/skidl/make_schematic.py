@@ -45,7 +45,11 @@ BLOCK_TITLES = OrderedDict([
     ("expander1", "Расширитель MCP23017"),
     ("controls1", "Энкодеры, кнопки, резерв"),
     ("ribbon1", "Шлейф к гребёнке J3 платы P4"),
-    ("indication1", "Индикация и контрольные точки"),
+    ("indication_power1", "Индикация и контрольные точки питания"),
+    ("indication_signal1", "Контрольные точки"),
+    ("links_power1", "Разъёмы: 12 В на усилители, 5 В на сигнальную плату"),
+    ("links_signal1", "Разъёмы: питание, провода к усилителям"),
+    ("links_amp1", "Разъём: 12 В с платы питания"),
 ])
 
 # Монтажные требования, которые иначе теряются между документами
@@ -266,9 +270,14 @@ def ref_key(ref):
     return (m.group(1), int(m.group(2))) if m else (ref, 0)
 
 
-def main():
-    sys.stdout.reconfigure(encoding="utf-8")
+def build(sch=None, keep_block=None, title="IP-Radio: вся схема (три платы)"):
+    """Схема целиком или только детали одной платы (keep_block(блок) -> bool).
+    Имя проекта в экземплярах символов = имя файла схемы без расширения."""
+    sch = sch or SCH
+    project = sch.stem
     comps, pin_net = read_netlist()
+    if keep_block:
+        comps = [c for c in comps if keep_block(c["block"])]
     lib_symbols, items = {}, []
     root_uuid = new_uuid()
 
@@ -331,7 +340,7 @@ def main():
                 cx, cy, line_h = x0, cy + line_h, 0.0
             sx = snap(cx + label_len + 2.5 - minx)
             sy = snap(cy + 2.5 + maxy)
-            items.append(place_symbol(c, key, pins, sx, sy, pin_net, root_uuid, fields))
+            items.append(place_symbol(c, key, pins, sx, sy, pin_net, root_uuid, fields, project))
             cx += w
             used_w = max(used_w, cx - x0)
             line_h = max(line_h, h)
@@ -339,13 +348,29 @@ def main():
         x0 += max(used_w, title_w) + 10
         row_h = max(row_h, block_h)
 
-    write_schematic(root_uuid, lib_symbols, items)
-    print(f"{SCH}: деталей {len(comps)}, символов {len(lib_symbols)}")
+    write_schematic(root_uuid, lib_symbols, items, sch, title)
+    print(f"{sch}: деталей {len(comps)}, символов {len(lib_symbols)}")
 
 
-def place_symbol(c, key, pins, sx, sy, pin_net, root_uuid, fields):
+def main():
+    """Схема целиком (Hybryd Radio.kicad_sch) и по одной на каждую плату
+    (hardware/kicad/<плата>/<плата>.kicad_sch)."""
+    sys.stdout.reconfigure(encoding="utf-8")
+    from boards import BOARDS, board_of
+    build()
+    for name, b in BOARDS.items():
+        folder = KICAD_DIR / name
+        folder.mkdir(exist_ok=True)
+        build(folder / f"{name}.kicad_sch", lambda blk, n=name: board_of(blk) == n, b["title"])
+
+
+def place_symbol(c, key, pins, sx, sy, pin_net, root_uuid, fields, project):
+    # Контрольные точки и площадки под провод не покупаются — не в BOM.
+    # Так же помечены их посадочные места в библиотеке KiCad (exclude_from_bom),
+    # иначе DRC со сверкой схемы ругается на расхождение.
+    in_bom = "no" if c["footprint"].startswith(("TestPoint:", "Connector_Wire:")) else "yes"
     out = [f'\t(symbol (lib_id "{key}") (at {sx} {sy} 0) (unit 1)\n'
-           f'\t\t(exclude_from_sim no) (in_bom yes) (on_board yes) (dnp no)\n'
+           f'\t\t(exclude_from_sim no) (in_bom {in_bom}) (on_board yes) (dnp no)\n'
            f'\t\t(uuid "{new_uuid()}")']
     pos = {t: (dx, dy, j) for t, dx, dy, j in fields}
 
@@ -361,7 +386,7 @@ def place_symbol(c, key, pins, sx, sy, pin_net, root_uuid, fields):
     prop("Datasheet", "", True)
     for p in pins:
         out.append(f'\t\t(pin "{p[0]}" (uuid "{new_uuid()}"))')
-    out.append(f'\t\t(instances (project "Hybryd Radio" (path "/{root_uuid}" '
+    out.append(f'\t\t(instances (project "{project}" (path "/{root_uuid}" '
                f'(reference "{c["ref"]}") (unit 1))))\n\t)')
 
     for num, px, py, ang in pins:
@@ -378,16 +403,16 @@ def place_symbol(c, key, pins, sx, sy, pin_net, root_uuid, fields):
     return "\n".join(out)
 
 
-def write_schematic(root_uuid, lib_symbols, items):
+def write_schematic(root_uuid, lib_symbols, items, sch, title):
     libs = "\n".join("\t\t" + dump(s) for s in lib_symbols.values())
     text = (f'(kicad_sch (version 20260306) (generator "make_schematic.py") (generator_version "10.0")\n'
             f'\t(uuid "{root_uuid}")\n\t(paper "{PAPER[0]}")\n'
-            f'\t(title_block (title "IP-Radio: плата-носитель модулей") '
+            f'\t(title_block (title "{title}") '
             f'(comment 1 "Сгенерировано из hardware/skidl/carrier.py — правки вносить туда"))\n'
             f'\t(lib_symbols\n{libs}\n\t)\n'
             + "\n".join(items) +
             '\n\t(sheet_instances (path "/" (page "1")))\n)\n')
-    SCH.write_text(text, encoding="utf-8")
+    sch.write_text(text, encoding="utf-8")
 
 
 if __name__ == "__main__":

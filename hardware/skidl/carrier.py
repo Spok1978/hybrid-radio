@@ -117,14 +117,22 @@ amp_sd = Net("AMP_SD")
 # ---------------------------------------------------------------- блоки
 @subcircuit
 def power_input():
-    """Вход 12 В: клеммник, предохранитель 3 А, защита от переполюсовки,
+    """Вход 12 В: гнездо 5,5x2,1, предохранитель T5A, защита от переполюсовки,
     TVS, накопительные конденсаторы, делитель признака питания.
-    Номиналы — docs/09 и docs/16 (сборка на Pi, три внешних разбора)."""
+    Номиналы — docs/33 (прошли три внешних разбора)."""
     v12_in, v12_fused, gate = Net("+12V_IN"), Net("12V_FUSED"), Net("Q1_GATE")
 
-    j = Part("Connector", "Screw_Terminal_01x02", ref="J1", value="12V IN", footprint=FP_TERM2)
+    # Гнездо под стандартный штекер 5,5 × 2,1, «плюс» в центре, впаивается в
+    # плату (решение заказчика 2026-10-08; БП — docs/11). Вывод 1 — центр,
+    # 2 — гильза, 3 — переключатель (замыкается на гильзу без штекера) — по
+    # символу Barrel_Jack_Switch из библиотеки KiCad; не используется.
+    # Посадочное место — типовое BarrelJack_Horizontal (DC-005); сверить с
+    # купленным гнездом печатью 1:1.
+    j = Part("Connector", "Barrel_Jack_Switch", ref="J1", value="12V 5.5x2.1",
+             footprint="Connector_BarrelJack:BarrelJack_Horizontal")
     j[1] += v12_in
     j[2] += gnd
+    j[3] += NC
 
     # T5A под БП 12 В / 5 А: два канала TPA3118 на 4 Ом при 12 В — до
     # 2 x 18 Вт (U^2/2R), это ~3,3 А плюс плата P4 (решение 2026-10-02).
@@ -188,8 +196,7 @@ def supply_5v():
 
 @subcircuit
 def supply_3v3_tuner():
-    """Отдельные 3,3 В тюнеру: дроссель, бусины и LDO HT7333-A,
-    как в сборке на Pi (docs/16)."""
+    """Отдельные 3,3 В тюнеру: дроссель, бусины и LDO HT7333-A (docs/33)."""
     v5_l, ldo_in, ldo_out = Net("+5V_FILT"), Net("LDO_IN"), Net("LDO_OUT")
     l1 = Part("Device", "L", value="10uH 3A", footprint=FP_CHOKE)
     l1[1] += v5
@@ -204,7 +211,9 @@ def supply_3v3_tuner():
     ldo["VIN"] += ldo_in
     ldo["VOUT"] += ldo_out
     ldo["GND"] += gnd
-    ldo.footprint = "Package_TO_SOT_THT:TO-92_Inline"
+    # Wide: шаг 2,54 (выводы разгибаются). У обычного TO-92_Inline шаг 1,27,
+    # кольцо 0,15 и зазор 0,22 мм — дома не вытравить (DRC, 2026-10-08).
+    ldo.footprint = "Package_TO_SOT_THT:TO-92_Inline_Wide"
 
     CP("10u", ldo_out, gnd, FP_CP_10U)
     C("100n", ldo_out, gnd)
@@ -235,6 +244,19 @@ def tuner():
     u["SDA"] += i2c_sda
     u["SCL"] += i2c_scl
     u["ANT"] += ant
+    # Развязка у вывода VCC модуля. В типовой схеме производителя — C2 22 нФ
+    # «Place C2 Close to 5807M pin7» (даташит V1.1, рис. 8-1); есть ли он на
+    # модуле RRD-102, не подтверждено. Без своего конденсатора бусина FB2
+    # стоит между развязкой LDO и нагрузкой и фильтром не работает
+    # (проверка по руководству разводки §4.5, 2026-10-08). Ref задан явно,
+    # чтобы не сдвинуть нумерацию остальных C; ref_prefix свой, потому что
+    # SKiDL сначала выдаёт детали автономер по префиксу и только потом ставит
+    # явный ref — счётчик «C» сдвигался, и C10…C26 съезжали на 1
+    # (skidl/part.py, Part.__init__: «if ref: self.ref = ref» после
+    # добавления в схему; проверено 2026-10-08).
+    c = Part("Device", "C", value="100n", footprint=FP_C, ref_prefix="CX", ref="C27")
+    c[1] += v3_fm
+    c[2] += gnd
     for pin, out in (("LOUT", tuner_l), ("ROUT", tuner_r)):
         raw = Net(f"RDA_{pin}")
         raw += u[pin]
@@ -339,7 +361,7 @@ def expander():
         u[a] += gnd                # адрес 0x20
     u["~{RESET}"] += v3_esp
     u["INTA"] += exp_int
-    u["INTB", "NC/SO", "NC/CS", "GPA7"] += NC
+    u["INTB", "NC_SO", "NC_CS", "GPA7"] += NC   # на модуле подписаны NC/SO, NC/CS; «/» в имени вывода KiCad экранирует, и сверка платы со схемой расходится
     for i in range(2, 8):
         u[f"GPB{i}"] += NC
     C("100n", v3_esp, gnd)
@@ -411,9 +433,16 @@ def ribbon():
     # 30 (GPIO35, автосброс).
 
 
+def test_points(nets):
+    for net in nets:
+        tp = Part("Connector", "TestPoint", value=net.name,
+                  footprint="TestPoint:TestPoint_THTPad_D2.0mm_Drill1.0mm")
+        tp[1] += net
+
+
 @subcircuit
-def indication():
-    """Светодиоды наличия +12 В и +5 В и контрольные точки (2026-10-02).
+def indication_power():
+    """Плата питания: светодиоды +12 В и +5 В, контрольные точки.
     Ток: (12 - 2) / 2,2k = 4,5 мА; (5 - 2) / 1k = 3 мА."""
     for rail, r in ((v12, "2k2"), (v5, "1k")):
         a = Net(f"LED_{rail.name.strip('+')}")
@@ -421,13 +450,59 @@ def indication():
         led = Part("Device", "LED", value=f"{rail.name} green", footprint="LED_THT:LED_D3.0mm")
         led["A"] += a
         led["K"] += gnd
+    test_points([v12, v5, gnd])
 
-    tp_nets = [v12, v5, v3_fm, pwr_sense, Net.get("SUM_L"), Net.get("SUM_R"), gnd, gnd]
-    assert all(tp_nets), "контрольная точка без цепи: indication() вызвать после микшера"
-    for net in tp_nets:
-        tp = Part("Connector", "TestPoint", value=net.name,
-                  footprint="TestPoint:TestPoint_THTPad_D2.0mm_Drill1.0mm")
-        tp[1] += net
+
+@subcircuit
+def indication_signal():
+    """Сигнальная плата: контрольные точки."""
+    nets = [v3_fm, pwr_sense, Net.get("SUM_L"), Net.get("SUM_R"), gnd]
+    assert all(nets), "indication_signal() вызывать после микшера"
+    test_points(nets)
+
+
+# ---------------------------------------------------------------- связи между платами
+# Решение 2026-10-08: три платы — питание, сигнальная, площадка усилителей
+# (docs/33, §15). Провод между платами — это одна цепь, соединяющая разъём
+# одной платы с разъёмом другой; так нетлист и схема остаются цельными, а
+# make_boards.py раздаёт детали по платам.
+FP_TERM3 = "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-3-5.08_1x03_P5.08mm_Horizontal"
+
+
+@subcircuit
+def links_power():
+    """Плата питания: 12 В на площадку усилителей, 5 В и признак 12 В на
+    сигнальную плату."""
+    j = Part("Connector", "Screw_Terminal_01x02", ref="J13", value="12V to AMP", footprint=FP_TERM2)
+    j[1] += v12
+    j[2] += gnd
+    j = Part("Connector", "Screw_Terminal_01x03", ref="J14", value="5V to SIGNAL", footprint=FP_TERM3)
+    j[1] += v5
+    j[2] += gnd
+    j[3] += pwr_sense
+
+
+@subcircuit
+def links_signal():
+    """Сигнальная плата: питание с платы питания; звук и MUTE — проводами
+    к модулям HW-327 (экранированный провод или витая пара)."""
+    j = Part("Connector", "Screw_Terminal_01x03", ref="J15", value="5V IN", footprint=FP_TERM3)
+    j[1] += v5
+    j[2] += gnd
+    j[3] += pwr_sense
+    j = Part("Connector_Generic", "Conn_01x06", ref="J16", value="TO AMPS", footprint=solder(6))
+    for i, name in enumerate(("AMP_L_INP", "AMP_L_INN", "AMP_R_INP", "AMP_R_INN")):
+        j[i + 1] += Net.get(name)
+    j[5] += amp_sd
+    j[6] += gnd
+
+
+@subcircuit
+def links_amp():
+    """Площадка усилителей: вход 12 В с платы питания."""
+    j = Part("Connector", "Screw_Terminal_01x02", ref="J17", value="12V IN", footprint=FP_TERM2)
+    j[1] += v12
+    j[2] += gnd
 
 
 # Крепёжные отверстия M3 ставятся в редакторе платы, а не здесь: деталь без
@@ -449,7 +524,11 @@ amp_mute()
 expander()
 controls()
 ribbon()
-indication()
+indication_power()
+indication_signal()
+links_power()
+links_signal()
+links_amp()
 
 if __name__ == "__main__":
     ERC()

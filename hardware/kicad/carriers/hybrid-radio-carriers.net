@@ -1,0 +1,9198 @@
+(export
+	(version "E")
+	(design
+		(source "C:\\Users\\telen\\Projects\\ip-radio\\hardware\\kicad\\carriers\\hybrid-radio-carriers.kicad_sch")
+		(date "2026-10-19T00:01:12")
+		(tool "Eeschema 10.0.6")
+		(sheet
+			(number "1")
+			(name "/")
+			(tstamps "/")
+			(title_block
+				(title "IP-Radio: доп. платы — лист для макетирования и проверок")
+				(company)
+				(rev)
+				(date)
+				(source "hybrid-radio-carriers.kicad_sch")
+				(comment
+					(number "1")
+					(value "Сгенерировано hardware/skidl/make_carriers_sheet.py из hardware/skidl/carrier.py")
+				)
+				(comment
+					(number "2")
+					(value "Перечень деталей: docs/35-carrier-boards-parts.md")
+				)
+				(comment
+					(number "3")
+					(value "")
+				)
+				(comment
+					(number "4")
+					(value "")
+				)
+				(comment
+					(number "5")
+					(value "")
+				)
+				(comment
+					(number "6")
+					(value "")
+				)
+				(comment
+					(number "7")
+					(value "")
+				)
+				(comment
+					(number "8")
+					(value "")
+				)
+				(comment
+					(number "9")
+					(value "")
+				)
+			)
+		)
+	)
+	(components
+		(comp
+			(ref "A1")
+			(value "HW-327")
+			(footprint "hybrid-radio:HW-327")
+			(fields
+				(field
+					(name "Footprint") "hybrid-radio:HW-327")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "hybrid-radio")
+				(part "HW-327")
+				(description "Amplifier TPA3118, HW-327 module, mono PBTL. Which MUTE pad is ground: verify with a meter")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "96cb04b9-b178-4daa-8ca8-a2a60afab394")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "5")
+						)
+						(pin
+							(num "6")
+						)
+						(pin
+							(num "7")
+						)
+						(pin
+							(num "8")
+						)
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+						(pin
+							(num "3")
+						)
+						(pin
+							(num "4")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "A2")
+			(value "HW-327")
+			(footprint "hybrid-radio:HW-327")
+			(fields
+				(field
+					(name "Footprint") "hybrid-radio:HW-327")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "hybrid-radio")
+				(part "HW-327")
+				(description "Amplifier TPA3118, HW-327 module, mono PBTL. Which MUTE pad is ground: verify with a meter")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "c207ef99-c108-4d42-8b3e-52e80c3ea10c")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "5")
+						)
+						(pin
+							(num "6")
+						)
+						(pin
+							(num "7")
+						)
+						(pin
+							(num "8")
+						)
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+						(pin
+							(num "3")
+						)
+						(pin
+							(num "4")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "C1")
+			(value "470u 25V")
+			(footprint "Capacitor_THT:CP_Radial_D10.0mm_P5.00mm")
+			(fields
+				(field
+					(name "Footprint") "Capacitor_THT:CP_Radial_D10.0mm_P5.00mm")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "C_Polarized")
+				(description "Polarized capacitor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "cap capacitor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "CP_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "bce099d6-05ac-4455-8c5d-d73ae80926e6")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "C2")
+			(value "100n")
+			(footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm")
+			(fields
+				(field
+					(name "Footprint") "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "C")
+				(description "Unpolarized capacitor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "cap capacitor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "C_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "1ad33806-ec44-46d3-be7f-698e75d11763")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "C3")
+			(value "100n")
+			(footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm")
+			(fields
+				(field
+					(name "Footprint") "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "C")
+				(description "Unpolarized capacitor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "cap capacitor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "C_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "b033cd0d-8db3-4996-afea-14ac889c953c")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "C4")
+			(value "470u 16V")
+			(footprint "Capacitor_THT:CP_Radial_D8.0mm_P3.50mm")
+			(fields
+				(field
+					(name "Footprint") "Capacitor_THT:CP_Radial_D8.0mm_P3.50mm")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "C_Polarized")
+				(description "Polarized capacitor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "cap capacitor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "CP_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "f00dfd13-4489-4f51-a521-2b367d7057e6")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "C5")
+			(value "100n")
+			(footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm")
+			(fields
+				(field
+					(name "Footprint") "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "C")
+				(description "Unpolarized capacitor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "cap capacitor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "C_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "29be2ea2-479c-4a2c-9e66-f6ae039f95ef")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "C6")
+			(value "10u")
+			(footprint "Capacitor_THT:CP_Radial_D5.0mm_P2.00mm")
+			(fields
+				(field
+					(name "Footprint") "Capacitor_THT:CP_Radial_D5.0mm_P2.00mm")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "C_Polarized")
+				(description "Polarized capacitor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "cap capacitor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "CP_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "ff6d67f0-ab95-432c-b64b-b8bafac7af40")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "C7")
+			(value "100n")
+			(footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm")
+			(fields
+				(field
+					(name "Footprint") "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "C")
+				(description "Unpolarized capacitor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "cap capacitor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "C_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "ac706920-871e-44a8-96d4-e34f449c8bd5")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "C8")
+			(value "10u")
+			(footprint "Capacitor_THT:CP_Radial_D5.0mm_P2.00mm")
+			(fields
+				(field
+					(name "Footprint") "Capacitor_THT:CP_Radial_D5.0mm_P2.00mm")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "C_Polarized")
+				(description "Polarized capacitor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "cap capacitor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "CP_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "2166cc7d-5cc1-46ca-bdff-fe6741a21773")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "C9")
+			(value "100n")
+			(footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm")
+			(fields
+				(field
+					(name "Footprint") "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "C")
+				(description "Unpolarized capacitor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "cap capacitor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "C_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "1174bd6e-79b0-4238-8b46-20a734d28fbe")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "C10")
+			(value "4u7 25V")
+			(footprint "Capacitor_THT:CP_Radial_D5.0mm_P2.00mm")
+			(fields
+				(field
+					(name "Footprint") "Capacitor_THT:CP_Radial_D5.0mm_P2.00mm")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "C_Polarized")
+				(description "Polarized capacitor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "cap capacitor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "CP_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "231179ad-28d4-4959-913a-d249ece94267")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "C11")
+			(value "4u7 25V")
+			(footprint "Capacitor_THT:CP_Radial_D5.0mm_P2.00mm")
+			(fields
+				(field
+					(name "Footprint") "Capacitor_THT:CP_Radial_D5.0mm_P2.00mm")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "C_Polarized")
+				(description "Polarized capacitor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "cap capacitor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "CP_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "1c714b23-4214-45c6-8d82-eaf6ab92ba0a")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "C12")
+			(value "100p C0G")
+			(footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm")
+			(fields
+				(field
+					(name "Footprint") "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "C")
+				(description "Unpolarized capacitor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "cap capacitor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "C_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "78024218-c805-4852-b563-594d787a7205")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "C13")
+			(value "100n")
+			(footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm")
+			(fields
+				(field
+					(name "Footprint") "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "C")
+				(description "Unpolarized capacitor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "cap capacitor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "C_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "2f84774c-3602-44fe-962d-b2118dee4719")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "C14")
+			(value "3u3 film 63V")
+			(footprint "Capacitor_THT:C_Rect_L18.0mm_W8.0mm_P15.00mm_FKS3_FKP3")
+			(fields
+				(field
+					(name "Footprint") "Capacitor_THT:C_Rect_L18.0mm_W8.0mm_P15.00mm_FKS3_FKP3")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "C")
+				(description "Unpolarized capacitor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "cap capacitor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "C_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "9e5373f6-8950-466f-9227-671457d1570a")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "C15")
+			(value "3u3 film 63V")
+			(footprint "Capacitor_THT:C_Rect_L18.0mm_W8.0mm_P15.00mm_FKS3_FKP3")
+			(fields
+				(field
+					(name "Footprint") "Capacitor_THT:C_Rect_L18.0mm_W8.0mm_P15.00mm_FKS3_FKP3")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "C")
+				(description "Unpolarized capacitor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "cap capacitor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "C_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "12c29d7c-155e-4da3-9fe3-ca3eaad4b782")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "C16")
+			(value "1000u 25V")
+			(footprint "Capacitor_THT:CP_Radial_D12.5mm_P5.00mm")
+			(fields
+				(field
+					(name "Footprint") "Capacitor_THT:CP_Radial_D12.5mm_P5.00mm")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "C_Polarized")
+				(description "Polarized capacitor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "cap capacitor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "CP_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "3049f3a7-870f-43e9-85fe-0825f1685a86")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "C17")
+			(value "100n")
+			(footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm")
+			(fields
+				(field
+					(name "Footprint") "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "C")
+				(description "Unpolarized capacitor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "cap capacitor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "C_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "c30968a7-dae2-4d97-869b-74038c563dd2")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "C18")
+			(value "3u3 film 63V")
+			(footprint "Capacitor_THT:C_Rect_L18.0mm_W8.0mm_P15.00mm_FKS3_FKP3")
+			(fields
+				(field
+					(name "Footprint") "Capacitor_THT:C_Rect_L18.0mm_W8.0mm_P15.00mm_FKS3_FKP3")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "C")
+				(description "Unpolarized capacitor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "cap capacitor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "C_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "71186f8a-69db-43ce-8590-95db2690a6c6")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "C19")
+			(value "3u3 film 63V")
+			(footprint "Capacitor_THT:C_Rect_L18.0mm_W8.0mm_P15.00mm_FKS3_FKP3")
+			(fields
+				(field
+					(name "Footprint") "Capacitor_THT:C_Rect_L18.0mm_W8.0mm_P15.00mm_FKS3_FKP3")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "C")
+				(description "Unpolarized capacitor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "cap capacitor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "C_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "632f08d0-4bd9-458a-afa1-520629f6cfcc")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "C20")
+			(value "1000u 25V")
+			(footprint "Capacitor_THT:CP_Radial_D12.5mm_P5.00mm")
+			(fields
+				(field
+					(name "Footprint") "Capacitor_THT:CP_Radial_D12.5mm_P5.00mm")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "C_Polarized")
+				(description "Polarized capacitor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "cap capacitor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "CP_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "dc15aff0-d6d0-4e0a-a30f-a7b715b10ff5")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "C21")
+			(value "100n")
+			(footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm")
+			(fields
+				(field
+					(name "Footprint") "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "C")
+				(description "Unpolarized capacitor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "cap capacitor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "C_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "d1148f47-c7bd-44b4-9fa1-f386269ef3e7")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "C22")
+			(value "100n")
+			(footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm")
+			(fields
+				(field
+					(name "Footprint") "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "C")
+				(description "Unpolarized capacitor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "cap capacitor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "C_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "ee870ddf-adf6-41f6-9981-ca2c3a8ae339")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "C23")
+			(value "10n")
+			(footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm")
+			(fields
+				(field
+					(name "Footprint") "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "C")
+				(description "Unpolarized capacitor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "cap capacitor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "C_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "36c622f4-7df0-4063-9be3-2bb2cf1bef06")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "C24")
+			(value "10n")
+			(footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm")
+			(fields
+				(field
+					(name "Footprint") "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "C")
+				(description "Unpolarized capacitor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "cap capacitor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "C_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "3d6ac146-0923-48bb-a991-83aea9a2be7b")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "C25")
+			(value "10n")
+			(footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm")
+			(fields
+				(field
+					(name "Footprint") "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "C")
+				(description "Unpolarized capacitor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "cap capacitor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "C_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "fef02195-1eef-4809-9d16-275ea308000f")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "C26")
+			(value "10n")
+			(footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm")
+			(fields
+				(field
+					(name "Footprint") "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "C")
+				(description "Unpolarized capacitor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "cap capacitor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "C_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "c460c4ba-c62a-4390-b587-36c57e4d18b4")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "C27")
+			(value "100n")
+			(footprint "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm")
+			(fields
+				(field
+					(name "Footprint") "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "C")
+				(description "Unpolarized capacitor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "cap capacitor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "C_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "5e2229ff-0dc8-41cd-9183-b2447f487bc9")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "D1")
+			(value "1N4744A 15V")
+			(footprint "Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal")
+			(fields
+				(field
+					(name "Footprint") "Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "D_Zener")
+				(description "Zener diode")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "diode")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "TO-???* *_Diode_* *SingleDiode* D_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "60d69037-1be9-4739-9d15-87ca39d01bfb")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "D2")
+			(value "P6KE16A TVS")
+			(footprint "Diode_THT:D_DO-15_P12.70mm_Horizontal")
+			(fields
+				(field
+					(name "Footprint") "Diode_THT:D_DO-15_P12.70mm_Horizontal")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "D_Zener")
+				(description "Zener diode")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "diode")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "TO-???* *_Diode_* *SingleDiode* D_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "5e98ddd5-af3d-4f33-ab2f-d00f88ebc1fe")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "D3")
+			(value "+12V green")
+			(footprint "LED_THT:LED_D3.0mm")
+			(fields
+				(field
+					(name "Footprint") "LED_THT:LED_D3.0mm")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "LED")
+				(description "Light emitting diode")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "LED diode")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "LED* LED_SMD:* LED_THT:*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "d3cb6d86-3e60-4a38-b6f0-24a67bba9eaf")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "D4")
+			(value "+5V green")
+			(footprint "LED_THT:LED_D3.0mm")
+			(fields
+				(field
+					(name "Footprint") "LED_THT:LED_D3.0mm")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "LED")
+				(description "Light emitting diode")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "LED diode")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "LED* LED_SMD:* LED_THT:*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "17aba52c-eafe-424a-b430-7020340448bd")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "F1")
+			(value "T5A")
+			(footprint "Fuse:Fuseholder_Clip-5x20mm_Bel_FC-203-22_Lateral_P17.80x5.00mm_D1.17mm_Horizontal")
+			(fields
+				(field
+					(name "Footprint") "Fuse:Fuseholder_Clip-5x20mm_Bel_FC-203-22_Lateral_P17.80x5.00mm_D1.17mm_Horizontal")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "Fuse")
+				(description "Fuse")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "fuse")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "*Fuse*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "b30aa637-b23b-42a4-94f3-18d2ef72534d")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "FB1")
+			(value "bead")
+			(footprint "Inductor_THT:L_Axial_L5.3mm_D2.2mm_P10.16mm_Horizontal_Vishay_IM-1")
+			(fields
+				(field
+					(name "Footprint") "Inductor_THT:L_Axial_L5.3mm_D2.2mm_P10.16mm_Horizontal_Vishay_IM-1")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "FerriteBead")
+				(description "Ferrite bead")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "L ferrite bead inductor filter")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "Inductor_* L_* *Ferrite*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "e23dd3df-3db9-4537-8e51-7f01aef37942")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "FB2")
+			(value "bead")
+			(footprint "Inductor_THT:L_Axial_L5.3mm_D2.2mm_P10.16mm_Horizontal_Vishay_IM-1")
+			(fields
+				(field
+					(name "Footprint") "Inductor_THT:L_Axial_L5.3mm_D2.2mm_P10.16mm_Horizontal_Vishay_IM-1")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "FerriteBead")
+				(description "Ferrite bead")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "L ferrite bead inductor filter")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "Inductor_* L_* *Ferrite*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "3c1230ba-077e-4ca5-ae45-17e2249619f8")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "J1")
+			(value "12V 5.5x2.1")
+			(footprint "Connector_BarrelJack:BarrelJack_Horizontal")
+			(fields
+				(field
+					(name "Footprint") "Connector_BarrelJack:BarrelJack_Horizontal")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Connector")
+				(part "Barrel_Jack_Switch")
+				(description "DC Barrel Jack with an internal switch")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "DC power barrel jack connector")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "BarrelJack*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "ebc014c9-e7e9-42b5-994b-338435f10f2a")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "3")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "J2")
+			(value "5V to P4 USB-C")
+			(footprint "Connector_USB:USB_A_Molex_67643_Horizontal")
+			(fields
+				(field
+					(name "Footprint") "Connector_USB:USB_A_Molex_67643_Horizontal")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Connector")
+				(part "USB_A")
+				(description "USB Type A connector")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "connector USB")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "USB*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "f319f52f-d926-4100-824d-83afebfdda6e")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "SH")
+						)
+						(pin
+							(num "4")
+						)
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "3")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "J3")
+			(value "to P4 J3")
+			(footprint "Connector_IDC:IDC-Header_2x20_P2.54mm_Vertical")
+			(fields
+				(field
+					(name "Footprint") "Connector_IDC:IDC-Header_2x20_P2.54mm_Vertical")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Connector_Generic")
+				(part "Conn_02x20_Odd_Even")
+				(description "Generic connector, double row, 02x20, odd/even pin numbering scheme (row 1 odd numbers, row 2 even numbers), script generated (kicad-library-utils/schlib/autogen/connector/)")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "connector")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "Connector*:*_2x??_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "a84e838a-ac92-4a1c-8b96-7273438e66ee")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "3")
+						)
+						(pin
+							(num "5")
+						)
+						(pin
+							(num "7")
+						)
+						(pin
+							(num "9")
+						)
+						(pin
+							(num "11")
+						)
+						(pin
+							(num "13")
+						)
+						(pin
+							(num "15")
+						)
+						(pin
+							(num "17")
+						)
+						(pin
+							(num "19")
+						)
+						(pin
+							(num "21")
+						)
+						(pin
+							(num "23")
+						)
+						(pin
+							(num "25")
+						)
+						(pin
+							(num "27")
+						)
+						(pin
+							(num "29")
+						)
+						(pin
+							(num "31")
+						)
+						(pin
+							(num "33")
+						)
+						(pin
+							(num "35")
+						)
+						(pin
+							(num "37")
+						)
+						(pin
+							(num "39")
+						)
+						(pin
+							(num "2")
+						)
+						(pin
+							(num "4")
+						)
+						(pin
+							(num "6")
+						)
+						(pin
+							(num "8")
+						)
+						(pin
+							(num "10")
+						)
+						(pin
+							(num "12")
+						)
+						(pin
+							(num "14")
+						)
+						(pin
+							(num "16")
+						)
+						(pin
+							(num "18")
+						)
+						(pin
+							(num "20")
+						)
+						(pin
+							(num "22")
+						)
+						(pin
+							(num "24")
+						)
+						(pin
+							(num "26")
+						)
+						(pin
+							(num "28")
+						)
+						(pin
+							(num "30")
+						)
+						(pin
+							(num "32")
+						)
+						(pin
+							(num "34")
+						)
+						(pin
+							(num "36")
+						)
+						(pin
+							(num "38")
+						)
+						(pin
+							(num "40")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "J4")
+			(value "ANT")
+			(footprint "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal")
+			(fields
+				(field
+					(name "Footprint") "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Connector")
+				(part "Screw_Terminal_01x02")
+				(description "Generic screw terminal, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "screw terminal")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "TerminalBlock*:*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "692dfba6-6ec7-4278-b176-afa95becfff7")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "J5")
+			(value "SPK L")
+			(footprint "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal")
+			(fields
+				(field
+					(name "Footprint") "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Connector")
+				(part "Screw_Terminal_01x02")
+				(description "Generic screw terminal, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "screw terminal")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "TerminalBlock*:*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "d9246318-76ae-4bcc-b130-fca882f2bd87")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "J6")
+			(value "SPK R")
+			(footprint "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal")
+			(fields
+				(field
+					(name "Footprint") "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Connector")
+				(part "Screw_Terminal_01x02")
+				(description "Generic screw terminal, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "screw terminal")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "TerminalBlock*:*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "20ac279a-9fff-4a65-ab88-3a8c49aad36a")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "J7")
+			(value "PRESETS 1-4")
+			(footprint "Connector_Wire:SolderWire-0.25sqmm_1x05_P4.2mm_D0.65mm_OD1.7mm")
+			(fields
+				(field
+					(name "Footprint") "Connector_Wire:SolderWire-0.25sqmm_1x05_P4.2mm_D0.65mm_OD1.7mm")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Connector_Generic")
+				(part "Conn_01x05")
+				(description "Generic connector, single row, 01x05, script generated (kicad-library-utils/schlib/autogen/connector/)")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "exclude_from_bom")
+			)
+			(property
+				(name "ki_keywords")
+				(value "connector")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "Connector*:*_1x??_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "e34e160e-d69d-4cfb-a154-f8d9f7a7db75")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+						(pin
+							(num "3")
+						)
+						(pin
+							(num "4")
+						)
+						(pin
+							(num "5")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "J8")
+			(value "SPARE")
+			(footprint "Connector_JST:JST_XH_B6B-XH-A_1x06_P2.50mm_Vertical")
+			(fields
+				(field
+					(name "Footprint") "Connector_JST:JST_XH_B6B-XH-A_1x06_P2.50mm_Vertical")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Connector_Generic")
+				(part "Conn_01x06")
+				(description "Generic connector, single row, 01x06, script generated (kicad-library-utils/schlib/autogen/connector/)")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "connector")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "Connector*:*_1x??_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "f674b99e-1659-4aaf-90c0-607d6d84ee7c")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+						(pin
+							(num "3")
+						)
+						(pin
+							(num "4")
+						)
+						(pin
+							(num "5")
+						)
+						(pin
+							(num "6")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "J9")
+			(value "EC11")
+			(footprint "Connector_Wire:SolderWire-0.25sqmm_1x05_P4.2mm_D0.65mm_OD1.7mm")
+			(fields
+				(field
+					(name "Footprint") "Connector_Wire:SolderWire-0.25sqmm_1x05_P4.2mm_D0.65mm_OD1.7mm")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Connector_Generic")
+				(part "Conn_01x05")
+				(description "Generic connector, single row, 01x05, script generated (kicad-library-utils/schlib/autogen/connector/)")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "exclude_from_bom")
+			)
+			(property
+				(name "ki_keywords")
+				(value "connector")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "Connector*:*_1x??_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "503181d6-ec1c-4b83-b9d9-e45a8d7e0f98")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+						(pin
+							(num "3")
+						)
+						(pin
+							(num "4")
+						)
+						(pin
+							(num "5")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "J10")
+			(value "EC11")
+			(footprint "Connector_Wire:SolderWire-0.25sqmm_1x05_P4.2mm_D0.65mm_OD1.7mm")
+			(fields
+				(field
+					(name "Footprint") "Connector_Wire:SolderWire-0.25sqmm_1x05_P4.2mm_D0.65mm_OD1.7mm")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Connector_Generic")
+				(part "Conn_01x05")
+				(description "Generic connector, single row, 01x05, script generated (kicad-library-utils/schlib/autogen/connector/)")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "exclude_from_bom")
+			)
+			(property
+				(name "ki_keywords")
+				(value "connector")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "Connector*:*_1x??_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "b460107a-fe7e-4924-b3ec-5b10a3cb6870")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+						(pin
+							(num "3")
+						)
+						(pin
+							(num "4")
+						)
+						(pin
+							(num "5")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "J11")
+			(value "BTN PWR")
+			(footprint "Connector_Wire:SolderWire-0.25sqmm_1x02_P4.2mm_D0.65mm_OD1.7mm")
+			(fields
+				(field
+					(name "Footprint") "Connector_Wire:SolderWire-0.25sqmm_1x02_P4.2mm_D0.65mm_OD1.7mm")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Connector_Generic")
+				(part "Conn_01x02")
+				(description "Generic connector, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "exclude_from_bom")
+			)
+			(property
+				(name "ki_keywords")
+				(value "connector")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "Connector*:*_1x??_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "65fa9b03-9ffc-499c-9cf1-7eb09215f944")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "J12")
+			(value "PRESETS 5-8 + MODE")
+			(footprint "Connector_Wire:SolderWire-0.25sqmm_1x06_P4.2mm_D0.65mm_OD1.7mm")
+			(fields
+				(field
+					(name "Footprint") "Connector_Wire:SolderWire-0.25sqmm_1x06_P4.2mm_D0.65mm_OD1.7mm")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Connector_Generic")
+				(part "Conn_01x06")
+				(description "Generic connector, single row, 01x06, script generated (kicad-library-utils/schlib/autogen/connector/)")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "exclude_from_bom")
+			)
+			(property
+				(name "ki_keywords")
+				(value "connector")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "Connector*:*_1x??_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "c81dfe56-8712-44a6-8554-781d6882a84e")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+						(pin
+							(num "3")
+						)
+						(pin
+							(num "4")
+						)
+						(pin
+							(num "5")
+						)
+						(pin
+							(num "6")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "J13")
+			(value "12V to AMP")
+			(footprint "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal")
+			(fields
+				(field
+					(name "Footprint") "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Connector")
+				(part "Screw_Terminal_01x02")
+				(description "Generic screw terminal, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "screw terminal")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "TerminalBlock*:*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "229a49b1-035c-4987-8abe-fe000d9df0b7")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "J14")
+			(value "5V to SIGNAL")
+			(footprint "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-3-5.08_1x03_P5.08mm_Horizontal")
+			(fields
+				(field
+					(name "Footprint") "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-3-5.08_1x03_P5.08mm_Horizontal")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Connector")
+				(part "Screw_Terminal_01x03")
+				(description "Generic screw terminal, single row, 01x03, script generated (kicad-library-utils/schlib/autogen/connector/)")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "screw terminal")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "TerminalBlock*:*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "b8b191ac-206a-46bd-900c-f63cced2a3dd")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+						(pin
+							(num "3")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "J15")
+			(value "5V IN")
+			(footprint "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-3-5.08_1x03_P5.08mm_Horizontal")
+			(fields
+				(field
+					(name "Footprint") "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-3-5.08_1x03_P5.08mm_Horizontal")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Connector")
+				(part "Screw_Terminal_01x03")
+				(description "Generic screw terminal, single row, 01x03, script generated (kicad-library-utils/schlib/autogen/connector/)")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "screw terminal")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "TerminalBlock*:*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "253659ee-0a0e-4707-b118-06054ab16197")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+						(pin
+							(num "3")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "J16")
+			(value "TO AMPS")
+			(footprint "Connector_Wire:SolderWire-0.25sqmm_1x06_P4.2mm_D0.65mm_OD1.7mm")
+			(fields
+				(field
+					(name "Footprint") "Connector_Wire:SolderWire-0.25sqmm_1x06_P4.2mm_D0.65mm_OD1.7mm")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Connector_Generic")
+				(part "Conn_01x06")
+				(description "Generic connector, single row, 01x06, script generated (kicad-library-utils/schlib/autogen/connector/)")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "exclude_from_bom")
+			)
+			(property
+				(name "ki_keywords")
+				(value "connector")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "Connector*:*_1x??_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "8eb600cf-9e89-4d5e-b5ea-8c3a3569ac9e")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+						(pin
+							(num "3")
+						)
+						(pin
+							(num "4")
+						)
+						(pin
+							(num "5")
+						)
+						(pin
+							(num "6")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "J17")
+			(value "12V IN")
+			(footprint "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal")
+			(fields
+				(field
+					(name "Footprint") "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Connector")
+				(part "Screw_Terminal_01x02")
+				(description "Generic screw terminal, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "screw terminal")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "TerminalBlock*:*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "dacb8c2e-673c-4de5-ad6e-824a283dfd48")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "L1")
+			(value "10uH 3A")
+			(footprint "Inductor_THT:L_Radial_D10.0mm_P5.00mm_Fastron_07P")
+			(fields
+				(field
+					(name "Footprint") "Inductor_THT:L_Radial_D10.0mm_P5.00mm_Fastron_07P")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "L")
+				(description "Inductor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "inductor choke coil reactor magnetic")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "Choke_* *Coil* Inductor_* L_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "724d1c29-974b-4e95-9447-0c3770f81e2a")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "Q1")
+			(value "IRF4905")
+			(footprint "Package_TO_SOT_THT:TO-220-3_Vertical")
+			(fields
+				(field
+					(name "Footprint") "Package_TO_SOT_THT:TO-220-3_Vertical")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Transistor_FET")
+				(part "IRF4905")
+				(description "-74A Id, -55V Vds, Single P-Channel HEXFET Power MOSFET, 20mOhm Ron, TO-220AB")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "Single P-Channel HEXFET Power MOSFET")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "TO?220*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "1bb7f268-c53b-410c-ad78-ee5222878e33")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+						(pin
+							(num "3")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "R1")
+			(value "100k")
+			(footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+			(fields
+				(field
+					(name "Footprint") "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "R")
+				(description "Resistor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "R res resistor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "R_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "2bca05f2-03a9-44a3-8be9-2cceac90de1f")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "R2")
+			(value "39k")
+			(footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+			(fields
+				(field
+					(name "Footprint") "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "R")
+				(description "Resistor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "R res resistor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "R_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "8eb2600e-e905-41e5-b771-ce794e8ebaa9")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "R3")
+			(value "12k")
+			(footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+			(fields
+				(field
+					(name "Footprint") "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "R")
+				(description "Resistor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "R res resistor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "R_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "f40a3311-a865-4e3a-a646-811b25462557")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "R4")
+			(value "47")
+			(footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+			(fields
+				(field
+					(name "Footprint") "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "R")
+				(description "Resistor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "R res resistor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "R_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "4a6654d5-e925-42a8-97db-f97e3e756224")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "R5")
+			(value "47")
+			(footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+			(fields
+				(field
+					(name "Footprint") "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "R")
+				(description "Resistor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "R res resistor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "R_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "496b37d1-d7eb-44fe-8206-70401ce3d0a8")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "R6")
+			(value "47")
+			(footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+			(fields
+				(field
+					(name "Footprint") "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "R")
+				(description "Resistor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "R res resistor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "R_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "088ad4de-81f5-4bd6-9541-1e7f66f490a4")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "R7")
+			(value "1k")
+			(footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+			(fields
+				(field
+					(name "Footprint") "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "R")
+				(description "Resistor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "R res resistor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "R_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "df416418-7aad-43d0-9de7-5837deef2465")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "R8")
+			(value "10k")
+			(footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+			(fields
+				(field
+					(name "Footprint") "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "R")
+				(description "Resistor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "R res resistor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "R_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "442e8304-f036-48bd-a5bf-eb78f431a184")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "R9")
+			(value "100k")
+			(footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+			(fields
+				(field
+					(name "Footprint") "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "R")
+				(description "Resistor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "R res resistor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "R_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "925a0781-843a-4c4b-a486-701ee5bfa853")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "R10")
+			(value "1k")
+			(footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+			(fields
+				(field
+					(name "Footprint") "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "R")
+				(description "Resistor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "R res resistor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "R_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "ab076585-cef4-4948-90eb-cb587767b17d")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "R11")
+			(value "10k")
+			(footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+			(fields
+				(field
+					(name "Footprint") "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "R")
+				(description "Resistor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "R res resistor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "R_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "cc41826e-3057-4d6a-997d-37c2ecc1696d")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "R12")
+			(value "100k")
+			(footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+			(fields
+				(field
+					(name "Footprint") "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "R")
+				(description "Resistor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "R res resistor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "R_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "7c498c32-4179-4279-9d8a-0cd7806d393b")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "R13")
+			(value "1k")
+			(footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+			(fields
+				(field
+					(name "Footprint") "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "R")
+				(description "Resistor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "R res resistor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "R_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "df73c38e-950e-4138-91ca-97ff25ff4f64")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "R14")
+			(value "100k (SDZ)")
+			(footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+			(fields
+				(field
+					(name "Footprint") "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "R")
+				(description "Resistor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "dnp")
+			)
+			(property
+				(name "ki_keywords")
+				(value "R res resistor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "R_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "6c2e5a92-a783-4111-a034-b760b79402d6")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "R15")
+			(value "100k (MUTE)")
+			(footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+			(fields
+				(field
+					(name "Footprint") "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "R")
+				(description "Resistor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "dnp")
+			)
+			(property
+				(name "ki_keywords")
+				(value "R res resistor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "R_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "69d2752b-a56c-414c-8cba-201bea653fb0")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "R16")
+			(value "10k")
+			(footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+			(fields
+				(field
+					(name "Footprint") "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "R")
+				(description "Resistor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "R res resistor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "R_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "e5f0e0cb-b93c-4582-b615-8011c9b4b8d8")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "R17")
+			(value "10k")
+			(footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+			(fields
+				(field
+					(name "Footprint") "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "R")
+				(description "Resistor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "R res resistor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "R_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "00d721d6-38ee-4027-b255-3b31c34052bb")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "R18")
+			(value "10k")
+			(footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+			(fields
+				(field
+					(name "Footprint") "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "R")
+				(description "Resistor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "R res resistor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "R_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "495dce5b-3634-49b4-b1e7-aa209d827d4f")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "R19")
+			(value "10k")
+			(footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+			(fields
+				(field
+					(name "Footprint") "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "R")
+				(description "Resistor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "R res resistor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "R_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "621d18c0-a685-4a19-a8d8-c4995125ea60")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "R20")
+			(value "2k2")
+			(footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+			(fields
+				(field
+					(name "Footprint") "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "R")
+				(description "Resistor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "R res resistor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "R_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "cc34e1a3-818f-41e5-aae2-e8186a51cc31")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "R21")
+			(value "1k")
+			(footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+			(fields
+				(field
+					(name "Footprint") "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "R")
+				(description "Resistor")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "R res resistor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "R_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "1d0dbf8e-8e6e-43df-abab-5997c293e993")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "RV1")
+			(value "10k 3296W")
+			(footprint "Potentiometer_THT:Potentiometer_Bourns_3296W_Vertical")
+			(fields
+				(field
+					(name "Footprint") "Potentiometer_THT:Potentiometer_Bourns_3296W_Vertical")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "R_Potentiometer_Trim")
+				(description "Trim-potentiometer")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "resistor variable trimpot trimmer")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "Potentiometer*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "c8222d13-7b64-46f0-9ea6-7cabeecf58c3")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "3")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "RV2")
+			(value "10k 3296W")
+			(footprint "Potentiometer_THT:Potentiometer_Bourns_3296W_Vertical")
+			(fields
+				(field
+					(name "Footprint") "Potentiometer_THT:Potentiometer_Bourns_3296W_Vertical")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "R_Potentiometer_Trim")
+				(description "Trim-potentiometer")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "resistor variable trimpot trimmer")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "Potentiometer*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "822a586f-0ec5-4cbd-af39-2bb7806ef38f")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "3")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "TP1")
+			(value "+12V")
+			(footprint "TestPoint:TestPoint_THTPad_D2.0mm_Drill1.0mm")
+			(fields
+				(field
+					(name "Footprint") "TestPoint:TestPoint_THTPad_D2.0mm_Drill1.0mm")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Connector")
+				(part "TestPoint")
+				(description "test point")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "exclude_from_bom")
+			)
+			(property
+				(name "ki_keywords")
+				(value "test point tp")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "Pin* Test*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "29cb140c-505b-475b-83cf-8549860399bf")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "TP2")
+			(value "+5V")
+			(footprint "TestPoint:TestPoint_THTPad_D2.0mm_Drill1.0mm")
+			(fields
+				(field
+					(name "Footprint") "TestPoint:TestPoint_THTPad_D2.0mm_Drill1.0mm")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Connector")
+				(part "TestPoint")
+				(description "test point")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "exclude_from_bom")
+			)
+			(property
+				(name "ki_keywords")
+				(value "test point tp")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "Pin* Test*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "c4ebe27e-444a-4c7b-902a-e154140794a3")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "TP3")
+			(value "GND")
+			(footprint "TestPoint:TestPoint_THTPad_D2.0mm_Drill1.0mm")
+			(fields
+				(field
+					(name "Footprint") "TestPoint:TestPoint_THTPad_D2.0mm_Drill1.0mm")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Connector")
+				(part "TestPoint")
+				(description "test point")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "exclude_from_bom")
+			)
+			(property
+				(name "ki_keywords")
+				(value "test point tp")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "Pin* Test*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "85b87553-5036-41df-b15e-46b7e9fcbdc5")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "TP4")
+			(value "+3V3_FM")
+			(footprint "TestPoint:TestPoint_THTPad_D2.0mm_Drill1.0mm")
+			(fields
+				(field
+					(name "Footprint") "TestPoint:TestPoint_THTPad_D2.0mm_Drill1.0mm")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Connector")
+				(part "TestPoint")
+				(description "test point")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "exclude_from_bom")
+			)
+			(property
+				(name "ki_keywords")
+				(value "test point tp")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "Pin* Test*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "405be94c-2b31-437c-a36c-5b2c9cf53b4c")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "TP5")
+			(value "PWR_SENSE")
+			(footprint "TestPoint:TestPoint_THTPad_D2.0mm_Drill1.0mm")
+			(fields
+				(field
+					(name "Footprint") "TestPoint:TestPoint_THTPad_D2.0mm_Drill1.0mm")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Connector")
+				(part "TestPoint")
+				(description "test point")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "exclude_from_bom")
+			)
+			(property
+				(name "ki_keywords")
+				(value "test point tp")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "Pin* Test*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "e4e83a95-9948-46ed-80ba-313f2cc78099")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "TP6")
+			(value "SUM_L")
+			(footprint "TestPoint:TestPoint_THTPad_D2.0mm_Drill1.0mm")
+			(fields
+				(field
+					(name "Footprint") "TestPoint:TestPoint_THTPad_D2.0mm_Drill1.0mm")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Connector")
+				(part "TestPoint")
+				(description "test point")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "exclude_from_bom")
+			)
+			(property
+				(name "ki_keywords")
+				(value "test point tp")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "Pin* Test*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "9303aab8-0e2a-47bc-985d-7825fef6af7b")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "TP7")
+			(value "SUM_R")
+			(footprint "TestPoint:TestPoint_THTPad_D2.0mm_Drill1.0mm")
+			(fields
+				(field
+					(name "Footprint") "TestPoint:TestPoint_THTPad_D2.0mm_Drill1.0mm")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Connector")
+				(part "TestPoint")
+				(description "test point")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "exclude_from_bom")
+			)
+			(property
+				(name "ki_keywords")
+				(value "test point tp")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "Pin* Test*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "8380e14a-1a79-4458-856b-acf7a07081b7")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "TP8")
+			(value "GND")
+			(footprint "TestPoint:TestPoint_THTPad_D2.0mm_Drill1.0mm")
+			(fields
+				(field
+					(name "Footprint") "TestPoint:TestPoint_THTPad_D2.0mm_Drill1.0mm")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Connector")
+				(part "TestPoint")
+				(description "test point")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(property
+				(name "exclude_from_bom")
+			)
+			(property
+				(name "ki_keywords")
+				(value "test point tp")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "Pin* Test*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "51a0d77a-1376-4b57-9d2c-a4109a688804")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "U1")
+			(value "WeAct-SY8205")
+			(footprint "hybrid-radio:WeAct-SY8205")
+			(fields
+				(field
+					(name "Footprint") "hybrid-radio:WeAct-SY8205")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "hybrid-radio")
+				(part "WeAct-SY8205")
+				(description "Synchronous buck WeAct SY8205, 7-30 V in, 5 V 5 A out")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "e2f1d7c4-b515-41e0-8792-7985d1114152")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+						(pin
+							(num "5")
+						)
+						(pin
+							(num "3")
+						)
+						(pin
+							(num "4")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "U2")
+			(value "HT7333-A")
+			(footprint "Package_TO_SOT_THT:TO-92_Inline_Wide")
+			(fields
+				(field
+					(name "Footprint") "Package_TO_SOT_THT:TO-92_Inline_Wide")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "hybrid-radio")
+				(part "HT7333-A")
+				(description "LDO 3.3 V 250 mA, TO-92. Pins per Holtek HT73XX datasheet rev. 1.30, Pin Assignment, TO-92 front view: 1 GND, 2 VIN, 3 VOUT")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "cff94dc7-ae73-429a-9aab-9b944a047196")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "2")
+						)
+						(pin
+							(num "3")
+						)
+						(pin
+							(num "1")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "U3")
+			(value "RRD-102")
+			(footprint "hybrid-radio:RRD-102")
+			(fields
+				(field
+					(name "Footprint") "hybrid-radio:RRD-102")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "hybrid-radio")
+				(part "RRD-102")
+				(description "FM tuner RDA5807M, RRD-102 V2.0 module, castellated 2.0 mm pitch. Pinout: JLCEDA/EasyEDA official library, LCSC C9900205627")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "89228b90-4692-46d7-8a26-89aa694ccd29")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "5")
+						)
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+						(pin
+							(num "4")
+						)
+						(pin
+							(num "3")
+						)
+						(pin
+							(num "6")
+						)
+						(pin
+							(num "9")
+						)
+						(pin
+							(num "10")
+						)
+						(pin
+							(num "7")
+						)
+						(pin
+							(num "8")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "U4")
+			(value "GY-PCM5102A")
+			(footprint "hybrid-radio:GY-PCM5102A")
+			(fields
+				(field
+					(name "Footprint") "hybrid-radio:GY-PCM5102A")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "hybrid-radio")
+				(part "GY-PCM5102A")
+				(description "DAC PCM5102A, GY-PCM5102A module (TZT). Pins 1-6: I2S row, 7-15: output/config row; names 11-15 read from the back side")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "ede3aa90-024b-4b79-a19c-c380e5c5232f")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+						(pin
+							(num "3")
+						)
+						(pin
+							(num "4")
+						)
+						(pin
+							(num "5")
+						)
+						(pin
+							(num "6")
+						)
+						(pin
+							(num "15")
+						)
+						(pin
+							(num "14")
+						)
+						(pin
+							(num "12")
+						)
+						(pin
+							(num "7")
+						)
+						(pin
+							(num "9")
+						)
+						(pin
+							(num "8")
+						)
+						(pin
+							(num "10")
+						)
+						(pin
+							(num "11")
+						)
+						(pin
+							(num "13")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "U5")
+			(value "MCP23017-CJMCU")
+			(footprint "hybrid-radio:MCP23017-CJMCU")
+			(fields
+				(field
+					(name "Footprint") "hybrid-radio:MCP23017-CJMCU")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "hybrid-radio")
+				(part "MCP23017-CJMCU")
+				(description "I/O expander MCP23017, CJMCU module. 1-10: single row, 11-20: column B of the double row, 21-30: column A. Which column is at the edge: verify on the module")
+			)
+			(property
+				(name "Sheetname")
+				(value "hybrid-radio-carriers")
+			)
+			(property
+				(name "Sheetfile")
+				(value "hybrid-radio-carriers.kicad_sch")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "705f8956-7e7d-4bb2-adfa-0bb3b60a7933")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "10")
+						)
+						(pin
+							(num "11")
+						)
+						(pin
+							(num "9")
+						)
+						(pin
+							(num "21")
+						)
+						(pin
+							(num "7")
+						)
+						(pin
+							(num "8")
+						)
+						(pin
+							(num "3")
+						)
+						(pin
+							(num "2")
+						)
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "4")
+						)
+						(pin
+							(num "5")
+						)
+						(pin
+							(num "6")
+						)
+						(pin
+							(num "22")
+						)
+						(pin
+							(num "12")
+						)
+						(pin
+							(num "23")
+						)
+						(pin
+							(num "24")
+						)
+						(pin
+							(num "25")
+						)
+						(pin
+							(num "26")
+						)
+						(pin
+							(num "27")
+						)
+						(pin
+							(num "28")
+						)
+						(pin
+							(num "29")
+						)
+						(pin
+							(num "30")
+						)
+						(pin
+							(num "13")
+						)
+						(pin
+							(num "14")
+						)
+						(pin
+							(num "15")
+						)
+						(pin
+							(num "16")
+						)
+						(pin
+							(num "17")
+						)
+						(pin
+							(num "18")
+						)
+						(pin
+							(num "19")
+						)
+						(pin
+							(num "20")
+						)
+					)
+				)
+			)
+		)
+	)
+	(groups)
+	(variants)
+	(libparts
+		(libpart
+			(lib "Connector")
+			(part "Barrel_Jack_Switch")
+			(description "DC Barrel Jack with an internal switch")
+			(footprints
+				(fp "BarrelJack*")
+			)
+			(fields
+				(field
+					(name "Reference") "J")
+				(field
+					(name "Value") "Barrel_Jack_Switch")
+				(field
+					(name "Footprint")
+				)
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description") "DC Barrel Jack with an internal switch")
+			)
+			(pins
+				(pin
+					(num "1")
+					(name "")
+					(type "passive")
+				)
+				(pin
+					(num "2")
+					(name "")
+					(type "passive")
+				)
+				(pin
+					(num "3")
+					(name "")
+					(type "passive")
+				)
+			)
+		)
+		(libpart
+			(lib "Connector")
+			(part "Screw_Terminal_01x02")
+			(description "Generic screw terminal, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)")
+			(footprints
+				(fp "TerminalBlock*:*")
+			)
+			(fields
+				(field
+					(name "Reference") "J")
+				(field
+					(name "Value") "Screw_Terminal_01x02")
+				(field
+					(name "Footprint")
+				)
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description") "Generic screw terminal, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)")
+			)
+			(pins
+				(pin
+					(num "1")
+					(name "Pin_1")
+					(type "passive")
+				)
+				(pin
+					(num "2")
+					(name "Pin_2")
+					(type "passive")
+				)
+			)
+		)
+		(libpart
+			(lib "Connector")
+			(part "Screw_Terminal_01x03")
+			(description "Generic screw terminal, single row, 01x03, script generated (kicad-library-utils/schlib/autogen/connector/)")
+			(footprints
+				(fp "TerminalBlock*:*")
+			)
+			(fields
+				(field
+					(name "Reference") "J")
+				(field
+					(name "Value") "Screw_Terminal_01x03")
+				(field
+					(name "Footprint")
+				)
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description") "Generic screw terminal, single row, 01x03, script generated (kicad-library-utils/schlib/autogen/connector/)")
+			)
+			(pins
+				(pin
+					(num "1")
+					(name "Pin_1")
+					(type "passive")
+				)
+				(pin
+					(num "2")
+					(name "Pin_2")
+					(type "passive")
+				)
+				(pin
+					(num "3")
+					(name "Pin_3")
+					(type "passive")
+				)
+			)
+		)
+		(libpart
+			(lib "Connector")
+			(part "TestPoint")
+			(description "test point")
+			(footprints
+				(fp "Pin*")
+				(fp "Test*")
+			)
+			(fields
+				(field
+					(name "Reference") "TP")
+				(field
+					(name "Value") "TestPoint")
+				(field
+					(name "Footprint")
+				)
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description") "test point")
+			)
+			(pins
+				(pin
+					(num "1")
+					(name "1")
+					(type "passive")
+				)
+			)
+		)
+		(libpart
+			(lib "Connector")
+			(part "USB_A")
+			(description "USB Type A connector")
+			(footprints
+				(fp "USB*")
+			)
+			(fields
+				(field
+					(name "Reference") "J")
+				(field
+					(name "Value") "USB_A")
+				(field
+					(name "Footprint")
+				)
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description") "USB Type A connector")
+			)
+			(pins
+				(pin
+					(num "1")
+					(name "VBUS")
+					(type "power_in")
+				)
+				(pin
+					(num "2")
+					(name "D-")
+					(type "bidirectional")
+				)
+				(pin
+					(num "3")
+					(name "D+")
+					(type "bidirectional")
+				)
+				(pin
+					(num "4")
+					(name "GND")
+					(type "power_in")
+				)
+				(pin
+					(num "SH")
+					(name "Shield")
+					(type "passive")
+				)
+			)
+		)
+		(libpart
+			(lib "Connector_Generic")
+			(part "Conn_01x02")
+			(description "Generic connector, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)")
+			(footprints
+				(fp "Connector*:*_1x??_*")
+			)
+			(fields
+				(field
+					(name "Reference") "J")
+				(field
+					(name "Value") "Conn_01x02")
+				(field
+					(name "Footprint")
+				)
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description") "Generic connector, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)")
+			)
+			(pins
+				(pin
+					(num "1")
+					(name "Pin_1")
+					(type "passive")
+				)
+				(pin
+					(num "2")
+					(name "Pin_2")
+					(type "passive")
+				)
+			)
+		)
+		(libpart
+			(lib "Connector_Generic")
+			(part "Conn_01x05")
+			(description "Generic connector, single row, 01x05, script generated (kicad-library-utils/schlib/autogen/connector/)")
+			(footprints
+				(fp "Connector*:*_1x??_*")
+			)
+			(fields
+				(field
+					(name "Reference") "J")
+				(field
+					(name "Value") "Conn_01x05")
+				(field
+					(name "Footprint")
+				)
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description") "Generic connector, single row, 01x05, script generated (kicad-library-utils/schlib/autogen/connector/)")
+			)
+			(pins
+				(pin
+					(num "1")
+					(name "Pin_1")
+					(type "passive")
+				)
+				(pin
+					(num "2")
+					(name "Pin_2")
+					(type "passive")
+				)
+				(pin
+					(num "3")
+					(name "Pin_3")
+					(type "passive")
+				)
+				(pin
+					(num "4")
+					(name "Pin_4")
+					(type "passive")
+				)
+				(pin
+					(num "5")
+					(name "Pin_5")
+					(type "passive")
+				)
+			)
+		)
+		(libpart
+			(lib "Connector_Generic")
+			(part "Conn_01x06")
+			(description "Generic connector, single row, 01x06, script generated (kicad-library-utils/schlib/autogen/connector/)")
+			(footprints
+				(fp "Connector*:*_1x??_*")
+			)
+			(fields
+				(field
+					(name "Reference") "J")
+				(field
+					(name "Value") "Conn_01x06")
+				(field
+					(name "Footprint")
+				)
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description") "Generic connector, single row, 01x06, script generated (kicad-library-utils/schlib/autogen/connector/)")
+			)
+			(pins
+				(pin
+					(num "1")
+					(name "Pin_1")
+					(type "passive")
+				)
+				(pin
+					(num "2")
+					(name "Pin_2")
+					(type "passive")
+				)
+				(pin
+					(num "3")
+					(name "Pin_3")
+					(type "passive")
+				)
+				(pin
+					(num "4")
+					(name "Pin_4")
+					(type "passive")
+				)
+				(pin
+					(num "5")
+					(name "Pin_5")
+					(type "passive")
+				)
+				(pin
+					(num "6")
+					(name "Pin_6")
+					(type "passive")
+				)
+			)
+		)
+		(libpart
+			(lib "Connector_Generic")
+			(part "Conn_02x20_Odd_Even")
+			(description "Generic connector, double row, 02x20, odd/even pin numbering scheme (row 1 odd numbers, row 2 even numbers), script generated (kicad-library-utils/schlib/autogen/connector/)")
+			(footprints
+				(fp "Connector*:*_2x??_*")
+			)
+			(fields
+				(field
+					(name "Reference") "J")
+				(field
+					(name "Value") "Conn_02x20_Odd_Even")
+				(field
+					(name "Footprint")
+				)
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description") "Generic connector, double row, 02x20, odd/even pin numbering scheme (row 1 odd numbers, row 2 even numbers), script generated (kicad-library-utils/schlib/autogen/connector/)")
+			)
+			(pins
+				(pin
+					(num "1")
+					(name "Pin_1")
+					(type "passive")
+				)
+				(pin
+					(num "2")
+					(name "Pin_2")
+					(type "passive")
+				)
+				(pin
+					(num "3")
+					(name "Pin_3")
+					(type "passive")
+				)
+				(pin
+					(num "4")
+					(name "Pin_4")
+					(type "passive")
+				)
+				(pin
+					(num "5")
+					(name "Pin_5")
+					(type "passive")
+				)
+				(pin
+					(num "6")
+					(name "Pin_6")
+					(type "passive")
+				)
+				(pin
+					(num "7")
+					(name "Pin_7")
+					(type "passive")
+				)
+				(pin
+					(num "8")
+					(name "Pin_8")
+					(type "passive")
+				)
+				(pin
+					(num "9")
+					(name "Pin_9")
+					(type "passive")
+				)
+				(pin
+					(num "10")
+					(name "Pin_10")
+					(type "passive")
+				)
+				(pin
+					(num "11")
+					(name "Pin_11")
+					(type "passive")
+				)
+				(pin
+					(num "12")
+					(name "Pin_12")
+					(type "passive")
+				)
+				(pin
+					(num "13")
+					(name "Pin_13")
+					(type "passive")
+				)
+				(pin
+					(num "14")
+					(name "Pin_14")
+					(type "passive")
+				)
+				(pin
+					(num "15")
+					(name "Pin_15")
+					(type "passive")
+				)
+				(pin
+					(num "16")
+					(name "Pin_16")
+					(type "passive")
+				)
+				(pin
+					(num "17")
+					(name "Pin_17")
+					(type "passive")
+				)
+				(pin
+					(num "18")
+					(name "Pin_18")
+					(type "passive")
+				)
+				(pin
+					(num "19")
+					(name "Pin_19")
+					(type "passive")
+				)
+				(pin
+					(num "20")
+					(name "Pin_20")
+					(type "passive")
+				)
+				(pin
+					(num "21")
+					(name "Pin_21")
+					(type "passive")
+				)
+				(pin
+					(num "22")
+					(name "Pin_22")
+					(type "passive")
+				)
+				(pin
+					(num "23")
+					(name "Pin_23")
+					(type "passive")
+				)
+				(pin
+					(num "24")
+					(name "Pin_24")
+					(type "passive")
+				)
+				(pin
+					(num "25")
+					(name "Pin_25")
+					(type "passive")
+				)
+				(pin
+					(num "26")
+					(name "Pin_26")
+					(type "passive")
+				)
+				(pin
+					(num "27")
+					(name "Pin_27")
+					(type "passive")
+				)
+				(pin
+					(num "28")
+					(name "Pin_28")
+					(type "passive")
+				)
+				(pin
+					(num "29")
+					(name "Pin_29")
+					(type "passive")
+				)
+				(pin
+					(num "30")
+					(name "Pin_30")
+					(type "passive")
+				)
+				(pin
+					(num "31")
+					(name "Pin_31")
+					(type "passive")
+				)
+				(pin
+					(num "32")
+					(name "Pin_32")
+					(type "passive")
+				)
+				(pin
+					(num "33")
+					(name "Pin_33")
+					(type "passive")
+				)
+				(pin
+					(num "34")
+					(name "Pin_34")
+					(type "passive")
+				)
+				(pin
+					(num "35")
+					(name "Pin_35")
+					(type "passive")
+				)
+				(pin
+					(num "36")
+					(name "Pin_36")
+					(type "passive")
+				)
+				(pin
+					(num "37")
+					(name "Pin_37")
+					(type "passive")
+				)
+				(pin
+					(num "38")
+					(name "Pin_38")
+					(type "passive")
+				)
+				(pin
+					(num "39")
+					(name "Pin_39")
+					(type "passive")
+				)
+				(pin
+					(num "40")
+					(name "Pin_40")
+					(type "passive")
+				)
+			)
+		)
+		(libpart
+			(lib "Device")
+			(part "C")
+			(description "Unpolarized capacitor")
+			(footprints
+				(fp "C_*")
+			)
+			(fields
+				(field
+					(name "Reference") "C")
+				(field
+					(name "Value") "C")
+				(field
+					(name "Footprint")
+				)
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description") "Unpolarized capacitor")
+			)
+			(pins
+				(pin
+					(num "1")
+					(name "")
+					(type "passive")
+				)
+				(pin
+					(num "2")
+					(name "")
+					(type "passive")
+				)
+			)
+		)
+		(libpart
+			(lib "Device")
+			(part "C_Polarized")
+			(description "Polarized capacitor")
+			(footprints
+				(fp "CP_*")
+			)
+			(fields
+				(field
+					(name "Reference") "C")
+				(field
+					(name "Value") "C_Polarized")
+				(field
+					(name "Footprint")
+				)
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description") "Polarized capacitor")
+			)
+			(pins
+				(pin
+					(num "1")
+					(name "")
+					(type "passive")
+				)
+				(pin
+					(num "2")
+					(name "")
+					(type "passive")
+				)
+			)
+		)
+		(libpart
+			(lib "Device")
+			(part "D_Zener")
+			(description "Zener diode")
+			(footprints
+				(fp "TO-???*")
+				(fp "*_Diode_*")
+				(fp "*SingleDiode*")
+				(fp "D_*")
+			)
+			(fields
+				(field
+					(name "Reference") "D")
+				(field
+					(name "Value") "D_Zener")
+				(field
+					(name "Footprint")
+				)
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description") "Zener diode")
+			)
+			(pins
+				(pin
+					(num "1")
+					(name "K")
+					(type "passive")
+				)
+				(pin
+					(num "2")
+					(name "A")
+					(type "passive")
+				)
+			)
+		)
+		(libpart
+			(lib "Device")
+			(part "FerriteBead")
+			(description "Ferrite bead")
+			(footprints
+				(fp "Inductor_*")
+				(fp "L_*")
+				(fp "*Ferrite*")
+			)
+			(fields
+				(field
+					(name "Reference") "FB")
+				(field
+					(name "Value") "FerriteBead")
+				(field
+					(name "Footprint")
+				)
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description") "Ferrite bead")
+			)
+			(pins
+				(pin
+					(num "1")
+					(name "")
+					(type "passive")
+				)
+				(pin
+					(num "2")
+					(name "")
+					(type "passive")
+				)
+			)
+		)
+		(libpart
+			(lib "Device")
+			(part "Fuse")
+			(description "Fuse")
+			(footprints
+				(fp "*Fuse*")
+			)
+			(fields
+				(field
+					(name "Reference") "F")
+				(field
+					(name "Value") "Fuse")
+				(field
+					(name "Footprint")
+				)
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description") "Fuse")
+			)
+			(pins
+				(pin
+					(num "1")
+					(name "")
+					(type "passive")
+				)
+				(pin
+					(num "2")
+					(name "")
+					(type "passive")
+				)
+			)
+		)
+		(libpart
+			(lib "Device")
+			(part "L")
+			(description "Inductor")
+			(footprints
+				(fp "Choke_*")
+				(fp "*Coil*")
+				(fp "Inductor_*")
+				(fp "L_*")
+			)
+			(fields
+				(field
+					(name "Reference") "L")
+				(field
+					(name "Value") "L")
+				(field
+					(name "Footprint")
+				)
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description") "Inductor")
+			)
+			(pins
+				(pin
+					(num "1")
+					(name "1")
+					(type "passive")
+				)
+				(pin
+					(num "2")
+					(name "2")
+					(type "passive")
+				)
+			)
+		)
+		(libpart
+			(lib "Device")
+			(part "LED")
+			(description "Light emitting diode")
+			(footprints
+				(fp "LED*")
+				(fp "LED_SMD:*")
+				(fp "LED_THT:*")
+			)
+			(fields
+				(field
+					(name "Reference") "D")
+				(field
+					(name "Value") "LED")
+				(field
+					(name "Footprint")
+				)
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description") "Light emitting diode")
+				(field
+					(name "Sim.Pins") "1=K 2=A")
+			)
+			(pins
+				(pin
+					(num "1")
+					(name "K")
+					(type "passive")
+				)
+				(pin
+					(num "2")
+					(name "A")
+					(type "passive")
+				)
+			)
+		)
+		(libpart
+			(lib "Device")
+			(part "R")
+			(description "Resistor")
+			(footprints
+				(fp "R_*")
+			)
+			(fields
+				(field
+					(name "Reference") "R")
+				(field
+					(name "Value") "R")
+				(field
+					(name "Footprint")
+				)
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description") "Resistor")
+			)
+			(pins
+				(pin
+					(num "1")
+					(name "")
+					(type "passive")
+				)
+				(pin
+					(num "2")
+					(name "")
+					(type "passive")
+				)
+			)
+		)
+		(libpart
+			(lib "Device")
+			(part "R_Potentiometer_Trim")
+			(description "Trim-potentiometer")
+			(footprints
+				(fp "Potentiometer*")
+			)
+			(fields
+				(field
+					(name "Reference") "RV")
+				(field
+					(name "Value") "R_Potentiometer_Trim")
+				(field
+					(name "Footprint")
+				)
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description") "Trim-potentiometer")
+				(field
+					(name "Sim.Device") "R")
+				(field
+					(name "Sim.Type") "POT")
+				(field
+					(name "Sim.Pins") "1=r0 2=wiper 3=r1")
+			)
+			(pins
+				(pin
+					(num "1")
+					(name "1")
+					(type "passive")
+				)
+				(pin
+					(num "2")
+					(name "2")
+					(type "passive")
+				)
+				(pin
+					(num "3")
+					(name "3")
+					(type "passive")
+				)
+			)
+		)
+		(libpart
+			(lib "Transistor_FET")
+			(part "IRF4905")
+			(description "-74A Id, -55V Vds, Single P-Channel HEXFET Power MOSFET, 20mOhm Ron, TO-220AB")
+			(docs "http://www.infineon.com/dgdl/irf4905.pdf?fileId=5546d462533600a4015355e32165197c")
+			(footprints
+				(fp "TO?220*")
+			)
+			(fields
+				(field
+					(name "Reference") "Q")
+				(field
+					(name "Value") "IRF4905")
+				(field
+					(name "Footprint") "Package_TO_SOT_THT:TO-220-3_Vertical")
+				(field
+					(name "Datasheet") "http://www.infineon.com/dgdl/irf4905.pdf?fileId=5546d462533600a4015355e32165197c")
+				(field
+					(name "Description") "-74A Id, -55V Vds, Single P-Channel HEXFET Power MOSFET, 20mOhm Ron, TO-220AB")
+			)
+			(pins
+				(pin
+					(num "1")
+					(name "G")
+					(type "input")
+				)
+				(pin
+					(num "2")
+					(name "D")
+					(type "passive")
+				)
+				(pin
+					(num "3")
+					(name "S")
+					(type "passive")
+				)
+			)
+		)
+		(libpart
+			(lib "hybrid-radio")
+			(part "ESP32-P4-Board")
+			(description "Waveshare ESP32-P4-WIFI6-Touch-LCD-5 as external device: J3 header 2x20 (pins 1-40) and USB-C power input (41-42)")
+			(fields
+				(field
+					(name "Reference") "P")
+				(field
+					(name "Value") "ESP32-P4-Board")
+				(field
+					(name "Footprint") "hybrid-radio:ESP32-P4-Board")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description") "Waveshare ESP32-P4-WIFI6-Touch-LCD-5 as external device: J3 header 2x20 (pins 1-40) and USB-C power input (41-42)")
+			)
+			(pins
+				(pin
+					(num "1")
+					(name "VCC_5V")
+					(type "passive")
+				)
+				(pin
+					(num "2")
+					(name "ESP_3V3")
+					(type "passive")
+				)
+				(pin
+					(num "3")
+					(name "VCC_5V")
+					(type "passive")
+				)
+				(pin
+					(num "4")
+					(name "GPIO7/SDA")
+					(type "passive")
+				)
+				(pin
+					(num "5")
+					(name "GND")
+					(type "passive")
+				)
+				(pin
+					(num "6")
+					(name "GPIO8/SCL")
+					(type "passive")
+				)
+				(pin
+					(num "7")
+					(name "GPIO37")
+					(type "passive")
+				)
+				(pin
+					(num "8")
+					(name "GPIO2")
+					(type "passive")
+				)
+				(pin
+					(num "9")
+					(name "GPIO38")
+					(type "passive")
+				)
+				(pin
+					(num "10")
+					(name "GND")
+					(type "passive")
+				)
+				(pin
+					(num "11")
+					(name "GPIO5")
+					(type "passive")
+				)
+				(pin
+					(num "12")
+					(name "GPIO3")
+					(type "passive")
+				)
+				(pin
+					(num "13")
+					(name "GND")
+					(type "passive")
+				)
+				(pin
+					(num "14")
+					(name "GPIO4")
+					(type "passive")
+				)
+				(pin
+					(num "15")
+					(name "GPIO21")
+					(type "passive")
+				)
+				(pin
+					(num "16")
+					(name "GPIO28")
+					(type "passive")
+				)
+				(pin
+					(num "17")
+					(name "GPIO22")
+					(type "passive")
+				)
+				(pin
+					(num "18")
+					(name "ESP_3V3")
+					(type "passive")
+				)
+				(pin
+					(num "19")
+					(name "GND")
+					(type "passive")
+				)
+				(pin
+					(num "20")
+					(name "GPIO29")
+					(type "passive")
+				)
+				(pin
+					(num "21")
+					(name "GPIO24")
+					(type "passive")
+				)
+				(pin
+					(num "22")
+					(name "GPIO30")
+					(type "passive")
+				)
+				(pin
+					(num "23")
+					(name "GPIO25")
+					(type "passive")
+				)
+				(pin
+					(num "24")
+					(name "GPIO31")
+					(type "passive")
+				)
+				(pin
+					(num "25")
+					(name "USBD_N")
+					(type "passive")
+				)
+				(pin
+					(num "26")
+					(name "GND")
+					(type "passive")
+				)
+				(pin
+					(num "27")
+					(name "USBD_P")
+					(type "passive")
+				)
+				(pin
+					(num "28")
+					(name "GPIO34")
+					(type "passive")
+				)
+				(pin
+					(num "29")
+					(name "GND")
+					(type "passive")
+				)
+				(pin
+					(num "30")
+					(name "GPIO35")
+					(type "passive")
+				)
+				(pin
+					(num "31")
+					(name "GPIO32")
+					(type "passive")
+				)
+				(pin
+					(num "32")
+					(name "GPIO49")
+					(type "passive")
+				)
+				(pin
+					(num "33")
+					(name "GND")
+					(type "passive")
+				)
+				(pin
+					(num "34")
+					(name "GPIO50")
+					(type "passive")
+				)
+				(pin
+					(num "35")
+					(name "GPIO46")
+					(type "passive")
+				)
+				(pin
+					(num "36")
+					(name "GPIO51")
+					(type "passive")
+				)
+				(pin
+					(num "37")
+					(name "GPIO47")
+					(type "passive")
+				)
+				(pin
+					(num "38")
+					(name "GPIO52")
+					(type "passive")
+				)
+				(pin
+					(num "39")
+					(name "GPIO48")
+					(type "passive")
+				)
+				(pin
+					(num "40")
+					(name "GND")
+					(type "passive")
+				)
+				(pin
+					(num "41")
+					(name "USB-C_VBUS")
+					(type "passive")
+				)
+				(pin
+					(num "42")
+					(name "USB-C_GND")
+					(type "passive")
+				)
+			)
+		)
+		(libpart
+			(lib "hybrid-radio")
+			(part "GY-PCM5102A")
+			(description "DAC PCM5102A, GY-PCM5102A module (TZT). Pins 1-6: I2S row, 7-15: output/config row; names 11-15 read from the back side")
+			(fields
+				(field
+					(name "Reference") "U")
+				(field
+					(name "Value") "GY-PCM5102A")
+				(field
+					(name "Footprint") "hybrid-radio:GY-PCM5102A")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description") "DAC PCM5102A, GY-PCM5102A module (TZT). Pins 1-6: I2S row, 7-15: output/config row; names 11-15 read from the back side")
+			)
+			(pins
+				(pin
+					(num "1")
+					(name "VIN")
+					(type "passive")
+				)
+				(pin
+					(num "2")
+					(name "GND")
+					(type "passive")
+				)
+				(pin
+					(num "3")
+					(name "LCK")
+					(type "passive")
+				)
+				(pin
+					(num "4")
+					(name "DIN")
+					(type "passive")
+				)
+				(pin
+					(num "5")
+					(name "BCK")
+					(type "passive")
+				)
+				(pin
+					(num "6")
+					(name "SCK")
+					(type "passive")
+				)
+				(pin
+					(num "7")
+					(name "L")
+					(type "passive")
+				)
+				(pin
+					(num "8")
+					(name "AGND")
+					(type "passive")
+				)
+				(pin
+					(num "9")
+					(name "R")
+					(type "passive")
+				)
+				(pin
+					(num "10")
+					(name "AGND")
+					(type "passive")
+				)
+				(pin
+					(num "11")
+					(name "A3V3")
+					(type "passive")
+				)
+				(pin
+					(num "12")
+					(name "FMT")
+					(type "passive")
+				)
+				(pin
+					(num "13")
+					(name "XSMT")
+					(type "passive")
+				)
+				(pin
+					(num "14")
+					(name "DEMP")
+					(type "passive")
+				)
+				(pin
+					(num "15")
+					(name "FLT")
+					(type "passive")
+				)
+			)
+		)
+		(libpart
+			(lib "hybrid-radio")
+			(part "HT7333-A")
+			(description "LDO 3.3 V 250 mA, TO-92. Pins per Holtek HT73XX datasheet rev. 1.30, Pin Assignment, TO-92 front view: 1 GND, 2 VIN, 3 VOUT")
+			(fields
+				(field
+					(name "Reference") "U")
+				(field
+					(name "Value") "HT7333-A")
+				(field
+					(name "Footprint") "hybrid-radio:HT7333-A")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description") "LDO 3.3 V 250 mA, TO-92. Pins per Holtek HT73XX datasheet rev. 1.30, Pin Assignment, TO-92 front view: 1 GND, 2 VIN, 3 VOUT")
+			)
+			(pins
+				(pin
+					(num "1")
+					(name "GND")
+					(type "passive")
+				)
+				(pin
+					(num "2")
+					(name "VIN")
+					(type "passive")
+				)
+				(pin
+					(num "3")
+					(name "VOUT")
+					(type "passive")
+				)
+			)
+		)
+		(libpart
+			(lib "hybrid-radio")
+			(part "HW-327")
+			(description "Amplifier TPA3118, HW-327 module, mono PBTL. Which MUTE pad is ground: verify with a meter")
+			(fields
+				(field
+					(name "Reference") "A")
+				(field
+					(name "Value") "HW-327")
+				(field
+					(name "Footprint") "hybrid-radio:HW-327")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description") "Amplifier TPA3118, HW-327 module, mono PBTL. Which MUTE pad is ground: verify with a meter")
+			)
+			(pins
+				(pin
+					(num "1")
+					(name "PWR+")
+					(type "passive")
+				)
+				(pin
+					(num "2")
+					(name "PWR-")
+					(type "passive")
+				)
+				(pin
+					(num "3")
+					(name "OUT+")
+					(type "passive")
+				)
+				(pin
+					(num "4")
+					(name "OUT-")
+					(type "passive")
+				)
+				(pin
+					(num "5")
+					(name "IN+")
+					(type "passive")
+				)
+				(pin
+					(num "6")
+					(name "IN-")
+					(type "passive")
+				)
+				(pin
+					(num "7")
+					(name "MUTE_SD")
+					(type "passive")
+				)
+				(pin
+					(num "8")
+					(name "MUTE_GND")
+					(type "passive")
+				)
+			)
+		)
+		(libpart
+			(lib "hybrid-radio")
+			(part "MCP23017-CJMCU")
+			(description "I/O expander MCP23017, CJMCU module. 1-10: single row, 11-20: column B of the double row, 21-30: column A. Which column is at the edge: verify on the module")
+			(fields
+				(field
+					(name "Reference") "U")
+				(field
+					(name "Value") "MCP23017-CJMCU")
+				(field
+					(name "Footprint") "hybrid-radio:MCP23017-CJMCU")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description") "I/O expander MCP23017, CJMCU module. 1-10: single row, 11-20: column B of the double row, 21-30: column A. Which column is at the edge: verify on the module")
+			)
+			(pins
+				(pin
+					(num "1")
+					(name "A2")
+					(type "passive")
+				)
+				(pin
+					(num "2")
+					(name "A1")
+					(type "passive")
+				)
+				(pin
+					(num "3")
+					(name "A0")
+					(type "passive")
+				)
+				(pin
+					(num "4")
+					(name "~{RESET}")
+					(type "passive")
+				)
+				(pin
+					(num "5")
+					(name "NC_SO")
+					(type "passive")
+				)
+				(pin
+					(num "6")
+					(name "NC_CS")
+					(type "passive")
+				)
+				(pin
+					(num "7")
+					(name "SDA")
+					(type "passive")
+				)
+				(pin
+					(num "8")
+					(name "SCL")
+					(type "passive")
+				)
+				(pin
+					(num "9")
+					(name "GND")
+					(type "passive")
+				)
+				(pin
+					(num "10")
+					(name "VCC")
+					(type "passive")
+				)
+				(pin
+					(num "11")
+					(name "VCC")
+					(type "passive")
+				)
+				(pin
+					(num "12")
+					(name "INTB")
+					(type "passive")
+				)
+				(pin
+					(num "13")
+					(name "GPB0")
+					(type "passive")
+				)
+				(pin
+					(num "14")
+					(name "GPB1")
+					(type "passive")
+				)
+				(pin
+					(num "15")
+					(name "GPB2")
+					(type "passive")
+				)
+				(pin
+					(num "16")
+					(name "GPB3")
+					(type "passive")
+				)
+				(pin
+					(num "17")
+					(name "GPB4")
+					(type "passive")
+				)
+				(pin
+					(num "18")
+					(name "GPB5")
+					(type "passive")
+				)
+				(pin
+					(num "19")
+					(name "GPB6")
+					(type "passive")
+				)
+				(pin
+					(num "20")
+					(name "GPB7")
+					(type "passive")
+				)
+				(pin
+					(num "21")
+					(name "GND")
+					(type "passive")
+				)
+				(pin
+					(num "22")
+					(name "INTA")
+					(type "passive")
+				)
+				(pin
+					(num "23")
+					(name "GPA0")
+					(type "passive")
+				)
+				(pin
+					(num "24")
+					(name "GPA1")
+					(type "passive")
+				)
+				(pin
+					(num "25")
+					(name "GPA2")
+					(type "passive")
+				)
+				(pin
+					(num "26")
+					(name "GPA3")
+					(type "passive")
+				)
+				(pin
+					(num "27")
+					(name "GPA4")
+					(type "passive")
+				)
+				(pin
+					(num "28")
+					(name "GPA5")
+					(type "passive")
+				)
+				(pin
+					(num "29")
+					(name "GPA6")
+					(type "passive")
+				)
+				(pin
+					(num "30")
+					(name "GPA7")
+					(type "passive")
+				)
+			)
+		)
+		(libpart
+			(lib "hybrid-radio")
+			(part "RRD-102")
+			(description "FM tuner RDA5807M, RRD-102 V2.0 module, castellated 2.0 mm pitch. Pinout: JLCEDA/EasyEDA official library, LCSC C9900205627")
+			(fields
+				(field
+					(name "Reference") "U")
+				(field
+					(name "Value") "RRD-102")
+				(field
+					(name "Footprint") "hybrid-radio:RRD-102")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description") "FM tuner RDA5807M, RRD-102 V2.0 module, castellated 2.0 mm pitch. Pinout: JLCEDA/EasyEDA official library, LCSC C9900205627")
+			)
+			(pins
+				(pin
+					(num "1")
+					(name "SDA")
+					(type "passive")
+				)
+				(pin
+					(num "2")
+					(name "SCL")
+					(type "passive")
+				)
+				(pin
+					(num "3")
+					(name "NC")
+					(type "no_connect")
+				)
+				(pin
+					(num "4")
+					(name "NC")
+					(type "no_connect")
+				)
+				(pin
+					(num "5")
+					(name "VCC")
+					(type "passive")
+				)
+				(pin
+					(num "6")
+					(name "GND")
+					(type "passive")
+				)
+				(pin
+					(num "7")
+					(name "LOUT")
+					(type "passive")
+				)
+				(pin
+					(num "8")
+					(name "ROUT")
+					(type "passive")
+				)
+				(pin
+					(num "9")
+					(name "NC")
+					(type "no_connect")
+				)
+				(pin
+					(num "10")
+					(name "ANT")
+					(type "passive")
+				)
+			)
+		)
+		(libpart
+			(lib "hybrid-radio")
+			(part "WeAct-SY8205")
+			(description "Synchronous buck WeAct SY8205, 7-30 V in, 5 V 5 A out")
+			(fields
+				(field
+					(name "Reference") "U")
+				(field
+					(name "Value") "WeAct-SY8205")
+				(field
+					(name "Footprint") "hybrid-radio:WeAct-SY8205")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description") "Synchronous buck WeAct SY8205, 7-30 V in, 5 V 5 A out")
+			)
+			(pins
+				(pin
+					(num "1")
+					(name "IN+")
+					(type "passive")
+				)
+				(pin
+					(num "2")
+					(name "IN-")
+					(type "passive")
+				)
+				(pin
+					(num "3")
+					(name "OUT+")
+					(type "passive")
+				)
+				(pin
+					(num "4")
+					(name "OUT-")
+					(type "passive")
+				)
+				(pin
+					(num "5")
+					(name "EN")
+					(type "passive")
+				)
+			)
+		)
+	)
+	(libraries
+		(library
+			(logical "Connector")
+			(uri "${KICAD10_SYMBOL_DIR}/Connector.kicad_sym")
+		)
+		(library
+			(logical "Connector_Generic")
+			(uri "${KICAD10_SYMBOL_DIR}/Connector_Generic.kicad_sym")
+		)
+		(library
+			(logical "Device")
+			(uri "${KICAD10_SYMBOL_DIR}/Device.kicad_sym")
+		)
+		(library
+			(logical "Transistor_FET")
+			(uri "${KICAD10_SYMBOL_DIR}/Transistor_FET.kicad_sym")
+		)
+		(library
+			(logical "hybrid-radio")
+			(uri "${KIPRJMOD}/../hybrid-radio.kicad_sym")
+		)
+	)
+	(nets
+		(net
+			(code "1")
+			(name "+3V3_ESP")
+			(class "Default")
+			(node
+				(ref "C22")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "J3")
+				(pin "18")
+				(pinfunction "Pin_18_18")
+				(pintype "passive")
+			)
+			(node
+				(ref "J3")
+				(pin "2")
+				(pinfunction "Pin_2_2")
+				(pintype "passive")
+			)
+			(node
+				(ref "J8")
+				(pin "5")
+				(pinfunction "Pin_5_5")
+				(pintype "passive")
+			)
+			(node
+				(ref "R15")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "R16")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "R17")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "R18")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "R19")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "U5")
+				(pin "10")
+				(pinfunction "VCC_10")
+				(pintype "passive")
+			)
+			(node
+				(ref "U5")
+				(pin "11")
+				(pinfunction "VCC_11")
+				(pintype "passive")
+			)
+			(node
+				(ref "U5")
+				(pin "4")
+				(pinfunction "~{RESET}_4")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "2")
+			(name "+3V3_FM")
+			(class "Default")
+			(node
+				(ref "C27")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "FB2")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "TP4")
+				(pin "1")
+				(pinfunction "1_1")
+				(pintype "passive")
+			)
+			(node
+				(ref "U3")
+				(pin "5")
+				(pinfunction "VCC_5")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "3")
+			(name "+5V")
+			(class "Default")
+			(node
+				(ref "C13")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "C4")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "C5")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "J14")
+				(pin "1")
+				(pinfunction "Pin_1_1")
+				(pintype "passive")
+			)
+			(node
+				(ref "J15")
+				(pin "1")
+				(pinfunction "Pin_1_1")
+				(pintype "passive")
+			)
+			(node
+				(ref "J2")
+				(pin "1")
+				(pinfunction "VBUS_1")
+				(pintype "power_in")
+			)
+			(node
+				(ref "L1")
+				(pin "1")
+				(pinfunction "1_1")
+				(pintype "passive")
+			)
+			(node
+				(ref "R21")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "TP2")
+				(pin "1")
+				(pinfunction "1_1")
+				(pintype "passive")
+			)
+			(node
+				(ref "U1")
+				(pin "3")
+				(pinfunction "OUT+_3")
+				(pintype "passive")
+			)
+			(node
+				(ref "U4")
+				(pin "1")
+				(pinfunction "VIN_1")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "4")
+			(name "+12V")
+			(class "Default")
+			(node
+				(ref "A1")
+				(pin "1")
+				(pinfunction "PWR+_1")
+				(pintype "passive")
+			)
+			(node
+				(ref "A2")
+				(pin "1")
+				(pinfunction "PWR+_1")
+				(pintype "passive")
+			)
+			(node
+				(ref "C1")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "C16")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "C17")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "C2")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "C20")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "C21")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "D1")
+				(pin "1")
+				(pinfunction "K_1")
+				(pintype "passive")
+			)
+			(node
+				(ref "D2")
+				(pin "1")
+				(pinfunction "K_1")
+				(pintype "passive")
+			)
+			(node
+				(ref "J13")
+				(pin "1")
+				(pinfunction "Pin_1_1")
+				(pintype "passive")
+			)
+			(node
+				(ref "J17")
+				(pin "1")
+				(pinfunction "Pin_1_1")
+				(pintype "passive")
+			)
+			(node
+				(ref "Q1")
+				(pin "3")
+				(pinfunction "S_3")
+				(pintype "passive")
+			)
+			(node
+				(ref "R2")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "R20")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "TP1")
+				(pin "1")
+				(pinfunction "1_1")
+				(pintype "passive")
+			)
+			(node
+				(ref "U1")
+				(pin "1")
+				(pinfunction "IN+_1")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "5")
+			(name "/+5V_FILT")
+			(class "Default")
+			(node
+				(ref "FB1")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "L1")
+				(pin "2")
+				(pinfunction "2_2")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "6")
+			(name "/+12V_IN")
+			(class "POWER_12V")
+			(node
+				(ref "F1")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "J1")
+				(pin "1")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "7")
+			(name "/12V_FUSED")
+			(class "POWER_12V")
+			(node
+				(ref "F1")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "Q1")
+				(pin "2")
+				(pinfunction "D_2")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "8")
+			(name "/AMP_L_INN")
+			(class "Default")
+			(node
+				(ref "A1")
+				(pin "6")
+				(pinfunction "IN-_6")
+				(pintype "passive")
+			)
+			(node
+				(ref "C15")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "J16")
+				(pin "2")
+				(pinfunction "Pin_2_2")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "9")
+			(name "/AMP_L_INP")
+			(class "Default")
+			(node
+				(ref "A1")
+				(pin "5")
+				(pinfunction "IN+_5")
+				(pintype "passive")
+			)
+			(node
+				(ref "C14")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "J16")
+				(pin "1")
+				(pinfunction "Pin_1_1")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "10")
+			(name "/AMP_R_INN")
+			(class "Default")
+			(node
+				(ref "A2")
+				(pin "6")
+				(pinfunction "IN-_6")
+				(pintype "passive")
+			)
+			(node
+				(ref "C19")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "J16")
+				(pin "4")
+				(pinfunction "Pin_4_4")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "11")
+			(name "/AMP_R_INP")
+			(class "Default")
+			(node
+				(ref "A2")
+				(pin "5")
+				(pinfunction "IN+_5")
+				(pintype "passive")
+			)
+			(node
+				(ref "C18")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "J16")
+				(pin "3")
+				(pinfunction "Pin_3_3")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "12")
+			(name "/AMP_SD")
+			(class "Default")
+			(node
+				(ref "A1")
+				(pin "7")
+				(pinfunction "MUTE_SD_7")
+				(pintype "passive")
+			)
+			(node
+				(ref "A2")
+				(pin "7")
+				(pinfunction "MUTE_SD_7")
+				(pintype "passive")
+			)
+			(node
+				(ref "J16")
+				(pin "5")
+				(pinfunction "Pin_5_5")
+				(pintype "passive")
+			)
+			(node
+				(ref "R13")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "R14")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "R15")
+				(pin "1")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "13")
+			(name "/AMP_SD_GPIO49")
+			(class "Default")
+			(node
+				(ref "J3")
+				(pin "32")
+				(pinfunction "Pin_32_32")
+				(pintype "passive")
+			)
+			(node
+				(ref "R13")
+				(pin "1")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "14")
+			(name "/ANT")
+			(class "Default")
+			(node
+				(ref "C12")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "U3")
+				(pin "10")
+				(pinfunction "ANT_10")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "15")
+			(name "/ANT_IN")
+			(class "Default")
+			(node
+				(ref "C12")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "J4")
+				(pin "1")
+				(pinfunction "Pin_1_1")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "16")
+			(name "/BTN_MODE")
+			(class "Default")
+			(node
+				(ref "J12")
+				(pin "5")
+				(pinfunction "Pin_5_5")
+				(pintype "passive")
+			)
+			(node
+				(ref "U5")
+				(pin "13")
+				(pinfunction "GPB0_13")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "17")
+			(name "/BTN_P1")
+			(class "Default")
+			(node
+				(ref "J7")
+				(pin "1")
+				(pinfunction "Pin_1_1")
+				(pintype "passive")
+			)
+			(node
+				(ref "U5")
+				(pin "23")
+				(pinfunction "GPA0_23")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "18")
+			(name "/BTN_P2")
+			(class "Default")
+			(node
+				(ref "J7")
+				(pin "2")
+				(pinfunction "Pin_2_2")
+				(pintype "passive")
+			)
+			(node
+				(ref "U5")
+				(pin "24")
+				(pinfunction "GPA1_24")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "19")
+			(name "/BTN_P3")
+			(class "Default")
+			(node
+				(ref "J7")
+				(pin "3")
+				(pinfunction "Pin_3_3")
+				(pintype "passive")
+			)
+			(node
+				(ref "U5")
+				(pin "25")
+				(pinfunction "GPA2_25")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "20")
+			(name "/BTN_P4")
+			(class "Default")
+			(node
+				(ref "J7")
+				(pin "4")
+				(pinfunction "Pin_4_4")
+				(pintype "passive")
+			)
+			(node
+				(ref "U5")
+				(pin "26")
+				(pinfunction "GPA3_26")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "21")
+			(name "/BTN_P5")
+			(class "Default")
+			(node
+				(ref "J12")
+				(pin "1")
+				(pinfunction "Pin_1_1")
+				(pintype "passive")
+			)
+			(node
+				(ref "U5")
+				(pin "27")
+				(pinfunction "GPA4_27")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "22")
+			(name "/BTN_P6")
+			(class "Default")
+			(node
+				(ref "J12")
+				(pin "2")
+				(pinfunction "Pin_2_2")
+				(pintype "passive")
+			)
+			(node
+				(ref "U5")
+				(pin "28")
+				(pinfunction "GPA5_28")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "23")
+			(name "/BTN_P7")
+			(class "Default")
+			(node
+				(ref "J12")
+				(pin "3")
+				(pinfunction "Pin_3_3")
+				(pintype "passive")
+			)
+			(node
+				(ref "U5")
+				(pin "29")
+				(pinfunction "GPA6_29")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "24")
+			(name "/BTN_P8")
+			(class "Default")
+			(node
+				(ref "J12")
+				(pin "4")
+				(pinfunction "Pin_4_4")
+				(pintype "passive")
+			)
+			(node
+				(ref "U5")
+				(pin "14")
+				(pinfunction "GPB1_14")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "25")
+			(name "/BTN_PWR")
+			(class "Default")
+			(node
+				(ref "J11")
+				(pin "1")
+				(pinfunction "Pin_1_1")
+				(pintype "passive")
+			)
+			(node
+				(ref "J3")
+				(pin "12")
+				(pinfunction "Pin_12_12")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "26")
+			(name "/DAC_A3V3")
+			(class "Default")
+			(node
+				(ref "U4")
+				(pin "11")
+				(pinfunction "A3V3_11")
+				(pintype "passive")
+			)
+			(node
+				(ref "U4")
+				(pin "13")
+				(pinfunction "XSMT_13")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "27")
+			(name "/DAC_BCK")
+			(class "Default")
+			(node
+				(ref "R4")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "U4")
+				(pin "5")
+				(pinfunction "BCK_5")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "28")
+			(name "/DAC_DIN")
+			(class "Default")
+			(node
+				(ref "R6")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "U4")
+				(pin "4")
+				(pinfunction "DIN_4")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "29")
+			(name "/DAC_L")
+			(class "Default")
+			(node
+				(ref "R8")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "U4")
+				(pin "7")
+				(pinfunction "L_7")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "30")
+			(name "/DAC_LCK")
+			(class "Default")
+			(node
+				(ref "R5")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "U4")
+				(pin "3")
+				(pinfunction "LCK_3")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "31")
+			(name "/DAC_R")
+			(class "Default")
+			(node
+				(ref "R11")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "U4")
+				(pin "9")
+				(pinfunction "R_9")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "32")
+			(name "/ENC1_A")
+			(class "Default")
+			(node
+				(ref "C23")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "J3")
+				(pin "15")
+				(pinfunction "Pin_15_15")
+				(pintype "passive")
+			)
+			(node
+				(ref "J9")
+				(pin "1")
+				(pinfunction "Pin_1_1")
+				(pintype "passive")
+			)
+			(node
+				(ref "R16")
+				(pin "1")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "33")
+			(name "/ENC1_B")
+			(class "Default")
+			(node
+				(ref "C24")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "J3")
+				(pin "17")
+				(pinfunction "Pin_17_17")
+				(pintype "passive")
+			)
+			(node
+				(ref "J9")
+				(pin "3")
+				(pinfunction "Pin_3_3")
+				(pintype "passive")
+			)
+			(node
+				(ref "R17")
+				(pin "1")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "34")
+			(name "/ENC1_SW")
+			(class "Default")
+			(node
+				(ref "J3")
+				(pin "16")
+				(pinfunction "Pin_16_16")
+				(pintype "passive")
+			)
+			(node
+				(ref "J9")
+				(pin "4")
+				(pinfunction "Pin_4_4")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "35")
+			(name "/ENC2_A")
+			(class "Default")
+			(node
+				(ref "C25")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "J10")
+				(pin "1")
+				(pinfunction "Pin_1_1")
+				(pintype "passive")
+			)
+			(node
+				(ref "J3")
+				(pin "20")
+				(pinfunction "Pin_20_20")
+				(pintype "passive")
+			)
+			(node
+				(ref "R18")
+				(pin "1")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "36")
+			(name "/ENC2_B")
+			(class "Default")
+			(node
+				(ref "C26")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "J10")
+				(pin "3")
+				(pinfunction "Pin_3_3")
+				(pintype "passive")
+			)
+			(node
+				(ref "J3")
+				(pin "22")
+				(pinfunction "Pin_22_22")
+				(pintype "passive")
+			)
+			(node
+				(ref "R19")
+				(pin "1")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "37")
+			(name "/ENC2_SW")
+			(class "Default")
+			(node
+				(ref "J10")
+				(pin "4")
+				(pinfunction "Pin_4_4")
+				(pintype "passive")
+			)
+			(node
+				(ref "J3")
+				(pin "24")
+				(pinfunction "Pin_24_24")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "38")
+			(name "/EXP_INT")
+			(class "Default")
+			(node
+				(ref "J3")
+				(pin "31")
+				(pinfunction "Pin_31_31")
+				(pintype "passive")
+			)
+			(node
+				(ref "U5")
+				(pin "22")
+				(pinfunction "INTA_22")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "39")
+			(name "/I2C_SCL")
+			(class "Default")
+			(node
+				(ref "J3")
+				(pin "6")
+				(pinfunction "Pin_6_6")
+				(pintype "passive")
+			)
+			(node
+				(ref "U3")
+				(pin "2")
+				(pinfunction "SCL_2")
+				(pintype "passive")
+			)
+			(node
+				(ref "U5")
+				(pin "8")
+				(pinfunction "SCL_8")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "40")
+			(name "/I2C_SDA")
+			(class "Default")
+			(node
+				(ref "J3")
+				(pin "4")
+				(pinfunction "Pin_4_4")
+				(pintype "passive")
+			)
+			(node
+				(ref "U3")
+				(pin "1")
+				(pinfunction "SDA_1")
+				(pintype "passive")
+			)
+			(node
+				(ref "U5")
+				(pin "7")
+				(pinfunction "SDA_7")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "41")
+			(name "/I2S_BCK")
+			(class "Default")
+			(node
+				(ref "J3")
+				(pin "35")
+				(pinfunction "Pin_35_35")
+				(pintype "passive")
+			)
+			(node
+				(ref "R4")
+				(pin "1")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "42")
+			(name "/I2S_DIN")
+			(class "Default")
+			(node
+				(ref "J3")
+				(pin "39")
+				(pinfunction "Pin_39_39")
+				(pintype "passive")
+			)
+			(node
+				(ref "R6")
+				(pin "1")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "43")
+			(name "/I2S_LRCK")
+			(class "Default")
+			(node
+				(ref "J3")
+				(pin "37")
+				(pinfunction "Pin_37_37")
+				(pintype "passive")
+			)
+			(node
+				(ref "R5")
+				(pin "1")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "44")
+			(name "/LDO_IN")
+			(class "Default")
+			(node
+				(ref "C6")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "C7")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "FB1")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "U2")
+				(pin "2")
+				(pinfunction "VIN_2")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "45")
+			(name "/LDO_OUT")
+			(class "Default")
+			(node
+				(ref "C8")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "C9")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "FB2")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "U2")
+				(pin "3")
+				(pinfunction "VOUT_3")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "46")
+			(name "/LED_5V")
+			(class "Default")
+			(node
+				(ref "D4")
+				(pin "2")
+				(pinfunction "A_2")
+				(pintype "passive")
+			)
+			(node
+				(ref "R21")
+				(pin "2")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "47")
+			(name "/LED_12V")
+			(class "Default")
+			(node
+				(ref "D3")
+				(pin "2")
+				(pinfunction "A_2")
+				(pintype "passive")
+			)
+			(node
+				(ref "R20")
+				(pin "2")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "48")
+			(name "/MIX_L")
+			(class "Default")
+			(node
+				(ref "C14")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "RV1")
+				(pin "2")
+				(pinfunction "2_2")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "49")
+			(name "/MIX_R")
+			(class "Default")
+			(node
+				(ref "C18")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "RV2")
+				(pin "2")
+				(pinfunction "2_2")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "50")
+			(name "/PWR_SENSE")
+			(class "Default")
+			(node
+				(ref "C3")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "J14")
+				(pin "3")
+				(pinfunction "Pin_3_3")
+				(pintype "passive")
+			)
+			(node
+				(ref "J15")
+				(pin "3")
+				(pinfunction "Pin_3_3")
+				(pintype "passive")
+			)
+			(node
+				(ref "J3")
+				(pin "34")
+				(pinfunction "Pin_34_34")
+				(pintype "passive")
+			)
+			(node
+				(ref "R2")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "R3")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "TP5")
+				(pin "1")
+				(pinfunction "1_1")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "51")
+			(name "/Q1_GATE")
+			(class "Default")
+			(node
+				(ref "D1")
+				(pin "2")
+				(pinfunction "A_2")
+				(pintype "passive")
+			)
+			(node
+				(ref "Q1")
+				(pin "1")
+				(pinfunction "G_1")
+				(pintype "input")
+			)
+			(node
+				(ref "R1")
+				(pin "1")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "52")
+			(name "/RDA_LOUT")
+			(class "Default")
+			(node
+				(ref "C10")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "U3")
+				(pin "7")
+				(pinfunction "LOUT_7")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "53")
+			(name "/RDA_ROUT")
+			(class "Default")
+			(node
+				(ref "C11")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "U3")
+				(pin "8")
+				(pinfunction "ROUT_8")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "54")
+			(name "/SPARE_GPIO4")
+			(class "Default")
+			(node
+				(ref "J3")
+				(pin "14")
+				(pinfunction "Pin_14_14")
+				(pintype "passive")
+			)
+			(node
+				(ref "J8")
+				(pin "1")
+				(pinfunction "Pin_1_1")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "55")
+			(name "/SPARE_GPIO5")
+			(class "Default")
+			(node
+				(ref "J3")
+				(pin "11")
+				(pinfunction "Pin_11_11")
+				(pintype "passive")
+			)
+			(node
+				(ref "J8")
+				(pin "2")
+				(pinfunction "Pin_2_2")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "56")
+			(name "/SPARE_GPIO51")
+			(class "Default")
+			(node
+				(ref "J3")
+				(pin "36")
+				(pinfunction "Pin_36_36")
+				(pintype "passive")
+			)
+			(node
+				(ref "J8")
+				(pin "3")
+				(pinfunction "Pin_3_3")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "57")
+			(name "/SPARE_GPIO52")
+			(class "Default")
+			(node
+				(ref "J3")
+				(pin "38")
+				(pinfunction "Pin_38_38")
+				(pintype "passive")
+			)
+			(node
+				(ref "J8")
+				(pin "4")
+				(pinfunction "Pin_4_4")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "58")
+			(name "/SPK_L+")
+			(class "SPEAKER")
+			(node
+				(ref "A1")
+				(pin "3")
+				(pinfunction "OUT+_3")
+				(pintype "passive")
+			)
+			(node
+				(ref "J5")
+				(pin "1")
+				(pinfunction "Pin_1_1")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "59")
+			(name "/SPK_L-")
+			(class "SPEAKER")
+			(node
+				(ref "A1")
+				(pin "4")
+				(pinfunction "OUT-_4")
+				(pintype "passive")
+			)
+			(node
+				(ref "J5")
+				(pin "2")
+				(pinfunction "Pin_2_2")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "60")
+			(name "/SPK_R+")
+			(class "SPEAKER")
+			(node
+				(ref "A2")
+				(pin "3")
+				(pinfunction "OUT+_3")
+				(pintype "passive")
+			)
+			(node
+				(ref "J6")
+				(pin "1")
+				(pinfunction "Pin_1_1")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "61")
+			(name "/SPK_R-")
+			(class "SPEAKER")
+			(node
+				(ref "A2")
+				(pin "4")
+				(pinfunction "OUT-_4")
+				(pintype "passive")
+			)
+			(node
+				(ref "J6")
+				(pin "2")
+				(pinfunction "Pin_2_2")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "62")
+			(name "/SUM_L")
+			(class "Default")
+			(node
+				(ref "R7")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "R8")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "R9")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "RV1")
+				(pin "1")
+				(pinfunction "1_1")
+				(pintype "passive")
+			)
+			(node
+				(ref "TP6")
+				(pin "1")
+				(pinfunction "1_1")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "63")
+			(name "/SUM_R")
+			(class "Default")
+			(node
+				(ref "R10")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "R11")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "R12")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "RV2")
+				(pin "1")
+				(pinfunction "1_1")
+				(pintype "passive")
+			)
+			(node
+				(ref "TP7")
+				(pin "1")
+				(pinfunction "1_1")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "64")
+			(name "/TUNER_L")
+			(class "Default")
+			(node
+				(ref "C10")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "R7")
+				(pin "1")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "65")
+			(name "/TUNER_R")
+			(class "Default")
+			(node
+				(ref "C11")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "R10")
+				(pin "1")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "66")
+			(name "GND")
+			(class "Default")
+			(node
+				(ref "A1")
+				(pin "2")
+				(pinfunction "PWR-_2")
+				(pintype "passive")
+			)
+			(node
+				(ref "A1")
+				(pin "8")
+				(pinfunction "MUTE_GND_8")
+				(pintype "passive")
+			)
+			(node
+				(ref "A2")
+				(pin "2")
+				(pinfunction "PWR-_2")
+				(pintype "passive")
+			)
+			(node
+				(ref "A2")
+				(pin "8")
+				(pinfunction "MUTE_GND_8")
+				(pintype "passive")
+			)
+			(node
+				(ref "C1")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "C13")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "C15")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "C16")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "C17")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "C19")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "C2")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "C20")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "C21")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "C22")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "C23")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "C24")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "C25")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "C26")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "C27")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "C3")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "C4")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "C5")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "C6")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "C7")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "C8")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "C9")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "D2")
+				(pin "2")
+				(pinfunction "A_2")
+				(pintype "passive")
+			)
+			(node
+				(ref "D3")
+				(pin "1")
+				(pinfunction "K_1")
+				(pintype "passive")
+			)
+			(node
+				(ref "D4")
+				(pin "1")
+				(pinfunction "K_1")
+				(pintype "passive")
+			)
+			(node
+				(ref "J1")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "J10")
+				(pin "2")
+				(pinfunction "Pin_2_2")
+				(pintype "passive")
+			)
+			(node
+				(ref "J10")
+				(pin "5")
+				(pinfunction "Pin_5_5")
+				(pintype "passive")
+			)
+			(node
+				(ref "J11")
+				(pin "2")
+				(pinfunction "Pin_2_2")
+				(pintype "passive")
+			)
+			(node
+				(ref "J12")
+				(pin "6")
+				(pinfunction "Pin_6_6")
+				(pintype "passive")
+			)
+			(node
+				(ref "J13")
+				(pin "2")
+				(pinfunction "Pin_2_2")
+				(pintype "passive")
+			)
+			(node
+				(ref "J14")
+				(pin "2")
+				(pinfunction "Pin_2_2")
+				(pintype "passive")
+			)
+			(node
+				(ref "J15")
+				(pin "2")
+				(pinfunction "Pin_2_2")
+				(pintype "passive")
+			)
+			(node
+				(ref "J16")
+				(pin "6")
+				(pinfunction "Pin_6_6")
+				(pintype "passive")
+			)
+			(node
+				(ref "J17")
+				(pin "2")
+				(pinfunction "Pin_2_2")
+				(pintype "passive")
+			)
+			(node
+				(ref "J2")
+				(pin "4")
+				(pinfunction "GND_4")
+				(pintype "power_in")
+			)
+			(node
+				(ref "J2")
+				(pin "SH")
+				(pinfunction "Shield_SH")
+				(pintype "passive")
+			)
+			(node
+				(ref "J3")
+				(pin "10")
+				(pinfunction "Pin_10_10")
+				(pintype "passive")
+			)
+			(node
+				(ref "J3")
+				(pin "13")
+				(pinfunction "Pin_13_13")
+				(pintype "passive")
+			)
+			(node
+				(ref "J3")
+				(pin "19")
+				(pinfunction "Pin_19_19")
+				(pintype "passive")
+			)
+			(node
+				(ref "J3")
+				(pin "26")
+				(pinfunction "Pin_26_26")
+				(pintype "passive")
+			)
+			(node
+				(ref "J3")
+				(pin "29")
+				(pinfunction "Pin_29_29")
+				(pintype "passive")
+			)
+			(node
+				(ref "J3")
+				(pin "33")
+				(pinfunction "Pin_33_33")
+				(pintype "passive")
+			)
+			(node
+				(ref "J3")
+				(pin "40")
+				(pinfunction "Pin_40_40")
+				(pintype "passive")
+			)
+			(node
+				(ref "J3")
+				(pin "5")
+				(pinfunction "Pin_5_5")
+				(pintype "passive")
+			)
+			(node
+				(ref "J4")
+				(pin "2")
+				(pinfunction "Pin_2_2")
+				(pintype "passive")
+			)
+			(node
+				(ref "J7")
+				(pin "5")
+				(pinfunction "Pin_5_5")
+				(pintype "passive")
+			)
+			(node
+				(ref "J8")
+				(pin "6")
+				(pinfunction "Pin_6_6")
+				(pintype "passive")
+			)
+			(node
+				(ref "J9")
+				(pin "2")
+				(pinfunction "Pin_2_2")
+				(pintype "passive")
+			)
+			(node
+				(ref "J9")
+				(pin "5")
+				(pinfunction "Pin_5_5")
+				(pintype "passive")
+			)
+			(node
+				(ref "R1")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "R12")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "R14")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "R3")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "R9")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "RV1")
+				(pin "3")
+				(pinfunction "3_3")
+				(pintype "passive")
+			)
+			(node
+				(ref "RV2")
+				(pin "3")
+				(pinfunction "3_3")
+				(pintype "passive")
+			)
+			(node
+				(ref "TP3")
+				(pin "1")
+				(pinfunction "1_1")
+				(pintype "passive")
+			)
+			(node
+				(ref "TP8")
+				(pin "1")
+				(pinfunction "1_1")
+				(pintype "passive")
+			)
+			(node
+				(ref "U1")
+				(pin "2")
+				(pinfunction "IN-_2")
+				(pintype "passive")
+			)
+			(node
+				(ref "U1")
+				(pin "4")
+				(pinfunction "OUT-_4")
+				(pintype "passive")
+			)
+			(node
+				(ref "U2")
+				(pin "1")
+				(pinfunction "GND_1")
+				(pintype "passive")
+			)
+			(node
+				(ref "U3")
+				(pin "6")
+				(pinfunction "GND_6")
+				(pintype "passive")
+			)
+			(node
+				(ref "U4")
+				(pin "10")
+				(pinfunction "AGND_10")
+				(pintype "passive")
+			)
+			(node
+				(ref "U4")
+				(pin "12")
+				(pinfunction "FMT_12")
+				(pintype "passive")
+			)
+			(node
+				(ref "U4")
+				(pin "14")
+				(pinfunction "DEMP_14")
+				(pintype "passive")
+			)
+			(node
+				(ref "U4")
+				(pin "15")
+				(pinfunction "FLT_15")
+				(pintype "passive")
+			)
+			(node
+				(ref "U4")
+				(pin "2")
+				(pinfunction "GND_2")
+				(pintype "passive")
+			)
+			(node
+				(ref "U4")
+				(pin "6")
+				(pinfunction "SCK_6")
+				(pintype "passive")
+			)
+			(node
+				(ref "U4")
+				(pin "8")
+				(pinfunction "AGND_8")
+				(pintype "passive")
+			)
+			(node
+				(ref "U5")
+				(pin "1")
+				(pinfunction "A2_1")
+				(pintype "passive")
+			)
+			(node
+				(ref "U5")
+				(pin "2")
+				(pinfunction "A1_2")
+				(pintype "passive")
+			)
+			(node
+				(ref "U5")
+				(pin "21")
+				(pinfunction "GND_21")
+				(pintype "passive")
+			)
+			(node
+				(ref "U5")
+				(pin "3")
+				(pinfunction "A0_3")
+				(pintype "passive")
+			)
+			(node
+				(ref "U5")
+				(pin "9")
+				(pinfunction "GND_9")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "67")
+			(name "unconnected-(J1-Pad3)")
+			(class "Default")
+			(node
+				(ref "J1")
+				(pin "3")
+				(pintype "passive+no_connect")
+			)
+		)
+		(net
+			(code "68")
+			(name "unconnected-(J2-D+-Pad3)")
+			(class "Default")
+			(node
+				(ref "J2")
+				(pin "3")
+				(pinfunction "D+_3")
+				(pintype "bidirectional+no_connect")
+			)
+		)
+		(net
+			(code "69")
+			(name "unconnected-(J2-D--Pad2)")
+			(class "Default")
+			(node
+				(ref "J2")
+				(pin "2")
+				(pinfunction "D-_2")
+				(pintype "bidirectional+no_connect")
+			)
+		)
+		(net
+			(code "70")
+			(name "unconnected-(J3-Pin_1-Pad1)")
+			(class "Default")
+			(node
+				(ref "J3")
+				(pin "1")
+				(pinfunction "Pin_1_1")
+				(pintype "passive+no_connect")
+			)
+		)
+		(net
+			(code "71")
+			(name "unconnected-(J3-Pin_3-Pad3)")
+			(class "Default")
+			(node
+				(ref "J3")
+				(pin "3")
+				(pinfunction "Pin_3_3")
+				(pintype "passive+no_connect")
+			)
+		)
+		(net
+			(code "72")
+			(name "unconnected-(J3-Pin_7-Pad7)")
+			(class "Default")
+			(node
+				(ref "J3")
+				(pin "7")
+				(pinfunction "Pin_7_7")
+				(pintype "passive+no_connect")
+			)
+		)
+		(net
+			(code "73")
+			(name "unconnected-(J3-Pin_8-Pad8)")
+			(class "Default")
+			(node
+				(ref "J3")
+				(pin "8")
+				(pinfunction "Pin_8_8")
+				(pintype "passive+no_connect")
+			)
+		)
+		(net
+			(code "74")
+			(name "unconnected-(J3-Pin_9-Pad9)")
+			(class "Default")
+			(node
+				(ref "J3")
+				(pin "9")
+				(pinfunction "Pin_9_9")
+				(pintype "passive+no_connect")
+			)
+		)
+		(net
+			(code "75")
+			(name "unconnected-(J3-Pin_21-Pad21)")
+			(class "Default")
+			(node
+				(ref "J3")
+				(pin "21")
+				(pinfunction "Pin_21_21")
+				(pintype "passive+no_connect")
+			)
+		)
+		(net
+			(code "76")
+			(name "unconnected-(J3-Pin_23-Pad23)")
+			(class "Default")
+			(node
+				(ref "J3")
+				(pin "23")
+				(pinfunction "Pin_23_23")
+				(pintype "passive+no_connect")
+			)
+		)
+		(net
+			(code "77")
+			(name "unconnected-(J3-Pin_25-Pad25)")
+			(class "Default")
+			(node
+				(ref "J3")
+				(pin "25")
+				(pinfunction "Pin_25_25")
+				(pintype "passive+no_connect")
+			)
+		)
+		(net
+			(code "78")
+			(name "unconnected-(J3-Pin_27-Pad27)")
+			(class "Default")
+			(node
+				(ref "J3")
+				(pin "27")
+				(pinfunction "Pin_27_27")
+				(pintype "passive+no_connect")
+			)
+		)
+		(net
+			(code "79")
+			(name "unconnected-(J3-Pin_28-Pad28)")
+			(class "Default")
+			(node
+				(ref "J3")
+				(pin "28")
+				(pinfunction "Pin_28_28")
+				(pintype "passive+no_connect")
+			)
+		)
+		(net
+			(code "80")
+			(name "unconnected-(J3-Pin_30-Pad30)")
+			(class "Default")
+			(node
+				(ref "J3")
+				(pin "30")
+				(pinfunction "Pin_30_30")
+				(pintype "passive+no_connect")
+			)
+		)
+		(net
+			(code "92")
+			(name "unconnected-(U1-EN-Pad5)")
+			(class "Default")
+			(node
+				(ref "U1")
+				(pin "5")
+				(pinfunction "EN_5")
+				(pintype "passive+no_connect")
+			)
+		)
+		(net
+			(code "93")
+			(name "unconnected-(U3-NC-Pad3)")
+			(class "Default")
+			(node
+				(ref "U3")
+				(pin "3")
+				(pinfunction "NC_3")
+				(pintype "no_connect")
+			)
+		)
+		(net
+			(code "94")
+			(name "unconnected-(U3-NC-Pad4)")
+			(class "Default")
+			(node
+				(ref "U3")
+				(pin "4")
+				(pinfunction "NC_4")
+				(pintype "no_connect")
+			)
+		)
+		(net
+			(code "95")
+			(name "unconnected-(U3-NC-Pad9)")
+			(class "Default")
+			(node
+				(ref "U3")
+				(pin "9")
+				(pinfunction "NC_9")
+				(pintype "no_connect")
+			)
+		)
+		(net
+			(code "96")
+			(name "unconnected-(U5-GPA7-Pad30)")
+			(class "Default")
+			(node
+				(ref "U5")
+				(pin "30")
+				(pinfunction "GPA7_30")
+				(pintype "passive+no_connect")
+			)
+		)
+		(net
+			(code "97")
+			(name "unconnected-(U5-GPB2-Pad15)")
+			(class "Default")
+			(node
+				(ref "U5")
+				(pin "15")
+				(pinfunction "GPB2_15")
+				(pintype "passive+no_connect")
+			)
+		)
+		(net
+			(code "98")
+			(name "unconnected-(U5-GPB3-Pad16)")
+			(class "Default")
+			(node
+				(ref "U5")
+				(pin "16")
+				(pinfunction "GPB3_16")
+				(pintype "passive+no_connect")
+			)
+		)
+		(net
+			(code "99")
+			(name "unconnected-(U5-GPB4-Pad17)")
+			(class "Default")
+			(node
+				(ref "U5")
+				(pin "17")
+				(pinfunction "GPB4_17")
+				(pintype "passive+no_connect")
+			)
+		)
+		(net
+			(code "100")
+			(name "unconnected-(U5-GPB5-Pad18)")
+			(class "Default")
+			(node
+				(ref "U5")
+				(pin "18")
+				(pinfunction "GPB5_18")
+				(pintype "passive+no_connect")
+			)
+		)
+		(net
+			(code "101")
+			(name "unconnected-(U5-GPB6-Pad19)")
+			(class "Default")
+			(node
+				(ref "U5")
+				(pin "19")
+				(pinfunction "GPB6_19")
+				(pintype "passive+no_connect")
+			)
+		)
+		(net
+			(code "102")
+			(name "unconnected-(U5-GPB7-Pad20)")
+			(class "Default")
+			(node
+				(ref "U5")
+				(pin "20")
+				(pinfunction "GPB7_20")
+				(pintype "passive+no_connect")
+			)
+		)
+		(net
+			(code "103")
+			(name "unconnected-(U5-INTB-Pad12)")
+			(class "Default")
+			(node
+				(ref "U5")
+				(pin "12")
+				(pinfunction "INTB_12")
+				(pintype "passive+no_connect")
+			)
+		)
+		(net
+			(code "104")
+			(name "unconnected-(U5-NC_CS-Pad6)")
+			(class "Default")
+			(node
+				(ref "U5")
+				(pin "6")
+				(pinfunction "NC_CS_6")
+				(pintype "passive+no_connect")
+			)
+		)
+		(net
+			(code "105")
+			(name "unconnected-(U5-NC_SO-Pad5)")
+			(class "Default")
+			(node
+				(ref "U5")
+				(pin "5")
+				(pinfunction "NC_SO_5")
+				(pintype "passive+no_connect")
+			)
+		)
+	)
+)
