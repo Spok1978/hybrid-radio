@@ -207,8 +207,8 @@
    * кнопки на них не вешать (docs/33, §10).                            */
   #define EXP_LINE_PRESET_BASE    0   /* пресеты 1…7: линии 0…6 */
   /* 2026-10-19: на макете пресет 8 припаян к GPB0 (перенесён с GPA7),
-   * поэтому MODE - на GPB1. В схеме (carrier.py, docs/33) было
-   * наоборот: пресет 8 GPB1, MODE GPB0 - схему привести к проводке. */
+   * поэтому MODE - на GPB1. Схема (carrier.py, docs/33) приведена
+   * к этой раскладке. */
   #define EXP_LINE_PRESET_8       8   /* GPB0 */
   #define EXP_LINE_MODE           9   /* GPB1 */
 
